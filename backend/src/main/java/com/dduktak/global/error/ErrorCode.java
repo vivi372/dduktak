@@ -1,7 +1,6 @@
 package com.dduktak.global.error;
 
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -18,7 +17,6 @@ import org.springframework.http.HttpStatus;
  * - _FATAL_   : 시스템 치명적 오류 화면
  */
 @Getter
-@RequiredArgsConstructor
 public enum ErrorCode {
 
     // =========================================================================
@@ -85,4 +83,10 @@ public enum ErrorCode {
      * 기본 에러 안내 메시지
      */
     private final String message;
+
+    ErrorCode(HttpStatus status, String code, String message) {
+        this.status = status;
+        this.code = code;
+        this.message = message;
+    }
 }
