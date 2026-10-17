@@ -1,0 +1,55 @@
+server:
+  port: ${PORT:8080}
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: dduktak-backend
+
+  datasource:
+    # log4jdbc driver for detailed SQL & parameter logging
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 300000
+      connection-timeout: 20000
+      max-lifetime: 1200000
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  type-aliases-package: com.dduktak.domain
+  configuration:
+    map-underscore-to-camel-case: true
+    default-fetch-size: 100
+    default-statement-timeout: 30
+
+jwt:
+  secret: ${JWT_SECRET:dduktak-dev-secret-key-must-be-at-least-256-bits-long-for-hmac-sha-algorithm}
+  expiration: 86400000 # 24 hours (ms)
+  refresh-expiration: 604800000 # 7 days (ms)
+
+logging:
+  level:
+    root: INFO
+    com.dduktak: DEBUG
+    jdbc:
+      sqltiming: INFO
+      sqlonly: OFF
+      audit: OFF
+      resultset: OFF
+      resultsettable: INFO
+      connection: OFF

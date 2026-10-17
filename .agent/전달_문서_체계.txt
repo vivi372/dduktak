@@ -1,0 +1,15 @@
+# 📚 AI 개발 에이전트 전달 문서 체계 (Vibe Coding Package)
+
+.agent/ (또는 프로젝트 루트)
+├── 00_SYSTEM_PROMPT.md          # AI 에이전트 페르소나 및 핵심 정책 (Guardrails)
+├── 01_TECH_STACK_AND_LIBS.md    # 프레임워크/라이브러리 버전 및 역할 분담 명세
+├── 02_ARCHITECTURE_AND_CONVENTIONS.md # [통합] 모노레포 구조, 코딩 컨벤션, AOP 로깅 & 에러 핸들링
+├── 03_REQUIREMENTS_SUMMARY.md   # 서비스 전체 기능 요구사항 통합 명세 (모듈 1~7)
+├── 04_DATABASE_SCHEMA.md        # Supabase PostgreSQL DDL SQL & ERD 명세
+├── 05_API_SPECIFICATION.md      # 순수 REST API 엔드포인트 규격 (URL, DTO, Response Code)
+├── 06_UI_UX_GUIDELINES.md       # 디자인 시스템 & UX 규칙 (2-Tier 아코디언, 팝업 등)
+├── 07_TEST_SCENARIOS.md          # 핵심 비즈니스 인수 테스트 시나리오 (Acceptance Criteria)
+├── 08_DEVELOPMENT_MASTER_PLAN.md # 개발 상세 마스터 플랜 및 진행 현황 추적표
+├── ingredient_master_seed.md     # 식재료 마스터 초기 데이터 DDL
+├── recipe_seed.md                # 1인 가구 대표 한식 레시피 30선 DDL
+└── logs/                         # 일자별 작업 로그 파일 저장 폴더
