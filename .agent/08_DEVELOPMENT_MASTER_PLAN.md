@@ -3,11 +3,11 @@
 ## 📊 개발 진행 현황 요약
 | 페이즈 | 주요 목표 | 완료 스텝 수 | 진행률 |
 | :--- | :--- | :---: | :---: |
-| **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[/] 1/4` | 25% |
+| **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[x] 2/4` | 50% |
 | **Phase 2** | 백엔드 도메인별 핵심 API 개발 | `[ ] 0/4` | 0% |
 | **Phase 3** | 프론트엔드 UI/UX 및 화면 구현 | `[ ] 0/4` | 0% |
 | **Phase 4** | 인수 테스트 및 최종 검토 | `[ ] 0/2` | 0% |
-| **전체** | **전체 시스템 구축 완료** | `[/] 1/14` | **7%** |
+| **전체** | **전체 시스템 구축 완료** | `[x] 2/14` | **14%** |
 
 ---
 
@@ -19,10 +19,10 @@
   * [x] `build.gradle`에 Spring Boot 3.x, MyBatis, PostgreSQL Driver, Spring Security, jjwt, Lombok 등 `01_TECH_STACK_AND_LIBS.md`에 정의된 의존성 추가.
   * [x] `backend/src/main/java/com/dduktak/` 아래에 `global/` (`config`, `error`, `aspect`, `util`) 및 `domain/` (`auth`, `inventory`, `recipe`, `matching`, `notification`) 패키지 구조 생성.
 
-* [ ] **Step 1-2: 공통 응답 DTO 및 전역 예외 처리 구현** (완료일시: - / 담당자: -)
-  * [ ] `ApiResponseDto<T>` (`success`, `data`, `message`) 구현.
-  * [ ] `02_ARCHITECTURE_AND_CONVENTIONS.md`의 에러 코드 규칙(`[도메인]_[UX태그]_[상세원인]`)을 따르는 `ErrorCode` Enum 정의.
-  * [ ] `GlobalExceptionHandler`를 구현하여 `CustomException` 및 `@Valid` 유효성 검증 실패 시 올바른 `ErrorResponseDto` 반환 처리.
+* [x] **Step 1-2: 공통 응답 DTO 및 전역 예외 처리 구현** (완료일시: 2026-10-17 / 담당자: AI 에이전트)
+  * [x] `ApiResponseDto<T>` (`success`, `data`, `message`) 구현.
+  * [x] `02_ARCHITECTURE_AND_CONVENTIONS.md`의 에러 코드 규칙(`[도메인]_[UX태그]_[상세원인]`)을 따르는 `ErrorCode` Enum 정의.
+  * [x] `GlobalExceptionHandler`를 구현하여 `CustomException` 및 `@Valid` 유효성 검증 실패 시 올바른 `ErrorResponseDto` 반환 처리.
 
 * [ ] **Step 1-3: AOP 로깅 및 트레이싱 구현** (완료일시: - / 담당자: -)
   * [ ] `LoggingAspect.java` 작성: 컨트롤러 및 서비스 진입 시 6자리 무작위 Trace ID 생성, 매개변수 로깅, 이탈 시 반환값 및 실행 시간(Execution Time) 로깅 자동화.
