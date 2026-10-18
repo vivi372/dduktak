@@ -207,6 +207,7 @@ class LoggingAspectTest {
         TestLoginResponse response = testController.loginWithDto(dto);
 
         // then
+        assertThat(response).isNotNull();
         List<String> logMessages = listAppender.list.stream()
                 .map(ILoggingEvent::getFormattedMessage)
                 .toList();
