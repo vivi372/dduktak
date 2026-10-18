@@ -3,11 +3,11 @@
 ## 📊 개발 진행 현황 요약
 | 페이즈 | 주요 목표 | 완료 스텝 수 | 진행률 |
 | :--- | :--- | :---: | :---: |
-| **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[x] 3/4` | 75% |
+| **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[x] 4/4` | **100%** |
 | **Phase 2** | 백엔드 도메인별 핵심 API 개발 | `[ ] 0/4` | 0% |
 | **Phase 3** | 프론트엔드 UI/UX 및 화면 구현 | `[ ] 0/4` | 0% |
 | **Phase 4** | 인수 테스트 및 최종 검토 | `[ ] 0/2` | 0% |
-| **전체** | **전체 시스템 구축 완료** | `[x] 3/14` | **21%** |
+| **전체** | **전체 시스템 구축 완료** | `[x] 4/14` | **29%** |
 
 ---
 
@@ -33,9 +33,9 @@
   * [x] `GlobalExceptionHandler.java` 연동: 모든 예외 응답(`ResponseEntity<ErrorResponseDto>`) 헤더에 MDC의 `X-Trace-Id` 자동 주입.
   * [x] `TraceIdFilterTest`(4종), `CorsConfigTest`(1종), `GlobalExceptionHandlerTest`(7종) 작성 및 전체 백엔드 테스트 20종 전원 통과 검증.
 
-* [ ] **Step 1-4: 데이터베이스 스키마(DDL) 및 시드 데이터 적재** (완료일시: - / 담당자: -)
-  * [ ] Supabase(PostgreSQL)에 `04_DATABASE_SCHEMA.md`를 바탕으로 테이블 생성.
-  * [ ] `ingredient_master_seed.md` (6개 카테고리, 1인 가구 필수 재료) 및 `recipe_seed.md` (레시피 30선) 데이터 적재.
+* [x] **Step 1-4: 데이터베이스 스키마(DDL) 및 시드 데이터 적재** (완료일시: 2026-10-19 / 담당자: AI 에이전트)
+  * [x] Supabase(PostgreSQL)에 `04_DATABASE_SCHEMA.md`를 바탕으로 11개 테이블 및 인덱스 6개 생성 완료.
+  * [x] `ingredient_master_seed.md` (6개 카테고리, 29개 식재료 마스터) 및 `recipe_seed.md` (레시피 1호, 재료 4건, 순서 3건) 데이터 적재 및 정합성 검증 완료.
 
 ---
 
