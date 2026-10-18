@@ -3,11 +3,11 @@
 ## 📊 개발 진행 현황 요약
 | 페이즈 | 주요 목표 | 완료 스텝 수 | 진행률 |
 | :--- | :--- | :---: | :---: |
-| **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[x] 2/4` | 50% |
+| **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[x] 3/4` | 75% |
 | **Phase 2** | 백엔드 도메인별 핵심 API 개발 | `[ ] 0/4` | 0% |
 | **Phase 3** | 프론트엔드 UI/UX 및 화면 구현 | `[ ] 0/4` | 0% |
 | **Phase 4** | 인수 테스트 및 최종 검토 | `[ ] 0/2` | 0% |
-| **전체** | **전체 시스템 구축 완료** | `[x] 2/14` | **14%** |
+| **전체** | **전체 시스템 구축 완료** | `[x] 3/14` | **21%** |
 
 ---
 
@@ -24,8 +24,11 @@
   * [x] `02_ARCHITECTURE_AND_CONVENTIONS.md`의 에러 코드 규칙(`[도메인]_[UX태그]_[상세원인]`)을 따르는 `ErrorCode` Enum 정의.
   * [x] `GlobalExceptionHandler`를 구현하여 `CustomException` 및 `@Valid` 유효성 검증 실패 시 올바른 `ErrorResponseDto` 반환 처리.
 
-* [ ] **Step 1-3: AOP 로깅 및 트레이싱 구현** (완료일시: - / 담당자: -)
-  * [ ] `LoggingAspect.java` 작성: 컨트롤러 및 서비스 진입 시 6자리 무작위 Trace ID 생성, 매개변수 로깅, 이탈 시 반환값 및 실행 시간(Execution Time) 로깅 자동화.
+* [x] **Step 1-3: AOP 로깅 및 트레이싱 구현** (완료일시: 2026-10-18 / 담당자: AI 에이전트)
+  * [x] `LoggingAspect.java` 작성: 컨트롤러 및 서비스 진입 시 6자리 무작위 Trace ID 발급 및 MDC 등록, 매개변수 마스킹 로깅, 이탈 시 반환값 및 실행 시간(Execution Time ms) 로깅, 최초 진입점 종료 시 `MDC.clear()` 보장.
+  * [x] 민감 정보 평문 노출 방지: 파라미터명(`password`, `token` 등), DTO toString 및 반환값 JWT 패턴 마스킹(`****`, `[PROTECTED_TOKEN]`), 특수 객체(`HttpServletRequest`, `MultipartFile`) 안전 요약 로깅.
+  * [x] `application.yml` 콘솔 로그 포맷에 `%clr([%X{traceId:-SYSTEM}]){magenta}` 연동.
+  * [x] 단위/통합 테스트 `LoggingAspectTest.java` 7종 작성 및 전원 통과 검증.
 
 * [ ] **Step 1-4: 데이터베이스 스키마(DDL) 및 시드 데이터 적재** (완료일시: - / 담당자: -)
   * [ ] Supabase(PostgreSQL)에 `04_DATABASE_SCHEMA.md`를 바탕으로 테이블 생성.
