@@ -29,6 +29,9 @@
   * [x] 민감 정보 평문 노출 방지: 파라미터명(`password`, `token` 등), DTO toString 및 반환값 JWT 패턴 마스킹(`****`, `[PROTECTED_TOKEN]`), 특수 객체(`HttpServletRequest`, `MultipartFile`) 안전 요약 로깅.
   * [x] `application.yml` 콘솔 로그 포맷에 `%clr([%X{traceId:-SYSTEM}]){magenta}` 연동.
   * [x] 단위/통합 테스트 `LoggingAspectTest.java` 7종 작성 및 전원 통과 검증.
+  * [x] `TraceIdFilter.java` 및 `CorsConfig.java` 작성: 서블릿 최우선 진입점(`@Order(Ordered.HIGHEST_PRECEDENCE)`)에서 Trace ID 발급 및 응답 헤더(`X-Trace-Id`) 주입, 프론트엔드 연동을 위한 `exposedHeaders("X-Trace-Id")` 설정.
+  * [x] `GlobalExceptionHandler.java` 연동: 모든 예외 응답(`ResponseEntity<ErrorResponseDto>`) 헤더에 MDC의 `X-Trace-Id` 자동 주입.
+  * [x] `TraceIdFilterTest`(4종), `CorsConfigTest`(1종), `GlobalExceptionHandlerTest`(7종) 작성 및 전체 백엔드 테스트 20종 전원 통과 검증.
 
 * [ ] **Step 1-4: 데이터베이스 스키마(DDL) 및 시드 데이터 적재** (완료일시: - / 담당자: -)
   * [ ] Supabase(PostgreSQL)에 `04_DATABASE_SCHEMA.md`를 바탕으로 테이블 생성.

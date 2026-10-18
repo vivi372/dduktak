@@ -1,11 +1,14 @@
 package com.dduktak.global.error;
 
+import com.dduktak.global.filter.TraceIdFilter;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.slf4j.MDC;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -18,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * 전역 예외 처리기(GlobalExceptionHandler) 및 응답 DTO 규격 단위 테스트
+ * 에러 발생 시 ErrorResponseDto 형식 및 HTTP 응답 헤더(X-Trace-Id) 주입을 검증합니다.
  */
 class GlobalExceptionHandlerTest {
 
@@ -25,11 +29,17 @@ class GlobalExceptionHandlerTest {
 
     @BeforeEach
     void setUp() {
+        MDC.clear();
         // MockMvc 독립 실행 환경 구성 (컨트롤러와 GlobalExceptionHandler 연동)
         this.mockMvc = MockMvcBuilders
                 .standaloneSetup(new TestController())
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
+    }
+
+    @AfterEach
+    void tearDown() {
+        MDC.clear();
     }
 
     @Test
@@ -43,10 +53,12 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("커스텀 예외: CustomException 발생 시 정의된 ErrorCode 규격 반환 검증")
+    @DisplayName("커스텀 예외: CustomException 발생 시 정의된 ErrorCode 규격 및 X-Trace-Id 응답 헤더 반환 검증")
     void customException_ShouldReturnErrorCodeFormat() throws Exception {
         mockMvc.perform(get("/test/custom-exception"))
                 .andExpect(status().isBadRequest())
+                .andExpect(header().exists(TraceIdFilter.TRACE_ID_HEADER))
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, matchesRegex("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("INV_WARN_IMMINENT_EXPIRATION"))
                 .andExpect(jsonPath("$.message").value("소비기한이 임박한 재료가 존재합니다."))
@@ -54,10 +66,12 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("커스텀 예외: 동적 커스텀 메시지가 주입된 경우 우선 적용 검증")
+    @DisplayName("커스텀 예외: 동적 커스텀 메시지가 주입된 경우 우선 적용 및 X-Trace-Id 헤더 주입 검증")
     void customException_WithCustomMessage_ShouldOverrideMessage() throws Exception {
         mockMvc.perform(get("/test/custom-message"))
                 .andExpect(status().isNotFound())
+                .andExpect(header().exists(TraceIdFilter.TRACE_ID_HEADER))
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, matchesRegex("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("AUTH_WARN_USER_NOT_FOUND"))
                 .andExpect(jsonPath("$.message").value("지정된 이메일의 유저가 존재하지 않습니다."))
@@ -65,7 +79,19 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("유효성 검증 예외: @Valid 필드 오류 발생 시 400 Bad Request 및 필드 에러 상세 반환 검증")
+    @DisplayName("기존 MDC Trace ID 유지: MDC에 Trace ID가 존재하는 경우 해당 ID가 에러 응답 헤더에 그대로 주입되어야 한다")
+    void customException_WithExistingMdcTraceId_ShouldPreserveTraceIdInHeader() throws Exception {
+        String existingTraceId = "ERR123";
+        MDC.put(TraceIdFilter.TRACE_ID_KEY, existingTraceId);
+
+        mockMvc.perform(get("/test/custom-exception"))
+                .andExpect(status().isBadRequest())
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, existingTraceId))
+                .andExpect(jsonPath("$.code").value("INV_WARN_IMMINENT_EXPIRATION"));
+    }
+
+    @Test
+    @DisplayName("유효성 검증 예외: @Valid 필드 오류 발생 시 400 Bad Request, 필드 에러 상세 및 X-Trace-Id 헤더 반환 검증")
     void validationException_ShouldReturnFieldErrors() throws Exception {
         String invalidPayload = "{\"name\":\"\",\"quantity\":-1}";
 
@@ -73,6 +99,8 @@ class GlobalExceptionHandlerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(invalidPayload))
                 .andExpect(status().isBadRequest())
+                .andExpect(header().exists(TraceIdFilter.TRACE_ID_HEADER))
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, matchesRegex("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("COMMON_FIELD_INVALID_INPUT"))
                 .andExpect(jsonPath("$.message").exists())
@@ -81,19 +109,23 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    @DisplayName("HTTP 메서드 예외: 지원하지 않는 메서드 요청 시 405 Method Not Allowed 반환 검증")
+    @DisplayName("HTTP 메서드 예외: 지원하지 않는 메서드 요청 시 405 Method Not Allowed 및 X-Trace-Id 헤더 반환 검증")
     void methodNotAllowed_ShouldReturn405() throws Exception {
         mockMvc.perform(post("/test/success"))
                 .andExpect(status().isMethodNotAllowed())
+                .andExpect(header().exists(TraceIdFilter.TRACE_ID_HEADER))
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, matchesRegex("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("COMMON_WARN_METHOD_NOT_ALLOWED"));
     }
 
     @Test
-    @DisplayName("시스템 예외: 처리되지 않은 일반 런타임 예외 발생 시 500 Internal Server Error 반환 검증")
+    @DisplayName("시스템 예외: 처리되지 않은 일반 런타임 예외 발생 시 500 Internal Server Error 및 X-Trace-Id 헤더 반환 검증")
     void unhandledException_ShouldReturn500() throws Exception {
         mockMvc.perform(get("/test/unhandled"))
                 .andExpect(status().isInternalServerError())
+                .andExpect(header().exists(TraceIdFilter.TRACE_ID_HEADER))
+                .andExpect(header().string(TraceIdFilter.TRACE_ID_HEADER, matchesRegex("^[A-Z0-9]{6}$")))
                 .andExpect(jsonPath("$.success").value(false))
                 .andExpect(jsonPath("$.code").value("COMMON_ALERT_INTERNAL_SERVER_ERROR"))
                 .andExpect(jsonPath("$.message").value("서버 내부 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."));
