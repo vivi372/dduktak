@@ -33,9 +33,11 @@
   * [x] `GlobalExceptionHandler.java` 연동: 모든 예외 응답(`ResponseEntity<ErrorResponseDto>`) 헤더에 MDC의 `X-Trace-Id` 자동 주입.
   * [x] `TraceIdFilterTest`(4종), `CorsConfigTest`(1종), `GlobalExceptionHandlerTest`(7종) 작성 및 전체 백엔드 테스트 20종 전원 통과 검증.
 
-* [x] **Step 1-4: 데이터베이스 스키마(DDL) 및 시드 데이터 적재** (완료일시: 2026-10-19 / 담당자: AI 에이전트)
+* [x] **Step 1-4: 데이터베이스 스키마(DDL), 시드 데이터 적재 및 DataSource 연동** (완료일시: 2026-10-19 / 담당자: AI 에이전트)
   * [x] Supabase(PostgreSQL)에 `04_DATABASE_SCHEMA.md`를 바탕으로 11개 테이블 및 인덱스 6개 생성 완료.
-  * [x] `ingredient_master_seed.md` (6개 카테고리, 29개 식재료 마스터) 및 `recipe_seed.md` (레시피 1호, 재료 4건, 순서 3건) 데이터 적재 및 정합성 검증 완료.
+  * [x] `ingredient_master_seed.md` (6개 카테고리, 마스터 식재료 74종 전량) 및 `recipe_seed.md` (한식 30선, 식재료 222건, 조리순서 120건) 복원 적재 및 조인 무결성 100% 검증 완료.
+  * [x] `application.yml`에 Supabase PostgreSQL 연결 설정(HikariCP 최적화, MyBatis 매퍼 설정, 6543 포트 및 `prepareThreshold=0`) 구성 완료.
+  * [x] `build.gradle` 및 `DotenvTestInitializer`를 통한 안전한 `.env` 로딩 인프라 구축 및 `DatabaseConnectionTest` 3종(커넥션 풀, SELECT 1, MyBatis 74건 조회) 통과 검증 완료.
 
 ---
 

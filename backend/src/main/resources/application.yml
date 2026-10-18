@@ -14,15 +14,17 @@ spring:
   datasource:
     # log4jdbc driver for detailed SQL & parameter logging
     driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-    url: jdbc:log4jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:postgres}?sslmode=require
-    username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    url: jdbc:log4jdbc:postgresql://${DB_HOST:aws-0-ap-northeast-2.pooler.supabase.com}:${DB_PORT:6543}/${DB_NAME:postgres}?sslmode=require&prepareThreshold=0
+    username: ${DB_USER:postgres.hefryhbaoovrhgzevfad}
+    password: ${DB_PASSWORD:}
     hikari:
+      pool-name: DduktakHikariPool
       maximum-pool-size: 10
       minimum-idle: 2
       idle-timeout: 300000
       connection-timeout: 20000
-      max-lifetime: 1200000
+      max-lifetime: 600000
+      auto-commit: true
 
   servlet:
     multipart:
@@ -47,7 +49,7 @@ logging:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.15t]){faint} %clr([%X{traceId:-SYSTEM}]){magenta} %clr(%-40.40logger{39}){cyan} : %msg%n"
   level:
     root: INFO
-    com.dduktak: DEBUG
+    "[com.dduktak]": DEBUG
     jdbc:
       sqltiming: INFO
       sqlonly: OFF
