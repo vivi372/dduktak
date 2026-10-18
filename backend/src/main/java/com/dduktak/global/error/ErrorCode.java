@@ -1,7 +1,7 @@
 package com.dduktak.global.error;
 
-import lombok.Getter;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 
 /**
  * 전역 에러 코드 Enum
@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
  * - _CONFIRM_ : 확인/취소 선택형 모달 팝업
  * - _FATAL_   : 시스템 치명적 오류 화면
  */
-@Getter
 public enum ErrorCode {
 
     // =========================================================================
@@ -88,5 +87,20 @@ public enum ErrorCode {
         this.status = status;
         this.code = code;
         this.message = message;
+    }
+
+    @NonNull
+    public HttpStatus getStatus() {
+        return this.status;
+    }
+
+    @NonNull
+    public String getCode() {
+        return this.code;
+    }
+
+    @NonNull
+    public String getMessage() {
+        return this.message;
     }
 }
