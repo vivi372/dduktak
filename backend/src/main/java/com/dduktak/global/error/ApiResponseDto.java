@@ -1,7 +1,5 @@
 package com.dduktak.global.error;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -11,8 +9,6 @@ import lombok.Getter;
  * { success: true, data: ..., message: ... } 형식을 엄격히 준수합니다.
  */
 @Getter
-@Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ApiResponseDto<T> {
 
     /**
@@ -29,6 +25,16 @@ public class ApiResponseDto<T> {
      * 사용자 친화적 완료 안내 메시지
      */
     private final String message;
+
+    /**
+     * Eclipse JDT/VS Code 언어 서버의 'Flexible Constructor Bodies' 호환성 문제를 방지하기 위한 명시적 생성자
+     */
+    @Builder
+    private ApiResponseDto(boolean success, T data, String message) {
+        this.success = success;
+        this.data = data;
+        this.message = message;
+    }
 
     /**
      * 데이터를 포함하는 기본 성공 응답 생성

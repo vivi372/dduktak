@@ -2,8 +2,6 @@ package com.dduktak.global.error;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -17,8 +15,6 @@ import java.util.List;
  * 폼 검증 실패 시 상세 필드 에러 목록(errors)을 함께 제공합니다.
  */
 @Getter
-@Builder
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class ErrorResponseDto {
 
     /**
@@ -47,6 +43,18 @@ public class ErrorResponseDto {
      */
     @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private final List<FieldErrorDetail> errors;
+
+    /**
+     * Eclipse JDT/VS Code 언어 서버 호환성을 위한 명시적 생성자
+     */
+    @Builder
+    private ErrorResponseDto(boolean success, String code, String message, LocalDateTime timestamp, List<FieldErrorDetail> errors) {
+        this.success = success;
+        this.code = code;
+        this.message = message;
+        this.timestamp = timestamp;
+        this.errors = errors;
+    }
 
     /**
      * ErrorCode 기본 메시지를 기반으로 ErrorResponseDto 생성
@@ -101,8 +109,6 @@ public class ErrorResponseDto {
      * 개별 필드 유효성 검증 실패 상세 정보
      */
     @Getter
-    @Builder
-    @AllArgsConstructor
     public static class FieldErrorDetail {
         /**
          * 유효성 검증에 실패한 필드명
@@ -118,5 +124,15 @@ public class ErrorResponseDto {
          * 유효성 검증 실패 사유
          */
         private final String reason;
+
+        /**
+         * Eclipse JDT/VS Code 언어 서버 호환성을 위한 명시적 생성자
+         */
+        @Builder
+        public FieldErrorDetail(String field, String value, String reason) {
+            this.field = field;
+            this.value = value;
+            this.reason = reason;
+        }
     }
 }
