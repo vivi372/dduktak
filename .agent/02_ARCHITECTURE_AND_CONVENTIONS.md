@@ -20,6 +20,7 @@ dduktak/                              # 루트 (Git Repository Root)
 │   ├── 06_UI_UX_GUIDELINES.md        # UI/UX 가이드라인
 │   ├── 07_TEST_SCENARIOS.md          # 핵심 비즈니스 인수 테스트 시나리오
 │   ├── 08_DEVELOPMENT_MASTER_PLAN.md # 개발 상세 마스터 플랜
+│   ├── 09_API_TEST_RESULTS.md       # 백엔드 API 테스트 시나리오 및 검증 결과
 │   ├── AGENTS.md                     # 프로젝트 전역 에이전트 지침
 │   ├── ingredient_master_seed.md     # 식재료 마스터 시드 DDL
 │   ├── recipe_seed.md                # 레시피 30선 시드 DDL
@@ -187,3 +188,7 @@ dduktak/                              # 루트 (Git Repository Root)
 
 ---
 ```
+
+##### 6.3. API 테스트 검증 결과 기록 수칙 (.agent/09_API_TEST_RESULTS.md)
+* **목적** : API 스펙 문서(`05_API_SPECIFICATION.md`)의 가독성을 유지하면서, 모듈별 API 개발 시 작성한 JUnit 5/Mockito 단위·통합 테스트 시나리오 및 실행 검증 결과를 일관되게 관리한다.
+* **작성 규칙** : 신규 API 구현 또는 수정 작업 완료 시, `.agent/09_API_TEST_RESULTS.md`에 테스트 커버리지, 성공/실패 예외 테스트 케이스 실행 결과를 누적 작성한다.

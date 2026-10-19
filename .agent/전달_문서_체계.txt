@@ -10,6 +10,7 @@
 ├── 06_UI_UX_GUIDELINES.md       # 디자인 시스템 & UX 규칙 (2-Tier 아코디언, 팝업 등)
 ├── 07_TEST_SCENARIOS.md          # 핵심 비즈니스 인수 테스트 시나리오 (Acceptance Criteria)
 ├── 08_DEVELOPMENT_MASTER_PLAN.md # 개발 상세 마스터 플랜 및 진행 현황 추적표
+├── 09_API_TEST_RESULTS.md        # 백엔드 API 테스트 시나리오 및 검증 결과 (신규/누적)
 ├── ingredient_master_seed.md     # 식재료 마스터 초기 데이터 DDL
 ├── recipe_seed.md                # 1인 가구 대표 한식 레시피 30선 DDL
 └── logs/                         # 일자별 작업 로그 파일 저장 폴더
