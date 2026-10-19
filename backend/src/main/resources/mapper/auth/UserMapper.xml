@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dduktak.domain.auth.mapper.UserMapper">
+
+    <!-- 회원 단건 조회 (PK) -->
+    <select id="findById" resultType="com.dduktak.domain.auth.entity.User">
+        SELECT
+            user_id,
+            email,
+            password,
+            nickname,
+            user_tag,
+            profile_image,
+            provider,
+            provider_id,
+            quiet_time_start,
+            quiet_time_end,
+            created_at,
+            updated_at
+        FROM public.users
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 회원 단건 조회 (이메일) -->
+    <select id="findByEmail" resultType="com.dduktak.domain.auth.entity.User">
+        SELECT
+            user_id,
+            email,
+            password,
+            nickname,
+            user_tag,
+            profile_image,
+            provider,
+            provider_id,
+            quiet_time_start,
+            quiet_time_end,
+            created_at,
+            updated_at
+        FROM public.users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 이메일 중복 확인 -->
+    <select id="existsByEmail" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM public.users
+        WHERE email = #{email}
+    </select>
+
+    <!-- 닉네임 + 태그 중복 확인 -->
+    <select id="existsByNicknameAndUserTag" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM public.users
+        WHERE nickname = #{nickname}
+          AND user_tag = #{userTag}
+    </select>
+
+    <!-- 신규 회원 등록 -->
+    <insert id="insertUser"
+            parameterType="com.dduktak.domain.auth.entity.User"
+            useGeneratedKeys="true"
+            keyProperty="userId"
+            keyColumn="user_id">
+        INSERT INTO public.users (
+            email,
+            password,
+            nickname,
+            user_tag,
+            profile_image,
+            provider,
+            provider_id,
+            quiet_time_start,
+            quiet_time_end,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{email},
+            #{password},
+            #{nickname},
+            #{userTag},
+            #{profileImage},
+            #{provider},
+            #{providerId},
+            #{quietTimeStart},
+            #{quietTimeEnd},
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <!-- 회원 프로필 수정 -->
+    <update id="updateProfile" parameterType="com.dduktak.domain.auth.entity.User">
+        UPDATE public.users
+        SET nickname = #{nickname},
+            profile_image = #{profileImage},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 야간 방해금지 시간대 수정 -->
+    <update id="updateQuietTime">
+        UPDATE public.users
+        SET quiet_time_start = #{quietTimeStart},
+            quiet_time_end = #{quietTimeEnd},
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 회원 탈퇴 시 레시피 작성자 ID NULL 익명화 처리 (USER-02) -->
+    <update id="anonymizeRecipesByUserId">
+        UPDATE public.recipe
+        SET user_id = NULL,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 회원 레코드 삭제 (Cascade 연쇄 삭제) -->
+    <delete id="deleteUserById">
+        DELETE FROM public.users
+        WHERE user_id = #{userId}
+    </delete>
+
+</mapper>

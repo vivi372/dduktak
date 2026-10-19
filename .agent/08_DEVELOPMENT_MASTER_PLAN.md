@@ -4,10 +4,10 @@
 | 페이즈 | 주요 목표 | 완료 스텝 수 | 진행률 |
 | :--- | :--- | :---: | :---: |
 | **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | `[x] 4/4` | **100%** |
-| **Phase 2** | 백엔드 도메인별 핵심 API 개발 | `[ ] 0/4` | 0% |
+| **Phase 2** | 백엔드 도메인별 핵심 API 개발 | `[ ] 1/4` | **25%** |
 | **Phase 3** | 프론트엔드 UI/UX 및 화면 구현 | `[ ] 0/4` | 0% |
 | **Phase 4** | 인수 테스트 및 최종 검토 | `[ ] 0/2` | 0% |
-| **전체** | **전체 시스템 구축 완료** | `[x] 4/14` | **29%** |
+| **전체** | **전체 시스템 구축 완료** | `[x] 5/14` | **36%** |
 
 ---
 
@@ -45,9 +45,12 @@
 
 > **목표:** 5개 주요 모듈의 비즈니스 로직과 MyBatis Mapper XML 연동을 완성합니다.
 
-* [ ] **Step 2-1: 모듈 1 (회원 및 인증)** (완료일시: - / 담당자: -)
-  * [ ] Supabase Auth / JWT 연동을 위한 `JwtProvider` 및 `SecurityConfig` 세팅.
-  * [ ] `/api/v1/auth/signup`, `/login`, `/me` (프로필 조회/수정, 방해금지 시간 설정) 엔티티 및 API 구현.
+* [x] **Step 2-1: 모듈 1 (회원 및 인증)** (완료일시: 2026-10-19 / 담당자: AI 에이전트)
+  * [x] BCrypt 단방향 비밀번호 암호화 및 JJWT 0.12.5 기반 `JwtProvider`, `JwtAuthenticationFilter`, `SecurityConfig` 세팅 완료.
+  * [x] `/api/v1/auth/signup`, `/login`, `/refresh`, `/me`, `/me/quiet-time`, `/withdraw` 전체 DTO, Entity, MyBatis XML Mapper, Repository, Service, Controller 구현 완료.
+  * [x] 회원 탈퇴(USER-02) 2중 안전장치(작성 레시피 `user_id = NULL` 익명화 선제 수행 및 개인 데이터 Cascade 파기) 적용.
+  * [x] 단위/통합 테스트 30종(JwtProviderTest 4종, AuthServiceTest 12종, AuthControllerTest 9종, SecurityConfigTest 4종, UserMapperIntegrationTest 1종) 전원 통과 (DoD 100% 달성).
+
 
 * [ ] **Step 2-2: 모듈 2 (내 재료 관리소)** (완료일시: - / 담당자: -)
   * [ ] 표준 식재료 마스터 조회 API (`ingredient_master` 기반 Searchable Select용).
