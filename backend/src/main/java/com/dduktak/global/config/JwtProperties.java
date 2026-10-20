@@ -16,9 +16,9 @@ import org.springframework.stereotype.Component;
 public class JwtProperties {
 
     /**
-     * HMAC-SHA 암호화용 서명 비밀키 (최소 256비트 이상)
+     * HMAC-SHA 암호화용 서명 비밀키 (최소 256비트 이상, 환경변수 필수 주입)
      */
-    private String secret = "dduktak-dev-secret-key-must-be-at-least-256-bits-long-for-hmac-sha-algorithm";
+    private String secret;
 
     /**
      * Access Token 유효 시간 (밀리초 단위, 기본 24시간)

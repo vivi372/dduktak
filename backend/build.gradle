@@ -42,9 +42,11 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
-    // 4. Lombok
+    // 4. Lombok & Configuration Processor
     compileOnly 'org.projectlombok:lombok'
+    compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
     annotationProcessor 'org.projectlombok:lombok'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
 
     // 5. Testing
     testImplementation 'org.springframework.boot:spring-boot-starter-test'

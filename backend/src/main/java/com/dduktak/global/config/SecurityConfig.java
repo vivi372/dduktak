@@ -5,7 +5,6 @@ import com.dduktak.global.security.JwtAccessDeniedHandler;
 import com.dduktak.global.security.JwtAuthenticationEntryPoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -31,8 +30,7 @@ public class SecurityConfig {
     public SecurityConfig(
             JwtAuthenticationFilter jwtAuthenticationFilter,
             JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint,
-            JwtAccessDeniedHandler jwtAccessDeniedHandler
-    ) {
+            JwtAccessDeniedHandler jwtAccessDeniedHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.jwtAuthenticationEntryPoint = jwtAuthenticationEntryPoint;
         this.jwtAccessDeniedHandler = jwtAccessDeniedHandler;
@@ -63,13 +61,11 @@ public class SecurityConfig {
                         // 1. 비인증 공개 허용 엔드포인트
                         .requestMatchers("/error").permitAll()
                         // 2. 그 외 모든 요청(세션 동기화, 본인 정보 조회/수정/탈퇴 등)은 Supabase JWT 인증 필수
-                        .anyRequest().authenticated()
-                )
+                        .anyRequest().authenticated())
                 // 인증 및 인가 실패 핸들러 등록
                 .exceptionHandling(exception -> exception
                         .authenticationEntryPoint(jwtAuthenticationEntryPoint)
-                        .accessDeniedHandler(jwtAccessDeniedHandler)
-                )
+                        .accessDeniedHandler(jwtAccessDeniedHandler))
                 // JWT 인증 필터를 UsernamePasswordAuthenticationFilter 앞단에 배치
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
