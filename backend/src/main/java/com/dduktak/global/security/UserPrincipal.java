@@ -17,9 +17,9 @@ import java.util.Collections;
 public class UserPrincipal implements UserDetails {
 
     /**
-     * 회원 식별 고유 PK (users.user_id)
+     * Supabase Auth 회원 식별 고유 PK (auth.users.id UUID)
      */
-    private final Long userId;
+    private final java.util.UUID userId;
 
     /**
      * 회원 이메일
@@ -28,11 +28,17 @@ public class UserPrincipal implements UserDetails {
 
     private final String role;
 
+    /**
+     * Supabase user_metadata 클레임
+     */
+    private final java.util.Map<String, Object> userMetadata;
+
     @Builder
-    public UserPrincipal(Long userId, String email, String role) {
+    public UserPrincipal(java.util.UUID userId, String email, String role, java.util.Map<String, Object> userMetadata) {
         this.userId = userId;
         this.email = email;
         this.role = (role != null) ? role : "ROLE_USER";
+        this.userMetadata = (userMetadata != null) ? userMetadata : java.util.Collections.emptyMap();
     }
 
     @Override

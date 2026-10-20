@@ -34,6 +34,7 @@ spring:
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.dduktak.domain
+  type-handlers-package: com.dduktak.global.config
   configuration:
     map-underscore-to-camel-case: true
     default-fetch-size: 100

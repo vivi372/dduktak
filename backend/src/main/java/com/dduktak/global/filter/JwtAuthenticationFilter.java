@@ -16,9 +16,11 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * HTTP 요청의 Authorization 헤더에서 JWT Access Token을 추출하여
+ * HTTP 요청의 Authorization 헤더에서 Supabase JWT 토큰을 추출하여
  * 유효성을 검증하고 SecurityContext에 인증 주체(UserPrincipal)를 등록하는 필터
  */
 @Slf4j
@@ -42,14 +44,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = resolveToken(request);
 
         if (StringUtils.hasText(token) && jwtProvider.validateToken(token)) {
-            // Access Token인 경우에만 일반 API 인증 주체로 등록 (Refresh Token으로 직접 인가 접근 방지)
             if (jwtProvider.isAccessToken(token)) {
-                Long userId = jwtProvider.getUserId(token);
+                UUID userId = jwtProvider.getUserId(token);
                 String email = jwtProvider.getEmail(token);
+                Map<String, Object> userMetadata = jwtProvider.getUserMetadata(token);
 
                 UserPrincipal principal = UserPrincipal.builder()
                         .userId(userId)
                         .email(email)
+                        .userMetadata(userMetadata)
                         .build();
 
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
@@ -62,7 +65,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 log.debug("[JwtAuthenticationFilter] SecurityContext에 인증 정보 등록 완료 - UserID: {}, Path: {}", userId,
                         request.getRequestURI());
             } else {
-                log.warn("[JwtAuthenticationFilter] Refresh Token으로 인가 엔드포인트 접근 시도 차단 - Path: {}",
+                log.warn("[JwtAuthenticationFilter] 유효하지 않은 인가 토큰 접근 시도 차단 - Path: {}",
                         request.getRequestURI());
             }
         }

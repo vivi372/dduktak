@@ -61,11 +61,8 @@ public class SecurityConfig {
                 // 엔드포인트별 인가 규칙
                 .authorizeHttpRequests(auth -> auth
                         // 1. 비인증 공개 허용 엔드포인트
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/signup").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         .requestMatchers("/error").permitAll()
-                        // 2. 그 외 모든 요청(본인 정보 조회/수정/탈퇴 등)은 인증 필수
+                        // 2. 그 외 모든 요청(세션 동기화, 본인 정보 조회/수정/탈퇴 등)은 Supabase JWT 인증 필수
                         .anyRequest().authenticated()
                 )
                 // 인증 및 인가 실패 핸들러 등록

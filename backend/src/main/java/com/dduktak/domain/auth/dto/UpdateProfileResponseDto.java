@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 /**
  * 프로필 정보 수정 응답 DTO
  */
@@ -14,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateProfileResponseDto {
 
-    private Long userId;
+    private UUID userId;
     private String nickname;
     private String profileImage;
 }

@@ -7,10 +7,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("[단위 테스트] JwtProvider 토큰 발급 및 검증 테스트")
+@DisplayName("[단위 테스트] JwtProvider Supabase JWT 토큰 검증 및 클레임 추출 테스트")
 class JwtProviderTest {
 
     private JwtProvider jwtProvider;
@@ -28,41 +32,27 @@ class JwtProviderTest {
     }
 
     @Test
-    @DisplayName("Access Token 발급 및 클레임 추출 성공 검증")
-    void createAccessToken_Success() {
+    @DisplayName("Supabase 호환 Access Token 발급 및 UUID, email, user_metadata 클레임 추출 성공 검증")
+    void createAndParseSupabaseToken_Success() {
         // given
-        Long userId = 100L;
+        UUID userId = UUID.randomUUID();
         String email = "chef@dduktak.com";
+        Map<String, Object> metadata = new HashMap<>();
+        metadata.put("nickname", "뚝딱셰프");
+        metadata.put("avatar_url", "https://image.url/avatar.png");
 
         // when
-        String token = jwtProvider.createAccessToken(userId, email);
+        String token = jwtProvider.createTestToken(userId, email, metadata);
 
         // then
         assertThat(token).isNotBlank();
         assertThat(jwtProvider.validateToken(token)).isTrue();
         assertThat(jwtProvider.isAccessToken(token)).isTrue();
-        assertThat(jwtProvider.isRefreshToken(token)).isFalse();
         assertThat(jwtProvider.getUserId(token)).isEqualTo(userId);
         assertThat(jwtProvider.getEmail(token)).isEqualTo(email);
-        assertThat(jwtProvider.getTokenType(token)).isEqualTo(JwtProvider.TOKEN_TYPE_ACCESS);
-    }
-
-    @Test
-    @DisplayName("Refresh Token 발급 및 클레임 추출 성공 검증")
-    void createRefreshToken_Success() {
-        // given
-        Long userId = 100L;
-
-        // when
-        String token = jwtProvider.createRefreshToken(userId);
-
-        // then
-        assertThat(token).isNotBlank();
-        assertThat(jwtProvider.validateToken(token)).isTrue();
-        assertThat(jwtProvider.isRefreshToken(token)).isTrue();
-        assertThat(jwtProvider.isAccessToken(token)).isFalse();
-        assertThat(jwtProvider.getUserId(token)).isEqualTo(userId);
-        assertThat(jwtProvider.getTokenType(token)).isEqualTo(JwtProvider.TOKEN_TYPE_REFRESH);
+        assertThat(jwtProvider.getRole(token)).isEqualTo(JwtProvider.ROLE_AUTHENTICATED);
+        assertThat(jwtProvider.getNicknameFromMetadata(token)).isEqualTo("뚝딱셰프");
+        assertThat(jwtProvider.getProfileImageFromMetadata(token)).isEqualTo("https://image.url/avatar.png");
     }
 
     @Test
@@ -75,7 +65,8 @@ class JwtProviderTest {
         JwtProvider shortLivedProvider = new JwtProvider(shortLivedProps);
         shortLivedProvider.init();
 
-        String token = shortLivedProvider.createAccessToken(100L, "chef@dduktak.com");
+        UUID userId = UUID.randomUUID();
+        String token = shortLivedProvider.createTestToken(userId, "chef@dduktak.com", null);
         Thread.sleep(10); // 만료 대기
 
         // when & then

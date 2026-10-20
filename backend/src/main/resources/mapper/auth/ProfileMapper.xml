@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dduktak.domain.auth.mapper.ProfileMapper">
+
+    <!-- 프로필 단건 조회 (PK) -->
+    <select id="findById" resultType="com.dduktak.domain.auth.entity.Profile">
+        SELECT
+            id,
+            nickname,
+            user_tag,
+            profile_image,
+            quiet_time_start,
+            quiet_time_end,
+            is_expire_warn_enabled,
+            is_reaction_notice_enabled,
+            created_at,
+            updated_at
+        FROM public.profiles
+        WHERE id = #{id}
+    </select>
+
+    <!-- 프로필 단건 조회 (auth.users LEFT JOIN으로 email 포함) -->
+    <select id="findProfileWithEmailById" resultType="com.dduktak.domain.auth.dto.UserProfileResponseDto">
+        SELECT
+            p.id AS user_id,
+            u.email,
+            p.nickname,
+            p.user_tag,
+            p.profile_image,
+            'ACTIVE' AS status,
+            p.quiet_time_start,
+            p.quiet_time_end
+        FROM public.profiles p
+        LEFT JOIN auth.users u ON p.id = u.id
+        WHERE p.id = #{id}
+    </select>
+
+    <!-- 프로필 존재 여부 확인 -->
+    <select id="existsById" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM public.profiles
+        WHERE id = #{id}
+    </select>
+
+    <!-- 닉네임 + 태그 중복 확인 -->
+    <select id="existsByNicknameAndUserTag" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM public.profiles
+        WHERE nickname = #{nickname}
+          AND user_tag = #{userTag}
+    </select>
+
+    <!-- 신규 프로필 등록 (Lazy Profile JIT Sync) -->
+    <insert id="insertProfile" parameterType="com.dduktak.domain.auth.entity.Profile">
+        INSERT INTO public.profiles (
+            id,
+            nickname,
+            user_tag,
+            profile_image,
+            quiet_time_start,
+            quiet_time_end,
+            is_expire_warn_enabled,
+            is_reaction_notice_enabled,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{id},
+            #{nickname},
+            #{userTag},
+            #{profileImage},
+            COALESCE(#{quietTimeStart}, CAST('21:00:00' AS time)),
+            COALESCE(#{quietTimeEnd}, CAST('08:00:00' AS time)),
+            COALESCE(#{isExpireWarnEnabled}, true),
+            COALESCE(#{isReactionNoticeEnabled}, true),
+            NOW(),
+            NOW()
+        )
+    </insert>
+
+    <!-- 프로필 정보(닉네임, 프로필 이미지) 수정 -->
+    <update id="updateProfile" parameterType="com.dduktak.domain.auth.entity.Profile">
+        UPDATE public.profiles
+        SET nickname = #{nickname},
+            profile_image = #{profileImage},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 야간 방해금지 시간대 수정 -->
+    <update id="updateQuietTime">
+        UPDATE public.profiles
+        SET quiet_time_start = #{quietTimeStart},
+            quiet_time_end = #{quietTimeEnd},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 회원 탈퇴 시 레시피 작성자 ID NULL 익명화 처리 (USER-02) -->
+    <update id="anonymizeRecipesByUserId">
+        UPDATE public.recipe
+        SET user_id = NULL,
+            updated_at = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+    <!-- 프로필 레코드 삭제 (Cascade 연쇄 삭제) -->
+    <delete id="deleteProfileById">
+        DELETE FROM public.profiles
+        WHERE id = #{id}
+    </delete>
+
+    <!-- auth.users 회원 레코드 삭제 -->
+    <delete id="deleteAuthUserById">
+        DELETE FROM auth.users
+        WHERE id = #{id}
+    </delete>
+
+    <!-- auth.users 비밀번호 조회 (이메일 회원 탈퇴 검증용) -->
+    <select id="findEncryptedPasswordByUserId" resultType="string">
+        SELECT encrypted_password
+        FROM auth.users
+        WHERE id = #{id}
+    </select>
+
+    <!-- auth.users 메타데이터 조회 -->
+    <select id="findRawUserMetaDataByUserId" resultType="string">
+        SELECT CAST(raw_user_meta_data AS text)
+        FROM auth.users
+        WHERE id = #{id}
+    </select>
+
+</mapper>

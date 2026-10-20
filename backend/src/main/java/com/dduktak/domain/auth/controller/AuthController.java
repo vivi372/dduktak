@@ -11,8 +11,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.UUID;
+
 /**
  * 회원 및 인증 도메인 REST Controller (/api/v1/auth)
+ * Supabase Auth 기반 Lazy Profile JIT Sync, 프로필 조회/수정 및 회원 탈퇴 제공
  */
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -22,36 +27,18 @@ public class AuthController {
     private final AuthService authService;
 
     /**
-     * 이메일 회원가입 (AUTH-01-1)
+     * 첫 로그인 시점 세션 동기화 및 지연 프로필 생성 (Lazy Profile JIT Sync, AUTH-01-2, AUTH-02-2)
      */
-    @PostMapping("/signup")
-    public ResponseEntity<ApiResponseDto<SignupResponseDto>> signup(
-            @Valid @RequestBody SignupRequestDto requestDto
+    @PostMapping("/init")
+    public ResponseEntity<ApiResponseDto<InitProfileResponseDto>> initProfile(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        SignupResponseDto response = authService.signup(requestDto);
-        return ResponseEntity.ok(ApiResponseDto.success(response, "회원가입이 완료되었습니다."));
-    }
+        UUID userId = resolveUserId(userPrincipal);
+        String email = (userPrincipal != null) ? userPrincipal.getEmail() : null;
+        Map<String, Object> metadata = (userPrincipal != null) ? userPrincipal.getUserMetadata() : Collections.emptyMap();
 
-    /**
-     * 이메일 로그인 (AUTH-01-2)
-     */
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponseDto<TokenResponseDto>> login(
-            @Valid @RequestBody LoginRequestDto requestDto
-    ) {
-        TokenResponseDto response = authService.login(requestDto);
-        return ResponseEntity.ok(ApiResponseDto.success(response, "로그인에 성공했습니다."));
-    }
-
-    /**
-     * Access/Refresh Token 재발급
-     */
-    @PostMapping("/refresh")
-    public ResponseEntity<ApiResponseDto<TokenResponseDto>> refresh(
-            @Valid @RequestBody RefreshTokenRequestDto requestDto
-    ) {
-        TokenResponseDto response = authService.refresh(requestDto);
-        return ResponseEntity.ok(ApiResponseDto.success(response, "토큰이 성공적으로 재발급되었습니다."));
+        InitProfileResponseDto response = authService.initProfile(userId, email, metadata);
+        return ResponseEntity.ok(ApiResponseDto.success(response, "프로필 세션 동기화가 완료되었습니다."));
     }
 
     /**
@@ -61,7 +48,7 @@ public class AuthController {
     public ResponseEntity<ApiResponseDto<UserProfileResponseDto>> getMyProfile(
             @AuthenticationPrincipal UserPrincipal userPrincipal
     ) {
-        Long userId = resolveUserId(userPrincipal);
+        UUID userId = resolveUserId(userPrincipal);
         UserProfileResponseDto response = authService.getMyProfile(userId);
         return ResponseEntity.ok(ApiResponseDto.success(response));
     }
@@ -74,7 +61,7 @@ public class AuthController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody UpdateProfileRequestDto requestDto
     ) {
-        Long userId = resolveUserId(userPrincipal);
+        UUID userId = resolveUserId(userPrincipal);
         UpdateProfileResponseDto response = authService.updateMyProfile(userId, requestDto);
         return ResponseEntity.ok(ApiResponseDto.success(response, "프로필이 성공적으로 수정되었습니다."));
     }
@@ -87,7 +74,7 @@ public class AuthController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @Valid @RequestBody QuietTimeRequestDto requestDto
     ) {
-        Long userId = resolveUserId(userPrincipal);
+        UUID userId = resolveUserId(userPrincipal);
         QuietTimeResponseDto response = authService.updateQuietTime(userId, requestDto);
         return ResponseEntity.ok(ApiResponseDto.success(response, "방해금지 시간이 설정되었습니다."));
     }
@@ -100,12 +87,12 @@ public class AuthController {
             @AuthenticationPrincipal UserPrincipal userPrincipal,
             @RequestBody(required = false) WithdrawRequestDto requestDto
     ) {
-        Long userId = resolveUserId(userPrincipal);
+        UUID userId = resolveUserId(userPrincipal);
         authService.withdraw(userId, requestDto);
         return ResponseEntity.ok(ApiResponseDto.success(null, "회원 탈퇴가 완료되었습니다."));
     }
 
-    private Long resolveUserId(UserPrincipal userPrincipal) {
+    private UUID resolveUserId(UserPrincipal userPrincipal) {
         if (userPrincipal != null && userPrincipal.getUserId() != null) {
             return userPrincipal.getUserId();
         }

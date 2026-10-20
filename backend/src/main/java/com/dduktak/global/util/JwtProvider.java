@@ -14,21 +14,22 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
+import java.util.Map;
+import java.util.UUID;
 
 /**
- * JJWT 0.12.x 기반 JWT 토큰 생성, 파싱 및 유효성 검증 프로바이더
+ * Supabase Auth JWT 토큰 검증 및 클레임 파싱 프로바이더 (JJWT 0.12.x 기반)
  */
 @Slf4j
 @Component
 public class JwtProvider {
 
-    public static final String CLAIM_TOKEN_TYPE = "tokenType";
     public static final String CLAIM_EMAIL = "email";
     public static final String CLAIM_ROLE = "role";
-
-    public static final String TOKEN_TYPE_ACCESS = "ACCESS";
-    public static final String TOKEN_TYPE_REFRESH = "REFRESH";
+    public static final String CLAIM_USER_METADATA = "user_metadata";
+    public static final String ROLE_AUTHENTICATED = "authenticated";
 
     private final JwtProperties jwtProperties;
     private SecretKey secretKey;
@@ -44,40 +45,23 @@ public class JwtProvider {
     }
 
     /**
-     * Access Token 신규 발급 (유효 시간 24시간)
+     * 단위/통합 테스트용 Supabase 호환 JWT 토큰 발급 헬퍼
      *
-     * @param userId 회원 고유 식별자 (user_id)
-     * @param email  회원 이메일
-     * @return 서명된 Access Token 문자열
+     * @param userId       Supabase Auth UUID
+     * @param email        사용자 이메일
+     * @param userMetadata 사용자 메타데이터 (닉네임 등)
+     * @return 서명된 JWT 토큰 문자열
      */
-    public String createAccessToken(Long userId, String email) {
+    public String createTestToken(UUID userId, String email, Map<String, Object> userMetadata) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtProperties.getExpiration());
 
         return Jwts.builder()
-                .subject(String.valueOf(userId))
+                .subject(userId.toString())
+                .audience().add(ROLE_AUTHENTICATED).and()
                 .claim(CLAIM_EMAIL, email)
-                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_ACCESS)
-                .claim(CLAIM_ROLE, "ROLE_USER")
-                .issuedAt(now)
-                .expiration(expiryDate)
-                .signWith(secretKey)
-                .compact();
-    }
-
-    /**
-     * Refresh Token 신규 발급 (유효 시간 7일)
-     *
-     * @param userId 회원 고유 식별자 (user_id)
-     * @return 서명된 Refresh Token 문자열
-     */
-    public String createRefreshToken(Long userId) {
-        Date now = new Date();
-        Date expiryDate = new Date(now.getTime() + jwtProperties.getRefreshExpiration());
-
-        return Jwts.builder()
-                .subject(String.valueOf(userId))
-                .claim(CLAIM_TOKEN_TYPE, TOKEN_TYPE_REFRESH)
+                .claim(CLAIM_ROLE, ROLE_AUTHENTICATED)
+                .claim(CLAIM_USER_METADATA, userMetadata != null ? userMetadata : Collections.emptyMap())
                 .issuedAt(now)
                 .expiration(expiryDate)
                 .signWith(secretKey)
@@ -136,11 +120,11 @@ public class JwtProvider {
     }
 
     /**
-     * 토큰에서 회원 PK(userId) 추출
+     * 토큰에서 회원 UUID (sub) 추출
      */
-    public Long getUserId(String token) {
+    public UUID getUserId(String token) {
         String subject = parseClaims(token).getSubject();
-        return Long.parseLong(subject);
+        return UUID.fromString(subject);
     }
 
     /**
@@ -151,23 +135,65 @@ public class JwtProvider {
     }
 
     /**
-     * 토큰 타입 추출 (ACCESS 또는 REFRESH)
+     * 토큰에서 Supabase role 추출
      */
-    public String getTokenType(String token) {
-        return parseClaims(token).get(CLAIM_TOKEN_TYPE, String.class);
+    public String getRole(String token) {
+        return parseClaims(token).get(CLAIM_ROLE, String.class);
     }
 
     /**
-     * Refresh Token 여부 확인
+     * 토큰에서 user_metadata 맵 추출
      */
-    public boolean isRefreshToken(String token) {
-        return TOKEN_TYPE_REFRESH.equals(getTokenType(token));
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getUserMetadata(String token) {
+        Object metadataObj = parseClaims(token).get(CLAIM_USER_METADATA);
+        if (metadataObj instanceof Map<?, ?> map) {
+            return (Map<String, Object>) map;
+        }
+        return Collections.emptyMap();
     }
 
     /**
-     * Access Token 여부 확인
+     * user_metadata에서 닉네임 추출
+     */
+    public String getNicknameFromMetadata(String token) {
+        Map<String, Object> metadata = getUserMetadata(token);
+        if (metadata.containsKey("nickname")) {
+            return String.valueOf(metadata.get("nickname"));
+        }
+        if (metadata.containsKey("name")) {
+            return String.valueOf(metadata.get("name"));
+        }
+        if (metadata.containsKey("full_name")) {
+            return String.valueOf(metadata.get("full_name"));
+        }
+        return null;
+    }
+
+    /**
+     * user_metadata에서 프로필 이미지 URL 추출
+     */
+    public String getProfileImageFromMetadata(String token) {
+        Map<String, Object> metadata = getUserMetadata(token);
+        if (metadata.containsKey("profile_image")) {
+            return String.valueOf(metadata.get("profile_image"));
+        }
+        if (metadata.containsKey("avatar_url")) {
+            return String.valueOf(metadata.get("avatar_url"));
+        }
+        return null;
+    }
+
+    /**
+     * Access Token 여부 확인 (Supabase 토큰 유효성 및 role 검증)
      */
     public boolean isAccessToken(String token) {
-        return TOKEN_TYPE_ACCESS.equals(getTokenType(token));
+        try {
+            Claims claims = parseClaims(token);
+            String role = claims.get(CLAIM_ROLE, String.class);
+            return ROLE_AUTHENTICATED.equalsIgnoreCase(role) || claims.getSubject() != null;
+        } catch (Exception e) {
+            return false;
+        }
     }
 }
