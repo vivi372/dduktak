@@ -2,7 +2,7 @@
 
 ## 1. 개요
 본 문서는 '오늘의 뚝딱' 프로젝트의 Supabase PostgreSQL 15+ 데이터베이스 스키마 및 DDL을 정의한다.
-1인 가구 냉장고 관리, 표준 식재료 마스터, 레시피 커뮤니티, 알림 센터, 그리고 익명화 및 선입선출(FIFO) 차감 인덱스 정책이 구현되어 있다.
+Supabase Auth의 내장 회원 테이블(`auth.users`, UUID)과 연동되는 `public.profiles` (회원 프로필) 구조를 채택하여, OAuth 소셜 로그인, 이메일 인증, 비밀번호 재설정 등의 보안 기능을 Supabase Auth 인프라와 완벽히 통합한다.
 
 ---
 
@@ -10,17 +10,18 @@
 
 | No | 테이블명 (Physical) | 논리 테이블명 (Logical) | 설명 및 핵심 정책 |
 | :-: | :--- | :--- | :--- |
-| 1 | `users` | 회원 | 회원 기본 정보, 방해금지 시간 설정, 탈퇴 정책 |
+| - | `auth.users` | Supabase 인증 회원 | Supabase Auth 내장 테이블 (UUID PK, 이메일, 암호화 비밀번호, OAuth 메타데이터) |
+| 1 | `public.profiles` | 회원 프로필 | `auth.users(id)`와 1:1 매핑 (UUID PK), 닉네임, 유저태그, 프로필 이미지, 알림 설정 |
 | 2 | `ingredient_category` | 식재료 카테고리 | 6개 표준 식재료 카테고리 (양념/소스 차감 제외 여부 포함) |
 | 3 | `ingredient_master` | 표준 식재료 마스터 | 검색/선택용 표준 재료, 기본 단위 및 권장 소비기한 |
-| 4 | `user_ingredient` | 내 냉장고 식재료 | 유저별 냉장고 재료 (독립 레코드 저장, **memo 표시용 메모/별칭 포함**) |
+| 4 | `user_ingredient` | 내 냉장고 식재료 | 유저별 냉장고 재료 (`user_id UUID`, 독립 레코드 저장, memo 표시용 메모/별칭) |
 | 5 | `recipe_category` | 레시피 카테고리 | 8개 고정 레시피 카테고리 |
-| 6 | `recipe` | 뚝딱 레시피 마스터 | 레시피 기본 정보, 작성자 익명 보존 (user_id NULL) |
+| 6 | `recipe` | 뚝딱 레시피 마스터 | 레시피 기본 정보, 작성자 익명 보존 (`user_id UUID NULL`) |
 | 7 | `recipe_ingredient` | 레시피 필요 재료 | 주재료(MAIN) / 부재료(SUB) 구분 및 대체재료 |
 | 8 | `recipe_step` | 레시피 조리 순서 | Step별 설명 및 이미지 URL |
-| 9 | `recipe_like` | 레시피 좋아요 | 유저-레시피 좋아요 매핑 (1인 1좋아요) |
-| 10 | `recipe_scrap` | 레시피 스크랩 | 유저별 즐겨찾기/스크랩 매핑 |
-| 11 | `notification` | 알림 센터 | 소비기한 임박 및 시스템 알림 |
+| 9 | `recipe_like` | 레시피 좋아요 | 유저-레시피 좋아요 매핑 (`user_id UUID`) |
+| 10 | `recipe_scrap` | 레시피 스크랩 | 유저별 즐겨찾기/스크랩 매핑 (`user_id UUID`) |
+| 11 | `notification` | 알림 센터 | 소비기한 임박 및 시스템 알림 (`user_id UUID`) |
 
 ---
 
@@ -28,23 +29,36 @@
 
 ```sql
 -- ========================================================
--- 1. 회원 테이블 (users)
+-- [참고] Supabase Auth 내장 테이블 구조 (auth.users)
 -- ========================================================
-CREATE TABLE users (
-    user_id BIGSERIAL PRIMARY KEY,
-    email VARCHAR(100) UNIQUE,
-    password_hash VARCHAR(255),
+-- Supabase Auth가 자동 관리하는 테이블 (직접 CREATE 금지)
+-- 주요 컬럼: id (UUID PK), email, encrypted_password, phone, raw_app_meta_data, raw_user_meta_data, created_at, last_sign_in_at 등
+
+-- ========================================================
+-- 1. 회원 프로필 테이블 (public.profiles)
+-- ========================================================
+-- 기존 public.users 대체: auth.users(id)를 외래키(PK)로 참조하는 1:1 프로필 테이블
+CREATE TABLE public.profiles (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nickname VARCHAR(30) NOT NULL,
     user_tag VARCHAR(10) NOT NULL,
     profile_image TEXT,
-    provider VARCHAR(20) DEFAULT 'EMAIL' CHECK (provider IN ('EMAIL', 'KAKAO', 'GOOGLE')),
-    provider_id VARCHAR(100),
     quiet_time_start TIME DEFAULT '21:00:00',
     quiet_time_end TIME DEFAULT '08:00:00',
+    is_expire_warn_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+    is_reaction_notice_enabled BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uk_nickname_tag UNIQUE (nickname, user_tag)
+    CONSTRAINT uk_profiles_nickname_tag UNIQUE (nickname, user_tag)
 );
+
+-- ========================================================
+-- [지연 프로필 생성 아키텍처 (Lazy Profile Initialization)]
+-- ========================================================
+-- DB PL/pgSQL 트리거를 사용하지 않으며, 이메일 인증 승인 완료(또는 소셜 로그인) 후
+-- 첫 로그인 시 백엔드(Spring Boot) 서비스가 public.profiles 레코드 존재 여부를 확인합니다.
+-- 레코드가 없을 경우, auth.users.raw_user_meta_data를 읽어 백엔드 비즈니스 로직으로
+-- 4자리 유저태그(#1024) 생성, 기본 캐릭터 세팅 및 알림 기본값을 부여하여 public.profiles를 안전하게 생성합니다.
 
 -- ========================================================
 -- 2. 식재료 카테고리 테이블 (ingredient_category)
@@ -75,7 +89,7 @@ CREATE TABLE ingredient_master (
 -- ========================================================
 CREATE TABLE user_ingredient (
     ingredient_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     master_ingredient_id BIGINT NOT NULL REFERENCES ingredient_master(master_ingredient_id),
     category_id BIGINT NOT NULL REFERENCES ingredient_category(category_id),
     name VARCHAR(50) NOT NULL,
@@ -104,7 +118,7 @@ CREATE TABLE recipe_category (
 -- ========================================================
 CREATE TABLE recipe (
     recipe_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT REFERENCES users(user_id) ON DELETE SET NULL, -- USER-02: 탈퇴 시 NULL 처리하여 익명 보존
+    user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL, -- USER-02: 탈퇴 시 NULL 처리하여 익명 보존
     recipe_category_id BIGINT NOT NULL REFERENCES recipe_category(recipe_category_id),
     title VARCHAR(100) NOT NULL,
     description TEXT,
@@ -153,7 +167,7 @@ CREATE TABLE recipe_step (
 -- ========================================================
 CREATE TABLE recipe_like (
     like_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     recipe_id BIGINT NOT NULL REFERENCES recipe(recipe_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_user_recipe_like UNIQUE (user_id, recipe_id)
@@ -164,7 +178,7 @@ CREATE TABLE recipe_like (
 -- ========================================================
 CREATE TABLE recipe_scrap (
     scrap_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     recipe_id BIGINT NOT NULL REFERENCES recipe(recipe_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_user_recipe_scrap UNIQUE (user_id, recipe_id)
@@ -175,7 +189,7 @@ CREATE TABLE recipe_scrap (
 -- ========================================================
 CREATE TABLE notification (
     notification_id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     type VARCHAR(30) NOT NULL CHECK (type IN ('EXPIRE_WARN', 'EXPIRE_D_DAY', 'SYSTEM')),
     title VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
@@ -183,8 +197,6 @@ CREATE TABLE notification (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
-
----
 
 ## 4. 성능 최적화 인덱스 (Indexes)
 
