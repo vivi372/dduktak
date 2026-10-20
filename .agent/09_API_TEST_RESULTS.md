@@ -109,3 +109,65 @@ BUILD SUCCESSFUL in 36s
 72 tests completed, 0 failed, 0 skipped.
 ```
 
+---
+
+## 4. [모듈 2] 내 냉장고 핵심 CRUD 및 표준 식재료 마스터 API (/api/v1/inventory) 테스트 검증 결과
+
+* **테스트 실행 일자**: 2026-10-21
+* **핵심 구현 정책 및 아키텍처**:
+  - **표준 마스터 식재료 조회 (`GET /api/v1/inventory/master-ingredients`)**:
+    * 74종 표준 식재료 및 카테고리(`ingredient_category`)를 JOIN하여 식재료 등록 시 모바일 검색창 자동완성 및 권장 소비기한/기본단위 제공.
+  - **독립 레코드(Independent Record) 수동 등록 (`POST /api/v1/inventory`)**:
+    * 동일한 재료(예: '계란')를 여러 번 등록하더라도 기존 레코드에 수량을 합산(UPDATE)하지 않고 개별 PK 레코드로 각각 신규 INSERT (`INV-01-2`).
+    * 소비기한 미입력 시 마스터 식재료의 권장 보관일수(`default_shelf_days`)를 오늘 날짜에 가산하여 자동 계산.
+  - **SQL 레벨 KST D-Day 연산 및 소비기한 임박순 정렬 (`GET /api/v1/inventory`)**:
+    * Supabase 클라우드 DB 타임존(UTC)과 한국 현지 시간(KST) 편차를 방어하기 위해 `(ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) AS d_day`로 실시간 D-Day 연산.
+    * `expire_date ASC, created_at ASC` 복합 정렬 인덱스를 활용한 고속 임박순 정렬.
+  - **식재료 개별 수정 (`PUT /api/v1/inventory/{ingredientId}`)**:
+    * 표준 식재료 마스터(종류)는 불변 정책 유지. 보관방법, 수량, 단위, 소비기한, 메모에 한해 안전하게 수정. 타인 소유 또는 미존재 시 `404 Not Found` (`INV_WARN_NOT_FOUND`) 차단.
+  - **소프트 삭제 (`DELETE /api/v1/inventory/{ingredientId}`)**:
+    * 물리 삭제를 방지하고 `status = 'DELETED'`로 상태를 전이하여 통계 및 이력 보존.
+  - **수동 소비 및 방어적 수량 차감 (`PATCH /api/v1/inventory/{ingredientId}/consume`)**:
+    * `Math.max(0, current - consume)` 수량 방어 로직을 적용하여 음수 수량을 원천 방지하고, 잔여 수량이 0 이하가 되면 상태를 `status = 'CONSUMED'`로 자동 전이.
+    * 소비 수량 미입력(`consumeQuantity: null`) 시 전량 소비 간주.
+* **테스트 대상 클래스**:
+  - `com.dduktak.domain.inventory.service.InventoryServiceTest`
+  - `com.dduktak.domain.inventory.controller.InventoryControllerTest`
+  - `com.dduktak.domain.inventory.mapper.UserIngredientMapperIntegrationTest`
+* **테스트 커버리지 결과**: 모듈 1 + 모듈 2 전체 **95개 테스트 케이스 100% 성공 (0 Failures, 0 Errors)**
+
+---
+
+### 4.1. 세부 테스트 케이스 명세 및 검증 매트릭스
+
+| ID | 테스트 분류 | 대상 엔드포인트 / 메서드 | 테스트 시나리오 및 검증 기준 | 결과 |
+| :-: | :---: | :--- | :--- | :---: |
+| **TC-INV-MST-01** | `단위/슬라이스` | `GET /api/v1/inventory/master-ingredients`<br>`InventoryService.getMasterIngredients()` | **74종 표준 마스터 식재료 및 카테고리 검색 (200 OK)**<br>`query` 유사 검색어 및 `categoryId` 필터링에 대응하여 카테고리명, 기본 단위, 권장 보관일수를 포함한 DTO 목록 정상 반환 검증 | **성공** |
+| **TC-INV-CRUD-01** | `단위/슬라이스` | `POST /api/v1/inventory`<br>`InventoryService.addIngredient()` | **신규 식재료 등록 및 독립 레코드 원칙 검증 (201 Created)**<br>동일 식재료 기등록 여부와 무관하게 신규 PK 생성(INSERT), 소비기한 미입력 시 `defaultShelfDays` 자동 계산 반영 검증 | **성공** |
+| **TC-INV-CRUD-02** | `슬라이스` | `POST /api/v1/inventory`<br>`GlobalExceptionHandler` | **식재료 등록 @Valid 유효성 검증 실패 (400 Bad Request)**<br>수량 0 이하(`@Positive` 위반), 보관방법 미선택(`@NotBlank` 위반) 시 400 Bad Request 및 `COMMON_FIELD_INVALID_INPUT` 반환 검증 | **성공** |
+| **TC-INV-CRUD-03** | `단위/슬라이스` | `GET /api/v1/inventory`<br>`InventoryService.getMyIngredients()` | **내 냉장고 식재료 목록 조회 및 D-Day 연산 검증 (200 OK)**<br>SQL 기반 실시간 KST D-Day 연산 및 소비기한 임박순 정렬 결과 반환, Jackson `@JsonProperty("dDay")` 카멜케이스 직렬화 검증 | **성공** |
+| **TC-INV-CRUD-04** | `단위/슬라이스` | `PUT /api/v1/inventory/{ingredientId}`<br>`InventoryService.updateIngredient()` | **식재료 개별 수정 및 소유권 검증 (200 OK / 404 Not Found)**<br>1. 본인 소유 식재료의 보관방법/수량/단위/소비기한/메모 수정 성공 검증<br>2. 타인 소유 또는 존재하지 않는 식재료 수정 시 404 `INV_WARN_NOT_FOUND` 차단 검증 | **성공** |
+| **TC-INV-CRUD-05** | `단위/슬라이스` | `DELETE /api/v1/inventory/{ingredientId}`<br>`InventoryService.deleteIngredient()` | **식재료 소프트 삭제 및 소유권 검증 (200 OK / 404 Not Found)**<br>1. 본인 식재료 삭제 시 `status='DELETED'` 전이 및 200 OK 반환 검증<br>2. 타인 소유 또는 존재하지 않는 식재료 삭제 시 404 `INV_WARN_NOT_FOUND` 차단 검증 | **성공** |
+| **TC-INV-CONS-01** | `단위/슬라이스` | `PATCH /api/v1/inventory/{ingredientId}/consume`<br>`InventoryService.consumeIngredient()` | **수동 부분 소비 및 ACTIVE 상태 유지 검증 (200 OK)**<br>보유 10개 중 3개 소비 ➔ 잔여 7개 반영 및 `status = 'ACTIVE'` 상태 유지 검증 | **성공** |
+| **TC-INV-CONS-02** | `단위/슬라이스` | `PATCH /api/v1/inventory/{ingredientId}/consume`<br>`InventoryService.consumeIngredient()` | **보유량 초과 소비 시 Math.max 방어 로직 및 CONSUMED 전이 검증 (INV-01-2)**<br>보유 5개 중 8개 소비 요청 시 음수가 되지 않고 0으로 고정 클램핑되며 `status = 'CONSUMED'` 자동 전이 검증 | **성공** |
+| **TC-INV-CONS-03** | `단위/슬라이스` | `PATCH /api/v1/inventory/{ingredientId}/consume`<br>`InventoryService.consumeIngredient()` | **소비 수량 미입력 시 전량 소비 간주 (200 OK)**<br>`consumeQuantity: null` 전달 시 잔여 0 및 `status = 'CONSUMED'` 전이 검증 | **성공** |
+| **TC-INV-MAP-01** | `통합` | `UserIngredientMapper` & PostgreSQL | **PostgreSQL 실제 MyBatis 매핑 및 타임존 무결성 검증**<br>1. `insert`: `useGeneratedKeys` PK 획득 및 독립 레코드 생성 검증<br>2. `findByIdAndUserId`: 본인 소유 활성 식재료 정상 조회 및 타인 격리 검증<br>3. `findAllByUserIdAndFilter`: `Asia/Seoul` 기준 D-Day 연산 및 `expire_date ASC` 정렬 검증<br>4. `update`, `updateQuantityAndStatus`, `softDelete`: 실제 DB 상태 전이 무결성 검증 | **성공** |
+
+---
+
+### 4.2. 전체 테스트 스위트 빌드 및 실행 결과 로그
+
+```text
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test
+
+BUILD SUCCESSFUL in 13s
+95 tests completed, 0 failed, 0 skipped.
+```
+
+

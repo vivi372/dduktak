@@ -52,16 +52,20 @@
   * [x] 단위/통합 테스트 30종(JwtProviderTest 4종, AuthServiceTest 12종, AuthControllerTest 9종, SecurityConfigTest 4종, UserMapperIntegrationTest 1종) 전원 통과 (DoD 100% 달성).
 
 
-* [ ] **Step 2-2: 모듈 2 (내 재료 관리소)** (진행 상태: 외부 연동 완료 / 담당자: AI 에이전트)
+* [x] **Step 2-2: 모듈 2 (내 재료 관리소)** (완료일시: 2026-10-21 / 담당자: AI 에이전트)
   * [x] **외부 연동 파이프라인 (바코드 & 영수증 OCR) 구현 완료** (완료일시: 2026-10-21 / 담당자: AI 에이전트):
     * [x] 바코드 식재료 조회 API (`GET /api/v1/inventory/barcode/{barcodeNo}`): 식품안전나라/푸드QR 및 인메모리 바코드 사전 ➔ `IngredientMatcher` 스마트 매칭 ➔ `ingredient_master`(74종) 연계. 미등록 시 `404 Not Found` (`INV_WARN_BARCODE_NOT_FOUND`) 반환.
     * [x] 영수증 OCR 스캔 API (`POST /api/v1/inventory/scan-ocr`): Google AI Studio Gemini Flash (`gemini-flash-latest`) REST API 프록시 연동, Base64 JSON 품목 추출 및 `ingredient_master` 매핑, 권장 소비기한 D-Day 자동 산출, 장애/미인식 시 Fail-safe 빈 배열 `[]` (`200 OK`) 반환.
     * [x] 표준 식재료 마스터(`ingredient_master`) MyBatis Mapper 및 Repository 구축 완료 (`findAll`, `findById`, `findByName`, `searchByNameLike`).
     * [x] 단위/슬라이스/통합 테스트 23종 전원 통과 (전체 백엔드 72종 100% 성공).
-  * [ ] 표준 식재료 마스터 검색 및 카테고리별 조회 API (`GET /api/v1/inventory/master`).
-  * [ ] 냉장고 재료 등록 (`POST /api/v1/inventory`, `REF-01` ~ `REF-04`): 동일 재료 독립 레코드 저장 및 소비기한 기본값 세팅.
-  * [ ] 냉장고 재료 조회/필터 (`GET /api/v1/inventory`): PostgreSQL SQL 기반 D-Day 실시간 연산 및 소비기한 만료 영역 분리.
-  * [ ] 냉장고 재료 수정/삭제/소비 (`PUT`, `DELETE`, `PATCH /consume`): `user_id` 소유권 검증 및 수동 소비 방어 차감(`Math.max`).
+  * [x] **내 냉장고 핵심 CRUD 및 표준 식재료 마스터 API 구현 완료** (완료일시: 2026-10-21 / 담당자: AI 에이전트):
+    * [x] 표준 식재료 마스터 검색 및 카테고리별 조회 API (`GET /api/v1/inventory/master-ingredients`): 74종 마스터 + 카테고리 JOIN 검색, DTO 반환.
+    * [x] 냉장고 재료 수동 직접 등록 (`POST /api/v1/inventory`): **독립 레코드(Independent Record) 원칙(INV-01-2)** 적용하여 수량 합산(UPDATE) 없이 신규 PK INSERT, 소비기한 미입력 시 마스터 권장보관일수 기반 자동 산출.
+    * [x] 냉장고 재료 목록 조회/필터 (`GET /api/v1/inventory`): PostgreSQL KST 실시간 D-Day 연산 (`(ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) AS d_day`), 소비기한 임박순 정렬 (`expire_date ASC, created_at ASC`), 상태 및 검색 필터링.
+    * [x] 냉장고 재료 개별 수정 (`PUT /api/v1/inventory/{ingredientId}`): 식재료 마스터 불변 유지, 보관방법/수량/단위/소비기한/메모 수정, 타인 소유 시 404 (`INV_WARN_NOT_FOUND`) 차단.
+    * [x] 냉장고 재료 소프트 삭제 (`DELETE /api/v1/inventory/{ingredientId}`): 물리 삭제 방지 및 `status = 'DELETED'` 전이, 타인 소유 시 404 차단.
+    * [x] 냉장고 재료 수동 소비 처리 (`PATCH /api/v1/inventory/{ingredientId}/consume`): `Math.max(0, current - consume)` 수량 방어 차감 로직, 잔여 0 이하 시 `status = 'CONSUMED'` 자동 전이, 미입력 시 전량 소비 간주, 타인 소유 시 404 차단.
+    * [x] 단위/슬라이스/통합 테스트 23종 신규 작성 및 전체 95종 전원 통과 (DoD 100% 달성).
 
 * [ ] **Step 2-3: 모듈 3 & 4 (뚝딱 레시피 커뮤니티 & 스마트 매칭 엔진)** (완료일시: - / 담당자: -)
   * [ ] 레시피 등록 API: `ingredient_master`에 등록된 재료만 선택 가능, 주/부재료 구분, **양념/소스 카테고리 재료는 차감 대상에서 제외**되는 규칙 적용.

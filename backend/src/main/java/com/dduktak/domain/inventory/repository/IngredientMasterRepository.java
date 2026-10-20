@@ -45,4 +45,11 @@ public class IngredientMasterRepository {
     public List<IngredientMaster> findAll() {
         return ingredientMasterMapper.findAll();
     }
+
+    /**
+     * 표준 식재료 마스터 검색 및 카테고리별 조회
+     */
+    public List<com.dduktak.domain.inventory.dto.MasterIngredientResponseDto> searchMasterIngredients(String query, Long categoryId) {
+        return ingredientMasterMapper.searchMasterIngredients(query, categoryId);
+    }
 }

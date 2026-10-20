@@ -58,4 +58,26 @@
         ORDER BY master_ingredient_id ASC
     </select>
 
+    <!-- 표준 식재료 마스터 검색 및 카테고리별 조회 -->
+    <select id="searchMasterIngredients" resultType="com.dduktak.domain.inventory.dto.MasterIngredientResponseDto">
+        SELECT
+            im.master_ingredient_id,
+            im.category_id,
+            ic.category_name,
+            im.name,
+            im.default_unit,
+            im.default_shelf_days
+        FROM public.ingredient_master im
+        JOIN public.ingredient_category ic ON im.category_id = ic.category_id
+        <where>
+            <if test="query != null and query != ''">
+                AND im.name ILIKE CONCAT('%', #{query}, '%')
+            </if>
+            <if test="categoryId != null">
+                AND im.category_id = #{categoryId}
+            </if>
+        </where>
+        ORDER BY ic.category_id ASC, im.name ASC
+    </select>
+
 </mapper>

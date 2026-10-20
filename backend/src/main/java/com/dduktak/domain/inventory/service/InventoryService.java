@@ -1,10 +1,10 @@
 package com.dduktak.domain.inventory.service;
 
-import com.dduktak.domain.inventory.dto.BarcodeIngredientResponseDto;
-import com.dduktak.domain.inventory.dto.GeminiReceiptItemDto;
-import com.dduktak.domain.inventory.dto.OcrIngredientResponseDto;
+import com.dduktak.domain.inventory.dto.*;
 import com.dduktak.domain.inventory.entity.IngredientMaster;
+import com.dduktak.domain.inventory.entity.UserIngredient;
 import com.dduktak.domain.inventory.repository.IngredientMasterRepository;
+import com.dduktak.domain.inventory.repository.UserIngredientRepository;
 import com.dduktak.global.error.CustomException;
 import com.dduktak.global.error.ErrorCode;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,8 @@ import java.util.*;
 
 /**
  * 내 재료 관리소(Inventory) 비즈니스 서비스
- * 바코드 상품명 조회 및 표준 식재료 스마트 매칭, Gemini Flash 기반 영수증 OCR 스캔 연동을 관장합니다.
+ * 표준 식재료 마스터 조회, 내 냉장고 CRUD, 소비 차감 방어 로직,
+ * 바코드 상품명 조회 및 스마트 매칭, Gemini Flash 영수증 OCR 스캔 연동을 관장합니다.
  */
 @Slf4j
 @Service
@@ -28,6 +29,7 @@ import java.util.*;
 public class InventoryService {
 
     private final IngredientMasterRepository ingredientMasterRepository;
+    private final UserIngredientRepository userIngredientRepository;
     private final BarcodeProductLookupService barcodeProductLookupService;
     private final IngredientMatcher ingredientMatcher;
     private final GeminiOcrClient geminiOcrClient;
@@ -148,5 +150,225 @@ public class InventoryService {
             log.error("[InventoryService] 영수증 OCR 처리 중 예외 발생 (안전한 빈 목록 반환): {}", e.getMessage(), e);
             return Collections.emptyList();
         }
+    }
+
+    /**
+     * 74종 표준 마스터 식재료 목록 및 카테고리 검색 조회 (INV-01-1)
+     *
+     * @param query 검색어 (식재료명 유사 검색)
+     * @param categoryId 카테고리 ID 필터링 (선택)
+     * @return 표준 마스터 식재료 응답 DTO 목록
+     */
+    public List<MasterIngredientResponseDto> getMasterIngredients(String query, Long categoryId) {
+        log.info("[InventoryService] 표준 마스터 식재료 검색 조회: query='{}', categoryId={}", query, categoryId);
+        return ingredientMasterRepository.searchMasterIngredients(query, categoryId);
+    }
+
+    /**
+     * 내 냉장고 식재료 수동 직접 등록 (INV-01-2)
+     * 독립 레코드(Independent Record) 원칙에 따라 기존 동일 재료가 존재하더라도
+     * 수량을 합산(UPDATE)하지 않고 새로운 PK 레코드로 개별 INSERT합니다.
+     * 소비기한 미입력 시 표준 식재료 마스터의 권장 보관일수(defaultShelfDays)를 가산하여 자동 계산합니다.
+     *
+     * @param userId 회원 UUID
+     * @param dto 식재료 등록 요청 DTO
+     * @return 등록 완료 DTO
+     */
+    @Transactional
+    public IngredientCreateResponseDto addIngredient(UUID userId, IngredientCreateRequestDto dto) {
+        log.info("[InventoryService] 식재료 등록 요청: userId={}, masterIngredientId={}",
+                userId, dto.getMasterIngredientId());
+
+        // 1. 마스터 식재료 조회 (필수)
+        IngredientMaster master = ingredientMasterRepository.findById(dto.getMasterIngredientId())
+                .orElseThrow(() -> new CustomException(ErrorCode.COMMON_ALERT_RESOURCE_NOT_FOUND));
+
+        // 2. 단위 및 소비기한 기본값 자동 완성 (미입력 시)
+        String unit = (dto.getUnit() != null && !dto.getUnit().isBlank())
+                ? dto.getUnit()
+                : master.getDefaultUnit();
+
+        LocalDate expireDate = dto.getExpireDate();
+        if (expireDate == null) {
+            int shelfDays = master.getDefaultShelfDays() != null ? master.getDefaultShelfDays() : 7;
+            expireDate = LocalDate.now().plusDays(shelfDays);
+        }
+
+        // 3. 독립 레코드 생성 (INV-01-2)
+        UserIngredient newIngredient = UserIngredient.builder()
+                .userId(userId)
+                .masterIngredientId(master.getMasterIngredientId())
+                .categoryId(master.getCategoryId())
+                .name(master.getName())
+                .storageType(dto.getStorageType())
+                .quantity(dto.getQuantity())
+                .unit(unit)
+                .expireDate(expireDate)
+                .memo(dto.getMemo())
+                .status("ACTIVE")
+                .build();
+
+        userIngredientRepository.insert(newIngredient);
+        log.info("[InventoryService] 신규 식재료 등록 완료 (독립 레코드 생성): ingredientId={}, name='{}'",
+                newIngredient.getIngredientId(), newIngredient.getName());
+
+        return IngredientCreateResponseDto.builder()
+                .ingredientId(newIngredient.getIngredientId())
+                .name(newIngredient.getName())
+                .memo(newIngredient.getMemo())
+                .build();
+    }
+
+    /**
+     * 내 냉장고 식재료 목록 조회 (INV-01-2)
+     * SQL 레벨에서 D-Day((expire_date - CURRENT_DATE))를 연산하여 반환하며,
+     * 소비기한 임박순(expire_date ASC, created_at ASC)으로 정렬됩니다.
+     *
+     * @param userId 회원 UUID
+     * @param query 검색어 (재료명 또는 메모 유사 검색)
+     * @param categoryId 카테고리 필터
+     * @param storageType 보관 방법 필터 (REFRIGERATED, FROZEN, ROOM_TEMP)
+     * @param status 상태 필터 (기본값 ACTIVE)
+     * @return 내 냉장고 식재료 응답 DTO 목록
+     */
+    public List<IngredientResponseDto> getMyIngredients(
+            UUID userId,
+            String query,
+            Long categoryId,
+            String storageType,
+            String status
+    ) {
+        String targetStatus = (status != null && !status.isBlank()) ? status : "ACTIVE";
+        log.info("[InventoryService] 냉장고 식재료 목록 조회: userId={}, status={}, query='{}'", userId, targetStatus, query);
+
+        List<UserIngredient> ingredients = userIngredientRepository.findAllByUserIdAndFilter(
+                userId, query, categoryId, storageType, targetStatus);
+
+        return ingredients.stream()
+                .map(i -> IngredientResponseDto.builder()
+                        .ingredientId(i.getIngredientId())
+                        .masterIngredientId(i.getMasterIngredientId())
+                        .categoryId(i.getCategoryId())
+                        .name(i.getName())
+                        .storageType(i.getStorageType())
+                        .quantity(i.getQuantity())
+                        .unit(i.getUnit())
+                        .expireDate(i.getExpireDate())
+                        .dDay(i.getDDay())
+                        .memo(i.getMemo())
+                        .build())
+                .toList();
+    }
+
+    /**
+     * 내 냉장고 식재료 개별 정보 수정 (INV-01-2)
+     * 식재료 마스터는 불변이며, 보관 방법/수량/단위/소비기한/메모만 수정 가능합니다.
+     * 본인 소유가 아니거나 없는 경우 404 (INV_WARN_NOT_FOUND)를 반환합니다.
+     *
+     * @param userId 회원 UUID
+     * @param ingredientId 식재료 ID
+     * @param dto 수정 요청 DTO
+     * @return 수정 완료 DTO
+     */
+    @Transactional
+    public IngredientUpdateResponseDto updateIngredient(UUID userId, Long ingredientId, IngredientUpdateRequestDto dto) {
+        log.info("[InventoryService] 식재료 수정 요청: userId={}, ingredientId={}", userId, ingredientId);
+
+        userIngredientRepository.findByIdAndUserId(ingredientId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INV_WARN_NOT_FOUND));
+
+        UserIngredient updateTarget = UserIngredient.builder()
+                .ingredientId(ingredientId)
+                .userId(userId)
+                .storageType(dto.getStorageType())
+                .quantity(dto.getQuantity())
+                .unit(dto.getUnit())
+                .expireDate(dto.getExpireDate())
+                .memo(dto.getMemo())
+                .build();
+
+        userIngredientRepository.update(updateTarget);
+        log.info("[InventoryService] 식재료 수정 완료: ingredientId={}", ingredientId);
+
+        return IngredientUpdateResponseDto.builder()
+                .ingredientId(ingredientId)
+                .quantity(dto.getQuantity())
+                .memo(dto.getMemo())
+                .build();
+    }
+
+    /**
+     * 내 냉장고 식재료 소프트 삭제 (INV-01-2)
+     * 데이터는 물리 삭제되지 않고 status='DELETED'로 전이됩니다.
+     * 본인 소유가 아니거나 없는 경우 404 (INV_WARN_NOT_FOUND)를 반환합니다.
+     *
+     * @param userId 회원 UUID
+     * @param ingredientId 식재료 ID
+     */
+    @Transactional
+    public void deleteIngredient(UUID userId, Long ingredientId) {
+        log.info("[InventoryService] 식재료 소프트 삭제 요청: userId={}, ingredientId={}", userId, ingredientId);
+
+        userIngredientRepository.findByIdAndUserId(ingredientId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INV_WARN_NOT_FOUND));
+
+        userIngredientRepository.softDelete(ingredientId, userId);
+        log.info("[InventoryService] 식재료 소프트 삭제 완료: ingredientId={}", ingredientId);
+    }
+
+    /**
+     * 내 냉장고 식재료 수동 소비 처리 (INV-01-2)
+     * 수량 방어 로직: Math.max(0, current - consume)을 적용하여 음수 수량을 방지합니다.
+     * 차감 후 잔여 수량이 0 이하가 되면 상태가 'CONSUMED'로 자동 전이됩니다.
+     * consumeQuantity가 전달되지 않은 경우 전량 소비로 간주합니다.
+     * 본인 소유가 아니거나 없는 경우 404 (INV_WARN_NOT_FOUND)를 반환합니다.
+     *
+     * @param userId 회원 UUID
+     * @param ingredientId 식재료 ID
+     * @param dto 소비 요청 DTO (소비 수량 포함, null 가능)
+     * @return 소비 처리 결과 DTO (잔여 수량 및 상태)
+     */
+    @Transactional
+    public IngredientConsumeResponseDto consumeIngredient(
+            UUID userId,
+            Long ingredientId,
+            IngredientConsumeRequestDto dto
+    ) {
+        log.info("[InventoryService] 식재료 소비 처리 요청: userId={}, ingredientId={}, consumeQuantity={}",
+                userId, ingredientId, dto != null ? dto.getConsumeQuantity() : "ALL");
+
+        UserIngredient ingredient = userIngredientRepository.findByIdAndUserId(ingredientId, userId)
+                .orElseThrow(() -> new CustomException(ErrorCode.INV_WARN_NOT_FOUND));
+
+        BigDecimal currentQty = ingredient.getQuantity() != null ? ingredient.getQuantity() : BigDecimal.ZERO;
+        BigDecimal remainingQty;
+        String newStatus;
+
+        if (dto == null || dto.getConsumeQuantity() == null) {
+            // 소비 수량 미입력 시 전량 소비
+            remainingQty = BigDecimal.ZERO;
+            newStatus = "CONSUMED";
+        } else {
+            BigDecimal consumeQty = dto.getConsumeQuantity();
+            // 수량 방어 로직: 음수 방지 Math.max(0, current - consume)
+            BigDecimal calculated = currentQty.subtract(consumeQty);
+            if (calculated.compareTo(BigDecimal.ZERO) <= 0) {
+                remainingQty = BigDecimal.ZERO;
+                newStatus = "CONSUMED";
+            } else {
+                remainingQty = calculated;
+                newStatus = "ACTIVE";
+            }
+        }
+
+        userIngredientRepository.updateQuantityAndStatus(ingredientId, userId, remainingQty, newStatus);
+        log.info("[InventoryService] 식재료 소비 완료: ingredientId={}, remainingQty={}, status={}",
+                ingredientId, remainingQty, newStatus);
+
+        return IngredientConsumeResponseDto.builder()
+                .ingredientId(ingredientId)
+                .remainingQuantity(remainingQty)
+                .status(newStatus)
+                .build();
     }
 }

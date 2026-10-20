@@ -32,4 +32,16 @@ public interface IngredientMasterMapper {
      * 전체 표준 식재료 목록 조회 (캐싱 및 매칭 엔진용)
      */
     List<IngredientMaster> findAll();
+
+    /**
+     * 표준 식재료 마스터 검색 및 카테고리별 조회 (카테고리명 조인 포함)
+     *
+     * @param query 검색 키워드 (선택)
+     * @param categoryId 식재료 카테고리 ID (선택)
+     * @return 카테고리 정보가 포함된 표준 식재료 DTO 목록
+     */
+    List<com.dduktak.domain.inventory.dto.MasterIngredientResponseDto> searchMasterIngredients(
+            @Param("query") String query,
+            @Param("categoryId") Long categoryId
+    );
 }
