@@ -72,8 +72,8 @@ Content-Type: application/json;charset=UTF-8
 | PUT | /{ingredientId} | 재료 수량/보관장소/소비기한/메모 전체 수정 (소유권 검증) | O | storageType, quantity, unit, expireDate, memo (선택) | { "ingredientId": 11, "quantity": 5.00, "memo": "수정된 메모" } |
 | PATCH | /{ingredientId}/consume | 식재료 수동 소비 처리 (프론트 validation & 클램핑) | O | consumeQuantity (선택, 기본 전체 차감) | { "ingredientId": 10, "remainingQuantity": 0.00, "status": "CONSUMED" } |
 | DELETE | /{ingredientId} | 재료 직접 삭제 (status=DELETED, 소유권 검증) | O | Path Variable | null |
-| GET | /barcode/{barcodeNo} | 바코드(EAN-13) 스캔 조회 (미등록 시 404) | O | Path Variable | { "masterIngredientId": 2, "name": "계란", "categoryId": 2, "recommendedUnit": "개", "recommendedExpireDate": "2026-10-16" } |
-| POST | /scan-ocr | 영수증 OCR 이미지 스캔 (실패 시 빈 배열 [] 반환) | O | multipart/form-data (image) | [ { "masterIngredientId": 2, "name": "계란", "quantity": 10.00, "unit": "개", "recommendedExpireDate": "2026-10-16" } ] |
+| GET | /barcode/{barcodeNo} | 바코드(EAN-13) 조회 (푸드QR ➔ ingredient_master 매핑 검색, 미등록 시 404) | O | Path Variable | { "masterIngredientId": 2, "name": "계란", "categoryId": 2, "recommendedUnit": "개", "recommendedExpireDate": "2026-10-16" } |
+| POST | /scan-ocr | 영수증 OCR 스캔 (Google AI Studio Gemini Flash 프록시, 실패 시 빈 배열 [] 반환) | O | multipart/form-data (image) | [ { "masterIngredientId": 2, "name": "계란", "quantity": 10.00, "unit": "개", "recommendedExpireDate": "2026-10-16" } ] |
 
 
 --------------------------------------------------------------------------------
