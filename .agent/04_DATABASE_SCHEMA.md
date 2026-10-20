@@ -1,6 +1,7 @@
 # PostgreSQL 데이터베이스 스키마 명세서 (04_DATABASE_SCHEMA.md)
 
 ## 1. 개요
+
 본 문서는 '오늘의 뚝딱' 프로젝트의 Supabase PostgreSQL 15+ 데이터베이스 스키마 및 DDL을 정의한다.
 Supabase Auth의 내장 회원 테이블(`auth.users`, UUID)과 연동되는 `public.profiles` (회원 프로필) 구조를 채택하여, OAuth 소셜 로그인, 이메일 인증, 비밀번호 재설정 등의 보안 기능을 Supabase Auth 인프라와 완벽히 통합한다.
 
@@ -8,20 +9,20 @@ Supabase Auth의 내장 회원 테이블(`auth.users`, UUID)과 연동되는 `pu
 
 ## 2. 테이블 목록 요약
 
-| No | 테이블명 (Physical) | 논리 테이블명 (Logical) | 설명 및 핵심 정책 |
-| :-: | :--- | :--- | :--- |
-| - | `auth.users` | Supabase 인증 회원 | Supabase Auth 내장 테이블 (UUID PK, 이메일, 암호화 비밀번호, OAuth 메타데이터) |
-| 1 | `public.profiles` | 회원 프로필 | `auth.users(id)`와 1:1 매핑 (UUID PK), 닉네임, 유저태그, 프로필 이미지, 알림 설정 |
-| 2 | `ingredient_category` | 식재료 카테고리 | 6개 표준 식재료 카테고리 (양념/소스 차감 제외 여부 포함) |
-| 3 | `ingredient_master` | 표준 식재료 마스터 | 검색/선택용 표준 재료, 기본 단위 및 권장 소비기한 |
-| 4 | `user_ingredient` | 내 냉장고 식재료 | 유저별 냉장고 재료 (`user_id UUID`, 독립 레코드 저장, memo 표시용 메모/별칭) |
-| 5 | `recipe_category` | 레시피 카테고리 | 8개 고정 레시피 카테고리 |
-| 6 | `recipe` | 뚝딱 레시피 마스터 | 레시피 기본 정보, 작성자 익명 보존 (`user_id UUID NULL`) |
-| 7 | `recipe_ingredient` | 레시피 필요 재료 | 주재료(MAIN) / 부재료(SUB) 구분 및 대체재료 |
-| 8 | `recipe_step` | 레시피 조리 순서 | Step별 설명 및 이미지 URL |
-| 9 | `recipe_like` | 레시피 좋아요 | 유저-레시피 좋아요 매핑 (`user_id UUID`) |
-| 10 | `recipe_scrap` | 레시피 스크랩 | 유저별 즐겨찾기/스크랩 매핑 (`user_id UUID`) |
-| 11 | `notification` | 알림 센터 | 소비기한 임박 및 시스템 알림 (`user_id UUID`) |
+| No  | 테이블명 (Physical)   | 논리 테이블명 (Logical) | 설명 및 핵심 정책                                                                 |
+| :-: | :-------------------- | :---------------------- | :-------------------------------------------------------------------------------- |
+|  -  | `auth.users`          | Supabase 인증 회원      | Supabase Auth 내장 테이블 (UUID PK, 이메일, 암호화 비밀번호, OAuth 메타데이터)    |
+|  1  | `public.profiles`     | 회원 프로필             | `auth.users(id)`와 1:1 매핑 (UUID PK), 닉네임, 유저태그, 프로필 이미지, 알림 설정 |
+|  2  | `ingredient_category` | 식재료 카테고리         | 6개 표준 식재료 카테고리 (양념/소스 차감 제외 여부 포함)                          |
+|  3  | `ingredient_master`   | 표준 식재료 마스터      | 검색/선택용 표준 재료, 기본 단위 및 권장 소비기한                                 |
+|  4  | `user_ingredient`     | 내 냉장고 식재료        | 유저별 냉장고 재료 (`user_id UUID`, 독립 레코드 저장, memo 표시용 메모/별칭)      |
+|  5  | `recipe_category`     | 레시피 카테고리         | 8개 고정 레시피 카테고리                                                          |
+|  6  | `recipe`              | 뚝딱 레시피 마스터      | 레시피 기본 정보, 작성자 익명 보존 (`user_id UUID NULL`)                          |
+|  7  | `recipe_ingredient`   | 레시피 필요 재료        | 주재료(MAIN) / 부재료(SUB) 구분 및 대체재료                                       |
+|  8  | `recipe_step`         | 레시피 조리 순서        | Step별 설명 및 이미지 URL                                                         |
+|  9  | `recipe_like`         | 레시피 좋아요           | 유저-레시피 좋아요 매핑 (`user_id UUID`)                                          |
+| 10  | `recipe_scrap`        | 레시피 스크랩           | 유저별 즐겨찾기/스크랩 매핑 (`user_id UUID`)                                      |
+| 11  | `notification`        | 알림 센터               | 소비기한 임박 및 시스템 알림 (`user_id UUID`)                                     |
 
 ---
 
@@ -80,7 +81,6 @@ CREATE TABLE ingredient_master (
     name VARCHAR(50) NOT NULL UNIQUE,
     default_unit VARCHAR(20) NOT NULL DEFAULT '개',
     default_shelf_days INT NOT NULL DEFAULT 7,
-    barcode_no VARCHAR(50),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

@@ -48,6 +48,7 @@ public enum ErrorCode {
     INV_FIELD_INVALID_QUANTITY(HttpStatus.BAD_REQUEST, "INV_FIELD_INVALID_QUANTITY", "식재료 수량은 0보다 커야 합니다."),
     INV_FIELD_INVALID_SHELF_LIFE(HttpStatus.BAD_REQUEST, "INV_FIELD_INVALID_SHELF_LIFE", "소비기한은 과거 날짜일 수 없습니다."),
     INV_ALERT_BARCODE_NOT_FOUND(HttpStatus.NOT_FOUND, "INV_ALERT_BARCODE_NOT_FOUND", "등록되지 않은 바코드 제품입니다."),
+    INV_WARN_BARCODE_NOT_FOUND(HttpStatus.NOT_FOUND, "INV_WARN_BARCODE_NOT_FOUND", "등록되지 않은 바코드 제품입니다."),
     INV_ALERT_OCR_PARSING_FAILED(HttpStatus.BAD_REQUEST, "INV_ALERT_OCR_PARSING_FAILED", "영수증 이미지에서 식재료를 인식하지 못했습니다."),
 
     // =========================================================================
