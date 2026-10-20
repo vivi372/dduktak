@@ -56,16 +56,24 @@ Content-Type: application/json;charset=UTF-8
 --------------------------------------------------------------------------------
 
 ###### 3.2. [모듈 2] 표준 식재료 & 내 냉장고 관리 API (/api/v1/inventory)
+> **비즈니스 & 보안 처리 가이드**:
+> 1. **소유권 검증(Ownership Validation)**: 단일 재료 수정(`PUT`), 소비(`PATCH`), 삭제(`DELETE`) 요청 시 SecurityContext의 `user_id`(UUID)와 `ingredient_id` 복합 조건을 검증하여 타인의 재료 조작 시 `INV_WARN_NOT_FOUND`(404)를 반환합니다.
+> 2. **SQL D-Day 연산**: `GET /` 조회 시 `dDay`는 서버 메모리가 아닌 PostgreSQL SQL 쿼리(`expire_date - CURRENT_DATE`)로 실시간 계산하여 반환합니다.
+> 3. **수동 소비 차감**: 프론트엔드에서 `consumeQuantity <= quantity` 유효성 검증을 수행하며, 백엔드는 `Math.max(0, quantity - consumeQuantity)` 방어적 차감 후 잔여 수량이 0이 되면 `status = 'CONSUMED'`로 변경합니다.
+> 4. **외부 스캔 실패 예외 복구**:
+>    - 바코드 미등록 시: `404 Not Found` (`code: "INV_WARN_BARCODE_NOT_FOUND"`) 반환 ➔ 프론트엔드 수동 등록 폼 유도.
+>    - OCR 인식 실패 시: `200 OK` 및 빈 배열 `data: []` 반환 ➔ 수동 입력 화면으로 가이드.
+
 | Method | Endpoint | Description | Auth | Request Body / Query | Response Data (data) |
 | ------ | ------ | ------ | ------ | ------ | ------ |
 | GET | /master-ingredients | 표준 식재료 검색/조회 | O | query (검색어), categoryId | [ { "masterIngredientId": 1, "categoryId": 2, "categoryName": "정육/계란", "name": "계란", "defaultUnit": "개", "defaultShelfDays": 7 } ] |
-| GET | / | 내 냉장고 재료 목록 조회 | O | query (재료명/메모 검색어, 선택), categoryId (선택), storageType (REFRIGERATED, FROZEN, ROOM_TEMP), sort (expireDate) | [ { "ingredientId": 10, "masterIngredientId": 2, "categoryId": 2, "name": "계란", "storageType": "REFRIGERATED", "quantity": 10.00, "unit": "개", "expireDate": "2026-10-15", "dDay": 6, "memo": "엄마표 김치" } ] |
+| GET | / | 내 냉장고 재료 목록 조회 (SQL D-Day 연산) | O | query (재료명/메모 검색어, 선택), categoryId (선택), storageType (REFRIGERATED, FROZEN, ROOM_TEMP), sort (expireDate) | [ { "ingredientId": 10, "masterIngredientId": 2, "categoryId": 2, "name": "계란", "storageType": "REFRIGERATED", "quantity": 10.00, "unit": "개", "expireDate": "2026-10-15", "dDay": 6, "memo": "엄마표 김치" } ] |
 | POST | / | 수동 재료 추가 | O | masterIngredientId, categoryId, name, storageType, quantity, unit, expireDate, memo (선택) | { "ingredientId": 11, "name": "계란", "memo": "엄마표 김치" } |
-| PUT | /{ingredientId} | 재료 수량/보관장소/소비기한/메모 전체 수정 | O | storageType, quantity, unit, expireDate, memo (선택) | { "ingredientId": 11, "quantity": 5.00, "memo": "수정된 메모" } |
-| PATCH | /{ingredientId}/consume | 식재료 수동 소비 처리 (status=CONSUMED) | O | consumeQuantity (선택, 기본 전체 차감) | { "ingredientId": 10, "remainingQuantity": 0.00, "status": "CONSUMED" } |
-| DELETE | /{ingredientId} | 재료 직접 삭제 (status=DELETED) | O | Path Variable | null |
-| GET | /barcode/{barcodeNo} | 바코드(EAN-13) 스캔 조회 | O | Path Variable | { "masterIngredientId": 2, "name": "계란", "categoryId": 2, "recommendedUnit": "개", "recommendedExpireDate": "2026-10-16" } |
-| POST | /scan-ocr | 영수증 OCR 이미지 스캔 | O | multipart/form-data (image) | [ { "masterIngredientId": 2, "name": "계란", "quantity": 10.00, "unit": "개", "recommendedExpireDate": "2026-10-16" } ] |
+| PUT | /{ingredientId} | 재료 수량/보관장소/소비기한/메모 전체 수정 (소유권 검증) | O | storageType, quantity, unit, expireDate, memo (선택) | { "ingredientId": 11, "quantity": 5.00, "memo": "수정된 메모" } |
+| PATCH | /{ingredientId}/consume | 식재료 수동 소비 처리 (프론트 validation & 클램핑) | O | consumeQuantity (선택, 기본 전체 차감) | { "ingredientId": 10, "remainingQuantity": 0.00, "status": "CONSUMED" } |
+| DELETE | /{ingredientId} | 재료 직접 삭제 (status=DELETED, 소유권 검증) | O | Path Variable | null |
+| GET | /barcode/{barcodeNo} | 바코드(EAN-13) 스캔 조회 (미등록 시 404) | O | Path Variable | { "masterIngredientId": 2, "name": "계란", "categoryId": 2, "recommendedUnit": "개", "recommendedExpireDate": "2026-10-16" } |
+| POST | /scan-ocr | 영수증 OCR 이미지 스캔 (실패 시 빈 배열 [] 반환) | O | multipart/form-data (image) | [ { "masterIngredientId": 2, "name": "계란", "quantity": 10.00, "unit": "개", "recommendedExpireDate": "2026-10-16" } ] |
 
 
 --------------------------------------------------------------------------------

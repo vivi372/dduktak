@@ -40,17 +40,22 @@
 * **TC-INV-01: 표준 식재료 수동 등록 및 독립 레코드 저장 (INV-01-2)**
   - **수행 내용**: 동일한 표준 식재료("계란")를 다른 메모("엄마표", "편의점 1+1") 및 유통기한으로 2회 연속 등록 (`POST /api/v1/inventory`).
   - **검증 기준**: 기존 레코드 수량이 합산(UPDATE)되지 않고, `user_ingredient` 테이블에 각각 독립된 PK 레코드로 2건 저장됨을 확인.
-* **TC-INV-02: 2-Tier Accordion 대표 카드 그룹화 및 만료 영역 분리 (INV-02-1, INV-02-4)**
+* **TC-INV-02: 2-Tier Accordion 대표 카드 그룹화, SQL D-Day 연산 및 만료 영역 동적 분류 (INV-02-1, INV-02-4)**
   - **수행 내용**: 내 냉장고 목록 조회 (`GET /api/v1/inventory`).
   - **검증 기준**:
     1. 동일 마스터 재료들이 대표 카드로 그룹화되고, 가장 임박한 D-Day 배지가 대표 카드로 표기됨.
-    2. 소비기한이 도과한 재료(`D-Day < 0`)는 메인 리스트에서 제외되어 최하단 '소비기한 만료 영역'으로 이동.
-* **TC-INV-03: 식재료 수동 소비(status=CONSUMED) vs 수동 삭제(status=DELETED) 상태 분리 (INV-04-1)**
-  - **수행 내용**: 아코디언 상세 뷰에서 [소비 완료] (`PATCH /inventory/{id}/consume`) 및 [삭제] (`DELETE /inventory/{id}`) 실행.
-  - **검증 기준**: 소비 시 `status = 'CONSUMED'`, 삭제 시 `status = 'DELETED'`로 DB 상태 전이가 엄격히 구분됨을 검증.
+    2. `dDay`는 서버 메모리가 아닌 PostgreSQL SQL 쿼리(`expire_date - CURRENT_DATE`)로 계산되어 반환됨.
+    3. 소비기한이 도과한 재료(`expire_date < CURRENT_DATE`)도 DB `status = 'ACTIVE'` 상태를 유지하되, 백엔드 Query 단에서 만료 영역으로 동적 분류되어 하단 '소비기한 만료 영역'으로 이동함.
+* **TC-INV-03: 식재료 수동 소비, 보유 수량 초과 차감 검증 및 소유권 검증 (INV-04-1)**
+  - **수행 내용**: [소비 완료] (`PATCH /inventory/{id}/consume`), [수정] (`PUT`), [삭제] (`DELETE`) 실행 및 타인 재료 요청 시도.
+  - **검증 기준**:
+    1. 차감 수량이 현재 보유 수량 이하로 전달될 때만 소비가 진행되며, 백엔드는 `Math.max(0, quantity - consumeQuantity)` 연산 후 수량 0 진입 시 `status = 'CONSUMED'`로 전이.
+    2. 타인의 `ingredient_id` 조작 시 SecurityContext `user_id` 복합 조건 검증에 실패하여 `INV_WARN_NOT_FOUND`(404) 예외 발생.
 * **TC-INV-04: 외부 스캔(바코드/영수증 OCR) 실패 시 예외 복구 흐름 (INV-01-3)**
-  - **수행 내용**: 인식 불가능한 바코드 스캔 또는 영수증 사진 업로드 (`POST /scan-ocr`).
-  - **검증 기준**: 서버 에러(500)가 발생하지 않고, 스캔 실패 안내 팝업과 함께 [다시 촬영하기] / [수동 등록하기] 선택권 제공.
+  - **수행 내용**: 인식 불가능한 바코드 스캔 (`GET /inventory/barcode/{no}`) 및 영수증 사진 업로드 (`POST /scan-ocr`).
+  - **검증 기준**:
+    1. 바코드 미등록 상품 조회 시 500 에러 없이 `404 Not Found` (`code: "INV_WARN_BARCODE_NOT_FOUND"`) 반환 검증.
+    2. 영수증 OCR 스캔 실패 시 500 에러 없이 `200 OK` 및 빈 배열 `data: []` 반환 검증.
 
 ---
 
