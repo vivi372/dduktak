@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dduktak.domain.recipe.mapper.RecipeScrapMapper">
+
+    <!-- 스크랩 존재 여부 확인 -->
+    <select id="exists" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1 FROM public.scrap
+            WHERE user_id = #{userId}
+              AND recipe_id = #{recipeId}
+        )
+    </select>
+
+    <!-- 스크랩 등록 -->
+    <insert id="insert">
+        INSERT INTO public.scrap (
+            user_id,
+            recipe_id,
+            created_at
+        ) VALUES (
+            #{userId},
+            #{recipeId},
+            CURRENT_TIMESTAMP
+        )
+        ON CONFLICT (user_id, recipe_id) DO NOTHING
+    </insert>
+
+    <!-- 스크랩 취소 -->
+    <delete id="delete">
+        DELETE FROM public.scrap
+        WHERE user_id = #{userId}
+          AND recipe_id = #{recipeId}
+    </delete>
+
+</mapper>

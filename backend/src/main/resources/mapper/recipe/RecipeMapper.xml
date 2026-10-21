@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dduktak.domain.recipe.mapper.RecipeMapper">
+
+    <!-- 신규 레시피 등록 (PK 자동 생성) -->
+    <insert id="insert" parameterType="com.dduktak.domain.recipe.entity.Recipe"
+            useGeneratedKeys="true" keyProperty="recipeId" keyColumn="recipe_id">
+        INSERT INTO public.recipe (
+            user_id,
+            recipe_category_id,
+            title,
+            description,
+            servings,
+            cooking_time,
+            difficulty,
+            thumbnail_url,
+            like_count,
+            cooked_count,
+            created_at,
+            updated_at
+        ) VALUES (
+            #{userId},
+            #{recipeCategoryId},
+            #{title},
+            #{description},
+            #{servings},
+            #{cookingTime},
+            #{difficulty},
+            #{thumbnailUrl},
+            0,
+            0,
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+    </insert>
+
+    <!-- 레시피 기본 정보 수정 -->
+    <update id="update" parameterType="com.dduktak.domain.recipe.entity.Recipe">
+        UPDATE public.recipe
+        SET
+            recipe_category_id = #{recipeCategoryId},
+            title = #{title},
+            description = #{description},
+            servings = #{servings},
+            cooking_time = #{cookingTime},
+            difficulty = #{difficulty},
+            thumbnail_url = #{thumbnailUrl},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE recipe_id = #{recipeId}
+    </update>
+
+    <!-- 레시피 삭제 -->
+    <delete id="deleteById">
+        DELETE FROM public.recipe
+        WHERE recipe_id = #{recipeId}
+    </delete>
+
+    <!-- 레시피 ID 기반 단건 조회 -->
+    <select id="findById" resultType="com.dduktak.domain.recipe.entity.Recipe">
+        SELECT
+            r.recipe_id,
+            r.user_id,
+            r.recipe_category_id,
+            r.title,
+            r.description,
+            r.servings,
+            r.cooking_time,
+            r.difficulty,
+            r.thumbnail_url,
+            r.like_count,
+            r.cooked_count,
+            r.created_at,
+            r.updated_at
+        FROM public.recipe r
+        WHERE r.recipe_id = #{recipeId}
+    </select>
+
+    <!-- 레시피 카테고리 전체 목록 조회 -->
+    <select id="findAllCategories" resultType="com.dduktak.domain.recipe.entity.RecipeCategory">
+        SELECT
+            rc.recipe_category_id,
+            rc.category_name,
+            rc.display_order,
+            rc.created_at
+        FROM public.recipe_category rc
+        ORDER BY rc.display_order ASC, rc.recipe_category_id ASC
+    </select>
+
+    <!-- 레시피 카테고리 단건 조회 -->
+    <select id="findCategoryById" resultType="com.dduktak.domain.recipe.entity.RecipeCategory">
+        SELECT
+            rc.recipe_category_id,
+            rc.category_name,
+            rc.display_order,
+            rc.created_at
+        FROM public.recipe_category rc
+        WHERE rc.recipe_category_id = #{recipeCategoryId}
+    </select>
+
+    <!-- 레시피 목록 페이징 및 필터/검색/정렬 조회 -->
+    <select id="findRecipesByFilter" resultType="com.dduktak.domain.recipe.dto.RecipeSummaryResponseDto">
+        SELECT
+            r.recipe_id,
+            r.recipe_category_id,
+            rc.category_name,
+            r.title,
+            r.thumbnail_url,
+            r.cooking_time,
+            r.difficulty,
+            r.like_count,
+            r.cooked_count,
+            COALESCE(p.nickname, '(알 수 없음)') AS author_nickname,
+            p.user_tag AS author_tag
+        FROM public.recipe r
+        JOIN public.recipe_category rc ON r.recipe_category_id = rc.recipe_category_id
+        LEFT JOIN public.profiles p ON r.user_id = p.id
+        <where>
+            <if test="filter == 'MY'">
+                AND r.user_id = #{userId}
+            </if>
+            <if test="filter == 'SCRAP'">
+                AND EXISTS (
+                    SELECT 1 FROM public.scrap s
+                    WHERE s.recipe_id = r.recipe_id
+                      AND s.user_id = #{userId}
+                )
+            </if>
+            <if test="recipeCategoryId != null">
+                AND r.recipe_category_id = #{recipeCategoryId}
+            </if>
+            <if test="query != null and query != ''">
+                AND (
+                    r.title ILIKE CONCAT('%', #{query}, '%')
+                    OR EXISTS (
+                        SELECT 1 FROM public.recipe_ingredient ri
+                        WHERE ri.recipe_id = r.recipe_id
+                          AND ri.name ILIKE CONCAT('%', #{query}, '%')
+                    )
+                )
+            </if>
+        </where>
+        <choose>
+            <when test="sort == 'like'">
+                ORDER BY r.like_count DESC, r.created_at DESC
+            </when>
+            <when test="sort == 'cooked'">
+                ORDER BY r.cooked_count DESC, r.created_at DESC
+            </when>
+            <otherwise>
+                ORDER BY r.created_at DESC, r.recipe_id DESC
+            </otherwise>
+        </choose>
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 레시피 목록 필터 카운트 -->
+    <select id="countRecipesByFilter" resultType="long">
+        SELECT COUNT(*)
+        FROM public.recipe r
+        <where>
+            <if test="filter == 'MY'">
+                AND r.user_id = #{userId}
+            </if>
+            <if test="filter == 'SCRAP'">
+                AND EXISTS (
+                    SELECT 1 FROM public.scrap s
+                    WHERE s.recipe_id = r.recipe_id
+                      AND s.user_id = #{userId}
+                )
+            </if>
+            <if test="recipeCategoryId != null">
+                AND r.recipe_category_id = #{recipeCategoryId}
+            </if>
+            <if test="query != null and query != ''">
+                AND (
+                    r.title ILIKE CONCAT('%', #{query}, '%')
+                    OR EXISTS (
+                        SELECT 1 FROM public.recipe_ingredient ri
+                        WHERE ri.recipe_id = r.recipe_id
+                          AND ri.name ILIKE CONCAT('%', #{query}, '%')
+                    )
+                )
+            </if>
+        </where>
+    </select>
+
+    <!-- 원자적 좋아요 수 증가 (+1) -->
+    <update id="incrementLikeCount">
+        UPDATE public.recipe
+        SET like_count = like_count + 1
+        WHERE recipe_id = #{recipeId}
+    </update>
+
+    <!-- 원자적 좋아요 수 감소 (0 이하 클램핑) -->
+    <update id="decrementLikeCount">
+        UPDATE public.recipe
+        SET like_count = GREATEST(0, like_count - 1)
+        WHERE recipe_id = #{recipeId}
+    </update>
+
+    <!-- 원자적 요리완료 수 증가 (+1) -->
+    <update id="incrementCookedCount">
+        UPDATE public.recipe
+        SET cooked_count = cooked_count + 1
+        WHERE recipe_id = #{recipeId}
+    </update>
+
+    <!-- 스마트 매칭용: 전체 레시피 목록 조회 -->
+    <select id="findAllForMatching" resultType="com.dduktak.domain.recipe.entity.Recipe">
+        SELECT
+            r.recipe_id,
+            r.user_id,
+            r.recipe_category_id,
+            r.title,
+            r.description,
+            r.servings,
+            r.cooking_time,
+            r.difficulty,
+            r.thumbnail_url,
+            r.like_count,
+            r.cooked_count,
+            r.created_at,
+            r.updated_at
+        FROM public.recipe r
+        <where>
+            <if test="recipeCategoryId != null">
+                AND r.recipe_category_id = #{recipeCategoryId}
+            </if>
+        </where>
+        ORDER BY r.created_at DESC
+    </select>
+
+</mapper>

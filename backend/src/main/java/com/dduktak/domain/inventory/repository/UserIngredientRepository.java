@@ -74,4 +74,18 @@ public class UserIngredientRepository {
     public int softDelete(Long ingredientId, UUID userId) {
         return userIngredientMapper.softDelete(ingredientId, userId);
     }
+
+    /**
+     * FIFO 차감용: 특정 회원의 특정 마스터 식재료에 대한 활성 식재료 목록 조회 (소비기한 임박순)
+     */
+    public List<UserIngredient> findActiveByUserIdAndMasterId(UUID userId, Long masterIngredientId) {
+        return userIngredientMapper.findActiveByUserIdAndMasterId(userId, masterIngredientId);
+    }
+
+    /**
+     * 특정 회원의 특정 마스터 식재료 총 보유 수량 합산 조회 (ACTIVE 상태)
+     */
+    public BigDecimal findTotalQuantityByUserIdAndMasterId(UUID userId, Long masterIngredientId) {
+        return userIngredientMapper.findTotalQuantityByUserIdAndMasterId(userId, masterIngredientId);
+    }
 }

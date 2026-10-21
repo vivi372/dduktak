@@ -170,4 +170,95 @@ BUILD SUCCESSFUL in 13s
 95 tests completed, 0 failed, 0 skipped.
 ```
 
+---
+
+## 5. [모듈 3] 뚝딱 레시피 커뮤니티 API (/api/v1/recipes) 테스트 검증 결과
+
+* **테스트 실행 일자**: 2026-10-21
+* **핵심 구현 정책 및 아키텍처**:
+  - **표준 식재료 연동 유효성 검증 (`POST /api/v1/recipes`)**:
+    * 자유 텍스트 입력을 원천 차단하고 `ingredient_master`에 사전 등록된 표준 재료만 레시피 재료(`recipe_ingredient`)로 등록 허용 (미등록 재료 전달 시 `COMMON_FIELD_INVALID_INPUT` 차단).
+    * 최소 1개 이상의 재료 필수 검증 (`RECIPE_FIELD_REQUIRED_INGREDIENTS`).
+  - **레시피 상세 조회 및 사용자 상호작용 (`GET /api/v1/recipes/{recipeId}`)**:
+    * 레시피 메타데이터, 닉네임/유저태그, 재료 목록(`isSauce` 양념류 표기 포함), 조리 순서(`stepNo ASC`) 일괄 응답.
+    * 요청 유저의 좋아요(`isLiked`) 및 스크랩(`isScrapped`) 여부 불리언 플래그 반환.
+  - **수정/삭제 권한 및 익명 레시피 보호 (`PUT /api/v1/recipes/{recipeId}`, `DELETE`)**:
+    * 본인이 작성한 레시피만 수정/삭제 허용 (`REC-01-4`).
+    * 회원 탈퇴(`USER-02`)로 `user_id = NULL`이 된 익명 레시피는 모든 유저의 수정/삭제 요청 시 `403 Forbidden` (`RECIPE_WARN_NOT_AUTHOR`)으로 원천 차단하여 커뮤니티 자산 영구 보존.
+  - **레시피 목록 필터링 및 검색 (`GET /api/v1/recipes`)**:
+    * `filter=ALL`, `filter=MY` (내가 작성한 레시피), `filter=SCRAP` (내가 북마크한 레시피 `scrap` 테이블 연동) 정상 필터링.
+    * 카테고리 필터링(`recipeCategoryId`), 제목/재료명 통합 검색(`query`), 최신순/인기순/요리완료순 정렬 및 페이징 지원.
+  - **원자적 카운터 및 토글 (`POST /like`, `POST /scrap`)**:
+    * 동시성 이슈를 예방하기 위해 DB SQL 레벨에서 `like_count = like_count + 1`, `like_count = GREATEST(0, like_count - 1)` 원자적 쿼리 수행.
+* **테스트 대상 클래스**:
+  - `com.dduktak.domain.recipe.service.RecipeServiceTest`
+  - `com.dduktak.domain.recipe.controller.RecipeControllerTest`
+  - `com.dduktak.domain.recipe.mapper.RecipeMapperIntegrationTest`
+
+---
+
+### 5.1. 세부 테스트 케이스 명세 및 검증 매트릭스
+
+| ID | 테스트 분류 | 대상 엔드포인트 / 메서드 | 테스트 시나리오 및 검증 기준 | 결과 |
+| :-: | :---: | :--- | :--- | :---: |
+| **TC-RCP-01** | `단위/슬라이스` | `POST /api/v1/recipes`<br>`RecipeService.createRecipe()` | **표준 식재료 기반 레시피 등록 및 마스터 식재료 검증 (201 Created)**<br>1. 표준 식재료(`ingredient_master`) 바인딩, MAIN/SUB 구분, 조리 순서 트랜잭션 정상 등록 검증<br>2. 미등록 마스터 식재료 ID 전달 시 `COMMON_FIELD_INVALID_INPUT` 예외 발생 검증 | **성공** |
+| **TC-RCP-02** | `단위/슬라이스` | `GET /api/v1/recipes/{recipeId}`<br>`RecipeService.getRecipeDetail()` | **레시피 상세 조회 및 본인 상호작용 플래그 (`isLiked`, `isScrapped`, `isSauce`)**<br>상세 정보, 작성자 닉네임/태그, 좋아요 여부, 스크랩 여부 및 양념류(`isSauce`) 불리언 플래그 정확성 검증 | **성공** |
+| **TC-RCP-03** | `단위/슬라이스` | `PUT, DELETE /api/v1/recipes/{recipeId}`<br>`RecipeService.updateRecipe()` | **본인 작성 레시피 및 익명 레시피 수정/삭제 권한 검증 (REC-01-4)**<br>1. 타인 작성 레시피 수정 요청 시 `403 Forbidden` (`RECIPE_WARN_NOT_AUTHOR`) 차단<br>2. 탈퇴 회원의 익명 레시피(`user_id = NULL`) 수정/삭제 요청 시 `403 Forbidden` (`RECIPE_WARN_NOT_AUTHOR`) 영구 보호 검증 | **성공** |
+| **TC-RCP-04** | `단위/슬라이스` | `GET /api/v1/recipes`<br>`RecipeService.getRecipes()` | **마이페이지 레시피 목록 필터링 (`filter=ALL, MY, SCRAP`)**<br>`filter=MY`(내가 작성한 레시피) 및 `filter=SCRAP`(내가 북마크한 레시피) 파라미터 전달 시 정확한 대상 목록만 필터링 반환 검증 | **성공** |
+| **TC-RCP-LIKE-01** | `단위/슬라이스` | `POST /api/v1/recipes/{recipeId}/like`<br>`RecipeService.toggleLike()` | **좋아요 토글 및 원자적 카운트 증감 검증 (200 OK)**<br>미등록 상태 시 INSERT 및 `like_count + 1`, 기등록 상태 시 DELETE 및 `like_count - 1` 원자적 반영 검증 | **성공** |
+| **TC-RCP-SCRAP-01** | `단위/슬라이스` | `POST /api/v1/recipes/{recipeId}/scrap`<br>`RecipeService.toggleScrap()` | **스크랩 토글 및 scrap 테이블 바인딩 검증 (200 OK)**<br>`public.scrap` 테이블 연동으로 스크랩 등록/취소 및 `scrapped` 플래그 반환 검증 | **성공** |
+
+---
+
+## 6. [모듈 4] 스마트 매칭 엔진 & 선입선출(FIFO) 차감 API (/api/v1/matching) 테스트 검증 결과
+
+* **테스트 실행 일자**: 2026-10-21
+* **핵심 구현 정책 및 아키텍처**:
+  - **주재료 필수 하드 게이트 (Hard Gate - MATCH-01-1)**:
+    * 유저 활성 냉장고에 레시피 주재료(`MAIN`)가 0개인 경우, 매칭률 0% 처리 및 추천 목록에서 완전 제외.
+  - **매칭 스코어링 공식 및 임박 가산점 (`GET /api/v1/matching/recommendations`)**:
+    * Base Score: 주재료 70점 균등 분할 + 부재료 30점 균등 분할 (직접보유 1.0, 대체 0.7, 생략가능 0.5, 미보유 0.0, 양념류 1.0).
+    * Bonus Score: 소비기한 임박($0 \le \text{D-Day} \le 3$) 주재료 +10점, 부재료 +5점 (최대 20점 캡, 도과 재료 제외).
+    * Final Score: $\min(100, \text{Math.round}(\text{Base Score} + \text{Bonus Score}))$.
+    * 정렬 우선순위: 1) 최종 점수 내림차순 ➔ 2) 임박 가산점 내림차순 ➔ 3) 인기순(`cooked_count + like_count`) 내림차순.
+  - **선입선출(FIFO) 차감 및 No-Mixing 혼합차감 금지 정책 (`POST /api/v1/matching/cook/{recipeId}`)**:
+    * **No-Mixing FIFO Deduction**: 음식 고유의 맛 보존을 위해 단일 요리 차감 루프에서 원본 재료와 대체 재료를 절대 섞어서 연속 차감하지 않음. 원본 재료를 `expire_date ASC, created_at ASC` 순으로 최우선 차감.
+    * **수량 부족 시 유연한 부분 차감 (Partial Deduction)**: 필요 수량보다 보유 수량이 모자라도 500/400 에러를 던지지 않고 보유분만 전량 차감(`status = 'CONSUMED'`) 처리 후 실제 차감량 및 잔여량을 응답으로 반환.
+    * **양념/소스 차감 제외**: `is_sauce = TRUE`인 재료(간장, 소금 등)는 차감 루프에서 무조건 제외.
+    * **2-Way 요리 완료 옵션**: `deductInventory: false` 시 냉장고 재료 차감 없이 레시피 `cooked_count`만 +1 원자적 업데이트.
+* **테스트 대상 클래스**:
+  - `com.dduktak.domain.matching.service.MatchingCalculatorTest`
+  - `com.dduktak.domain.matching.service.MatchingServiceTest`
+  - `com.dduktak.domain.matching.controller.MatchingControllerTest`
+* **테스트 커버리지 결과**: 모듈 1 + 모듈 2 + 모듈 3 + 모듈 4 전체 **130개 테스트 케이스 100% 성공 (0 Failures, 0 Errors)**
+
+---
+
+### 6.1. 세부 테스트 케이스 명세 및 검증 매트릭스
+
+| ID | 테스트 분류 | 대상 엔드포인트 / 메서드 | 테스트 시나리오 및 검증 기준 | 결과 |
+| :-: | :---: | :--- | :--- | :---: |
+| **TC-MATCH-01** | `단위/슬라이스` | `GET /api/v1/matching/recommendations`<br>`MatchingService.getRecommendations()` | **주재료 필수 하드 필터링 (Hard Gate - MATCH-01-1)**<br>내 냉장고에 주재료(MAIN)가 0개인 레시피는 매칭 점수 0% 처리 및 추천 목록에서 완전히 제외됨을 검증 | **성공** |
+| **TC-MATCH-02** | `단위/슬라이스` | `GET /api/v1/matching/recommendations`<br>`MatchingCalculator.calculate()` | **매칭 점수 산출 및 소비기한 임박 가산점 연산 (Base + Bonus Score)**<br>D-1 임박 주재료 보유 상태에서 Base Score(77.5점) + 가산점(+10점) 반영되어 88%로 정렬 최상단 노출 검증 | **성공** |
+| **TC-MATCH-03** | `단위/슬라이스` | `POST /api/v1/matching/cook/{recipeId}`<br>`MatchingService.cookRecipe()` | **요리 완료 선입선출(FIFO) 차감 및 No-Mixing 혼합차감 금지 (INV-04-2, REC-03-1)**<br>1. 소비기한 가장 임박한 레코드(`expire_date ASC`)부터 순차 차감<br>2. 원본/대체재료 혼합 차감 원천 차단<br>3. 보유 수량 부족 시 에러 없이 보유분만 부분 차감(Partial Deduction)<br>4. 양념/소스(`is_sauce=TRUE`) 차감 자동 제외 검증 | **성공** |
+| **TC-MATCH-04** | `단위/슬라이스` | `POST /api/v1/matching/cook/{recipeId}`<br>`MatchingService.cookRecipe()` | **요리 완료 2-Way 옵션 및 cookedCount 연동**<br>`deductInventory: false` 전달 시 재료 차감 없이(`isDeducted: false`), 레시피 요리 완료 수(`cookedCount`)만 +1 원자적 증가 검증 | **성공** |
+
+---
+
+### 6.2. 전체 백엔드 테스트 스위트 빌드 및 실행 결과 로그
+
+```text
+> Task :compileJava UP-TO-DATE
+> Task :processResources
+> Task :classes
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test
+
+BUILD SUCCESSFUL in 13s
+130 tests completed, 0 failed, 0 skipped.
+```
+
+
 

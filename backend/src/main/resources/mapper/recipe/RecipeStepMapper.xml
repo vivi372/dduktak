@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dduktak.domain.recipe.mapper.RecipeStepMapper">
+
+    <!-- 조리 단계 일괄 등록 -->
+    <insert id="insertBatch">
+        INSERT INTO public.recipe_step (
+            recipe_id,
+            step_no,
+            description,
+            image_url
+        ) VALUES
+        <foreach collection="steps" item="step" separator=",">
+        (
+            #{recipeId},
+            #{step.stepNo},
+            #{step.description},
+            #{step.imageUrl}
+        )
+        </foreach>
+    </insert>
+
+    <!-- 레시피 조리 단계 목록 조회 -->
+    <select id="findByRecipeId" resultType="com.dduktak.domain.recipe.entity.RecipeStep">
+        SELECT
+            step_id,
+            recipe_id,
+            step_no,
+            description,
+            image_url
+        FROM public.recipe_step
+        WHERE recipe_id = #{recipeId}
+        ORDER BY step_no ASC
+    </select>
+
+    <!-- 레시피 조리 단계 일괄 삭제 -->
+    <delete id="deleteByRecipeId">
+        DELETE FROM public.recipe_step
+        WHERE recipe_id = #{recipeId}
+    </delete>
+
+</mapper>

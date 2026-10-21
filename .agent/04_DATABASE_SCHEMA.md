@@ -176,12 +176,11 @@ CREATE TABLE recipe_like (
 -- ========================================================
 -- 10. 레시피 스크랩 테이블 (recipe_scrap)
 -- ========================================================
-CREATE TABLE recipe_scrap (
-    scrap_id BIGSERIAL PRIMARY KEY,
+CREATE TABLE scrap (
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
     recipe_id BIGINT NOT NULL REFERENCES recipe(recipe_id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uk_user_recipe_scrap UNIQUE (user_id, recipe_id)
+    PRIMARY KEY (user_id, recipe_id)
 );
 
 -- ========================================================

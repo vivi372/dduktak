@@ -6,3 +6,16 @@
 3. 세부 기능 및 성능 요구사항 (Functional & Performance) 3.1. 하드 필터링 및 정렬 (MATCH-01) • MATCH-01-1 [주재료 필수 검증 (Hard Gate)]: ◦ 유저의 user_refrigerator 테이블(status = 'ACTIVE')에 있는 마스터 재료 ID 목록과 레시피의 MAIN 재료 ID 목록을 비교. ◦ 레시피의 MAIN 재료 중 단 하나도 유저 냉장고에 없다면 매칭률을 0%로 처리하고 [🟢 내 냉장고 뚝딱 매칭 모드] 조회 결과에서 완전 제외. • MATCH-01-3 [선택적 레시피 카테고리 필터링 (Category Filter)]:
   ◦ 유저가 특정 레시피 카테고리(recipe_category_id)를 선택하여 추천 요청 시, 해당 카테고리에 속한 레시피만 1차 필터링한 후 매칭 스코어링 및 정렬을 수행.
 • MATCH-01-2 [매칭 정렬 순서]: ◦ [🟢 내 냉장고 뚝딱 매칭 모드] 클릭 시 정렬 우선순위: a. 최종 매칭 점수 (Final Score) 내림차순 b. 임박 가산점 (Bonus Score) 내림차순 (냉털 요리 우선) c. 레시피 인기순 (completed_count + like_count) 내림차순 3.2. 성능 최적화 및 쿼리 전략 (MATCH-02) • MATCH-02-1 [목록 조회 쿼리 최적화]: ◦ 매번 전체 레시피를 전수 조사하면 성능 저하가 발생하므로, 유저가 가지고 있는 주재료 ID 목록으로 recipe_ingredient 테이블을 IN (...) 조건 1차 필터링한 후 매칭 점수를 연산. • MATCH-02-2 [실시간 스코어링 캐싱]: ◦ 냉장고 재료 변경(등록/차감/삭제)이 일어날 때 유저별 매칭 가능 레시피 ID와 점수를 간단히 메모리 캐싱하거나 Fast-path 쿼리로 실행하여 목록 로딩 속도를 200ms 이내로 유지.
+
+
+4. 세부 차감 및 동시성 정책 (Deduction & Concurrency Policies)
+4.1. 원본/대체 재료 혼합 차감 금지 (No-Mixing FIFO Deduction Policy)
+• **맛 보존을 위한 혼합 차감 금지**: 요리의 본래 맛 유지를 위해 단일 레시피 요리 완료 연산 시 원본 재료(`master_ingredient_id`)와 대체 재료(`alt_ingredient_id`)를 섞어서 연속 차감하지 않음.
+• **차감 연산 순서**: 원본 재료를 최우선 FIFO(`expire_date ASC, created_at ASC`) 차감함. 원본 재료가 없거나 부족한 경우 보유분만 차감(Partial Deduction)하며, 부족분을 대체 재료에서 이어서 차감하지 않음 (대체 재료로 요리 시 대체 재료 단독 차감).
+
+4.2. 보유 수량 부족 시 부분 차감 (Partial Deduction)
+• 요리 완료 시 레시피 필요 수량보다 냉장고 보유 수량이 적더라도 에러(500/400)를 던지지 않고, 보유한 재료를 전량 FIFO 차감(`status = 'CONSUMED'`)한 뒤 실제 차감된 수량을 `deductedIngredients` 응답으로 반환함.
+
+4.3. 원자적 카운터 업데이트 및 익명 레시피 보안 (Atomic Update & Security)
+• **원자적(Atomic) 연산**: `like_count` 및 `cooked_count` 증가/감소 연산은 동시성 이슈 방지를 위해 DB SQL 레벨에서 `UPDATE recipe SET cooked_count = cooked_count + 1 WHERE recipe_id = :id` 형태로 직접 처리함.
+• **익명 레시피 보호**: 작성자 회원 탈퇴로 `user_id = NULL` 처리된 익명 레시피는 모든 유저의 수정(`PUT`) 및 삭제(`DELETE`) 요청을 백엔드 권한 검증 단계에서 `403 Forbidden` (`RCP_WARN_NOT_AUTHOR`) 처리하여 커뮤니티 공유 자산으로 완전 보호함.

@@ -70,4 +70,20 @@ public interface UserIngredientMapper {
             @Param("ingredientId") Long ingredientId,
             @Param("userId") UUID userId
     );
+
+    /**
+     * FIFO 차감용: 특정 회원의 특정 마스터 식재료에 대한 활성 식재료 목록 조회 (expire_date ASC, created_at ASC)
+     */
+    List<UserIngredient> findActiveByUserIdAndMasterId(
+            @Param("userId") UUID userId,
+            @Param("masterIngredientId") Long masterIngredientId
+    );
+
+    /**
+     * 특정 회원의 특정 마스터 식재료 총 보유 수량 합산 조회 (ACTIVE 상태)
+     */
+    BigDecimal findTotalQuantityByUserIdAndMasterId(
+            @Param("userId") UUID userId,
+            @Param("masterIngredientId") Long masterIngredientId
+    );
 }

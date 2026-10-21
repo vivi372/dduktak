@@ -152,4 +152,37 @@
           AND status != 'DELETED'
     </update>
 
+    <!-- FIFO 차감용: 회원 활성 식재료 목록 조회 (expire_date ASC, created_at ASC) -->
+    <select id="findActiveByUserIdAndMasterId" resultType="com.dduktak.domain.inventory.entity.UserIngredient">
+        SELECT
+            ui.ingredient_id,
+            ui.user_id,
+            ui.master_ingredient_id,
+            ui.category_id,
+            ui.name,
+            ui.storage_type,
+            ui.quantity,
+            ui.unit,
+            ui.expire_date,
+            (ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) AS d_day,
+            ui.memo,
+            ui.status,
+            ui.created_at,
+            ui.updated_at
+        FROM public.user_ingredient ui
+        WHERE ui.user_id = #{userId}
+          AND ui.master_ingredient_id = #{masterIngredientId}
+          AND ui.status = 'ACTIVE'
+        ORDER BY ui.expire_date ASC, ui.created_at ASC
+    </select>
+
+    <!-- 특정 마스터 식재료의 총 활성 보유 수량 합산 -->
+    <select id="findTotalQuantityByUserIdAndMasterId" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(ui.quantity), 0)
+        FROM public.user_ingredient ui
+        WHERE ui.user_id = #{userId}
+          AND ui.master_ingredient_id = #{masterIngredientId}
+          AND ui.status = 'ACTIVE'
+    </select>
+
 </mapper>
