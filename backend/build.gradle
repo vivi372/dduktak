@@ -42,6 +42,9 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 
+    // 4. Firebase Cloud Messaging (FCM Push Notifications)
+    implementation 'com.google.firebase:firebase-admin:9.4.3'
+
     // 4. Lombok & Configuration Processor
     compileOnly 'org.projectlombok:lombok'
     compileOnly 'org.springframework.boot:spring-boot-configuration-processor'

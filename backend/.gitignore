@@ -32,3 +32,6 @@ out/
 ### Secret files ###
 application-secret.yml
 application-local.yml
+*firebase*.json
+google-services.json
+firebase-service-account.json

@@ -1,8 +1,12 @@
 package com.dduktak.domain.matching.service;
 
+import com.dduktak.domain.auth.entity.Profile;
+import com.dduktak.domain.auth.repository.ProfileRepository;
 import com.dduktak.domain.inventory.entity.UserIngredient;
 import com.dduktak.domain.inventory.repository.UserIngredientRepository;
 import com.dduktak.domain.matching.dto.*;
+import com.dduktak.domain.notification.entity.NotificationType;
+import com.dduktak.domain.notification.service.NotificationService;
 import com.dduktak.domain.recipe.entity.Recipe;
 import com.dduktak.domain.recipe.entity.RecipeIngredient;
 import com.dduktak.domain.recipe.repository.RecipeIngredientRepository;
@@ -34,6 +38,8 @@ public class MatchingService {
     private final RecipeIngredientRepository recipeIngredientRepository;
     private final UserIngredientRepository userIngredientRepository;
     private final MatchingCalculator matchingCalculator;
+    private final ProfileRepository profileRepository;
+    private final NotificationService notificationService;
 
     @Getter
     @Builder
@@ -146,6 +152,10 @@ public class MatchingService {
         if (!deductInventory) {
             recipeRepository.incrementCookedCount(recipeId);
             int cookedCount = recipeRepository.findById(recipeId).map(Recipe::getCookedCount).orElse(1);
+
+            // [모듈 5 연동] 요리완료 소셜 알림 발송 (자추 스킵 및 방해금지 판정은 NotificationService 내부에서 수행)
+            sendCookedNotification(userId, recipe);
+
             return CookResponseDto.builder()
                     .recipeId(recipeId)
                     .isDeducted(false)
@@ -241,11 +251,28 @@ public class MatchingService {
         recipeRepository.incrementCookedCount(recipeId);
         int updatedCookedCount = recipeRepository.findById(recipeId).map(Recipe::getCookedCount).orElse(1);
 
+        // [모듈 5 연동] 요리완료 소셜 알림 발송 (자추 스킵 및 방해금지 판정은 NotificationService 내부에서 수행)
+        sendCookedNotification(userId, recipe);
+
         return CookResponseDto.builder()
                 .recipeId(recipeId)
                 .isDeducted(true)
                 .cookedCount(updatedCookedCount)
                 .deductedIngredients(deductedList)
                 .build();
+    }
+
+    /**
+     * 요리완료 소셜 알림 발송 헬퍼 메서드
+     */
+    private void sendCookedNotification(UUID actorId, Recipe recipe) {
+        if (recipe != null && recipe.getUserId() != null) {
+            Profile actor = profileRepository.findById(actorId).orElse(null);
+            String actorNickname = (actor != null) ? actor.getNickname() : "어떤 요리사";
+            notificationService.sendSocialNotification(
+                    recipe.getUserId(), actorId, NotificationType.COOKED_NOTICE,
+                    recipe.getRecipeId(), recipe.getTitle(), actorNickname
+            );
+        }
     }
 }

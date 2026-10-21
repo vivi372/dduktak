@@ -3,6 +3,8 @@ package com.dduktak.domain.recipe.service;
 import com.dduktak.domain.auth.entity.Profile;
 import com.dduktak.domain.auth.repository.ProfileRepository;
 import com.dduktak.domain.inventory.repository.IngredientMasterRepository;
+import com.dduktak.domain.notification.entity.NotificationType;
+import com.dduktak.domain.notification.service.NotificationService;
 import com.dduktak.domain.recipe.dto.*;
 import com.dduktak.domain.recipe.entity.Recipe;
 import com.dduktak.domain.recipe.entity.RecipeCategory;
@@ -36,6 +38,7 @@ public class RecipeService {
         private final RecipeScrapRepository recipeScrapRepository;
         private final IngredientMasterRepository ingredientMasterRepository;
         private final ProfileRepository profileRepository;
+        private final NotificationService notificationService;
 
         /**
          * 8대 표준 레시피 카테고리 목록 조회
@@ -291,7 +294,7 @@ public class RecipeService {
          */
         @Transactional
         public RecipeLikeResponseDto toggleLike(UUID userId, Long recipeId) {
-                recipeRepository.findById(recipeId)
+                Recipe recipe = recipeRepository.findById(recipeId)
                                 .orElseThrow(() -> new CustomException(ErrorCode.RECIPE_WARN_NOT_FOUND));
 
                 boolean isLiked = recipeLikeRepository.exists(userId, recipeId);
@@ -304,6 +307,16 @@ public class RecipeService {
                         recipeLikeRepository.insert(userId, recipeId);
                         recipeRepository.incrementLikeCount(recipeId);
                         int updatedCount = recipeRepository.findById(recipeId).map(Recipe::getLikeCount).orElse(1);
+
+                        // [모듈 5 연동] 레시피 좋아요 소셜 알림 발송 (자추 스킵 및 방해금지 시간 판정은 NotificationService 내부에서 수행)
+                        if (recipe.getUserId() != null) {
+                                Profile actor = profileRepository.findById(userId).orElse(null);
+                                String actorNickname = (actor != null) ? actor.getNickname() : "어떤 요리사";
+                                notificationService.sendSocialNotification(
+                                                recipe.getUserId(), userId, NotificationType.LIKE_NOTICE, recipeId, recipe.getTitle(), actorNickname
+                                );
+                        }
+
                         return RecipeLikeResponseDto.builder().liked(true).likeCount(updatedCount).build();
                 }
         }

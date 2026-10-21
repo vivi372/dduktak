@@ -57,6 +57,12 @@ food-qr:
   api-key: ${FOOD_QR_API_KEY:}
   base-url: ${FOOD_QR_BASE_URL:https://api.foodsafetykorea.go.kr}
 
+# Firebase Cloud Messaging (FCM 푸시 알림 설정)
+fcm:
+  credentials:
+    path: ${FIREBASE_SERVICE_ACCOUNT_PATH:backend/src/main/resources/firebase-service-account.json}
+    json: ${FIREBASE_SERVICE_ACCOUNT_JSON:}
+
 logging:
   pattern:
     console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(%-5level) %clr([%15.15t]){faint} %clr([%X{traceId:-SYSTEM}]){magenta} %clr(%-40.40logger{39}){cyan} : %msg%n"

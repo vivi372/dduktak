@@ -97,6 +97,27 @@
         WHERE id = #{id}
     </update>
 
+    <!-- 알림 통합 설정(소비기한 알림, 소셜 알림, 야간 방해금지 시간) 수정 -->
+    <update id="updateNotificationSettings">
+        UPDATE public.profiles
+        <set>
+            <if test="isExpireWarnEnabled != null">
+                is_expire_warn_enabled = #{isExpireWarnEnabled},
+            </if>
+            <if test="isReactionNoticeEnabled != null">
+                is_reaction_notice_enabled = #{isReactionNoticeEnabled},
+            </if>
+            <if test="quietTimeStart != null">
+                quiet_time_start = #{quietTimeStart},
+            </if>
+            <if test="quietTimeEnd != null">
+                quiet_time_end = #{quietTimeEnd},
+            </if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id}
+    </update>
+
     <!-- 회원 탈퇴 시 레시피 작성자 ID NULL 익명화 처리 (USER-02) -->
     <update id="anonymizeRecipesByUserId">
         UPDATE public.recipe

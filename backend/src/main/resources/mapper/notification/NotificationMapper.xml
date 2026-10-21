@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.dduktak.domain.notification.mapper.NotificationMapper">
+
+    <!-- Notification ResultMap -->
+    <resultMap id="NotificationResultMap" type="com.dduktak.domain.notification.entity.Notification">
+        <id property="notificationId" column="notification_id" />
+        <result property="userId" column="user_id" />
+        <result property="type" column="type" />
+        <result property="title" column="title" />
+        <result property="content" column="content" />
+        <result property="targetId" column="target_id" />
+        <result property="isRead" column="is_read" />
+        <result property="createdAt" column="created_at" />
+    </resultMap>
+
+    <!-- ExpiringIngredientTargetVo ResultMap -->
+    <resultMap id="ExpiringTargetResultMap" type="com.dduktak.domain.notification.dto.ExpiringIngredientTargetVo">
+        <result property="userId" column="user_id" />
+        <result property="ingredientId" column="ingredient_id" />
+        <result property="ingredientName" column="ingredient_name" />
+        <result property="dDay" column="d_day" />
+        <result property="expireDate" column="expire_date" />
+        <result property="isExpireWarnEnabled" column="is_expire_warn_enabled" />
+    </resultMap>
+
+    <!-- 유저별 알림 목록 최신순 페이징 조회 (idx_notification_user_created 최적화) -->
+    <select id="selectNotificationsByUserId" resultMap="NotificationResultMap">
+        SELECT
+            notification_id,
+            user_id,
+            type,
+            title,
+            content,
+            target_id,
+            is_read,
+            created_at
+        FROM public.notification
+        WHERE user_id = #{userId}
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- 유저의 읽지 않은 알림 개수 카운트 (idx_notification_user_read 최적화) -->
+    <select id="countUnreadByUserId" resultType="int">
+        SELECT COUNT(*)
+        FROM public.notification
+        WHERE user_id = #{userId}
+          AND is_read = FALSE
+    </select>
+
+    <!-- 알림 단건 조회 -->
+    <select id="findById" resultMap="NotificationResultMap">
+        SELECT
+            notification_id,
+            user_id,
+            type,
+            title,
+            content,
+            target_id,
+            is_read,
+            created_at
+        FROM public.notification
+        WHERE notification_id = #{notificationId}
+    </select>
+
+    <!-- 신규 알림 등록 -->
+    <insert id="insert" parameterType="com.dduktak.domain.notification.entity.Notification"
+            useGeneratedKeys="true" keyProperty="notificationId" keyColumn="notification_id">
+        INSERT INTO public.notification (
+            user_id,
+            type,
+            title,
+            content,
+            target_id,
+            is_read,
+            created_at
+        ) VALUES (
+            #{userId},
+            #{type},
+            #{title},
+            #{content},
+            #{targetId},
+            COALESCE(#{isRead}, FALSE),
+            COALESCE(#{createdAt}, NOW())
+        )
+    </insert>
+
+    <!-- 단일 알림 읽음 상태 갱신 -->
+    <update id="updateReadStatus">
+        UPDATE public.notification
+        SET is_read = #{isRead}
+        WHERE notification_id = #{notificationId}
+    </update>
+
+    <!-- 특정 유저의 모든 알림 읽음 처리 -->
+    <update id="updateReadAllByUserId">
+        UPDATE public.notification
+        SET is_read = TRUE
+        WHERE user_id = #{userId}
+          AND is_read = FALSE
+    </update>
+
+    <!-- 단일 알림 삭제 -->
+    <delete id="deleteById">
+        DELETE FROM public.notification
+        WHERE notification_id = #{notificationId}
+    </delete>
+
+    <!-- 특정 유저의 모든 알림 삭제 -->
+    <delete id="deleteAllByUserId">
+        DELETE FROM public.notification
+        WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 읽은 알림 중 N일 경과 레코드 자동 Cleanup -->
+    <delete id="deleteReadNotificationsOlderThan">
+        DELETE FROM public.notification
+        WHERE is_read = TRUE
+          AND created_at &lt; NOW() - (#{days} || ' days')::interval
+    </delete>
+
+    <!-- 당일(KST 기준) 특정 유저에게 이미 발송된 EXPIRE_WARN 알림 존재 여부 확인 (스케줄러 멱등성 보장) -->
+    <select id="existsExpireWarnToday" resultType="boolean">
+        SELECT EXISTS (
+            SELECT 1
+            FROM public.notification
+            WHERE user_id = #{userId}
+              AND type = 'EXPIRE_WARN'
+              AND (created_at AT TIME ZONE 'Asia/Seoul')::date = (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+        )
+    </select>
+
+    <!-- 소비기한 임박(0 <= D-Day <= 3) 식재료 및 수신 대상 유저 조회 -->
+    <select id="selectExpiringIngredientsForAlert" resultMap="ExpiringTargetResultMap">
+        SELECT
+            ui.user_id,
+            ui.ingredient_id,
+            ui.name AS ingredient_name,
+            ui.expire_date,
+            (ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) AS d_day,
+            p.is_expire_warn_enabled
+        FROM public.user_ingredient ui
+        JOIN public.profiles p ON p.id = ui.user_id
+        WHERE ui.status = 'STORED'
+          AND p.is_expire_warn_enabled = TRUE
+          AND (ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) BETWEEN 0 AND 3
+        ORDER BY ui.user_id, d_day ASC, ui.ingredient_id ASC
+    </select>
+
+</mapper>

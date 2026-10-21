@@ -189,9 +189,10 @@ CREATE TABLE scrap (
 CREATE TABLE notification (
     notification_id BIGSERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-    type VARCHAR(30) NOT NULL CHECK (type IN ('EXPIRE_WARN', 'EXPIRE_D_DAY', 'SYSTEM')),
+    type VARCHAR(30) NOT NULL CHECK (type IN ('EXPIRE_WARN', 'EXPIRE_D_DAY', 'LIKE_NOTICE', 'COOKED_NOTICE', 'SYSTEM')),
     title VARCHAR(100) NOT NULL,
     content TEXT NOT NULL,
+    target_id BIGINT,
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -213,6 +214,7 @@ CREATE INDEX idx_recipe_cooked ON recipe(cooked_count DESC);
 CREATE INDEX idx_recipe_ingredient_recipe ON recipe_ingredient(recipe_id);
 CREATE INDEX idx_recipe_ingredient_master ON recipe_ingredient(master_ingredient_id);
 
--- 4. 알림 안읽은 목록 조회 인덱스
+-- 4. 알림 안읽은 목록 및 최신순 조회 인덱스
 CREATE INDEX idx_notification_user_read ON notification(user_id, is_read, created_at DESC);
+CREATE INDEX idx_notification_user_created ON notification(user_id, created_at DESC);
 ```

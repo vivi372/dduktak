@@ -56,6 +56,17 @@ public interface ProfileMapper {
     );
 
     /**
+     * 알림 통합 설정(소비기한 알림, 소셜 알림, 야간 방해금지 시간) 수정
+     */
+    int updateNotificationSettings(
+            @Param("id") UUID id,
+            @Param("isExpireWarnEnabled") Boolean isExpireWarnEnabled,
+            @Param("isReactionNoticeEnabled") Boolean isReactionNoticeEnabled,
+            @Param("quietTimeStart") LocalTime quietTimeStart,
+            @Param("quietTimeEnd") LocalTime quietTimeEnd
+    );
+
+    /**
      * 회원 탈퇴 시 작성 레시피의 user_id를 NULL로 익명화 처리 (USER-02)
      */
     int anonymizeRecipesByUserId(@Param("userId") UUID userId);

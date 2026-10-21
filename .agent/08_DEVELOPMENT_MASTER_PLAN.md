@@ -80,9 +80,18 @@
     * 뚝딱 요리 완료 (`POST /cook/{recipeId}`): 2-Way 옵션 (`deductInventory: false` 시 원자적 cookedCount만 증가), **No-Mixing 선입선출(FIFO) 차감 정책** 적용 (원본 재료 최우선 FIFO 차감, 수량 부족 시 Partial Deduction 부분 차감 후 부족분을 대체 재료와 섞지 않음).
   * [x] 단위/슬라이스/통합 테스트 35종 신규 작성 및 전체 130종 전원 통과 (DoD 100% 달성).
 
-* [ ] **Step 2-4: 모듈 5 & 6 (알림 및 메인 브리핑)** (완료일시: - / 담당자: -)
-  * [ ] `@Scheduled` 스케줄러를 활용한 소비기한 임박(D-1, D-3) 유저 알림 생성 로직 구현.
-  * [ ] 메인 화면용 브리핑 위젯 및 인기 레시피 목록 조회 API 구현.
+* [ ] **Step 2-4: 모듈 5 & 6 (알림 및 메인 브리핑)**
+  * [x] **모듈 5: 알림 시스템 및 배치 스케줄러 구현 완료 (2026-10-21 / 담당자: AI 에이전트)**:
+    * 매일 09시 소비기한 임박(D-0 ~ D-3) 묶음 알림 일괄 생성 및 당일 멱등성(`DATE(created_at) = CURRENT_DATE`) 중복 발송 방어 배치 스케줄러 구현.
+    * 읽은 알림(`is_read = true`) 30일 경과 자동 Cleanup 정기 배치 스케줄러 구현.
+    * FCM(Firebase Cloud Messaging) 비동기 Fire-and-Forget 푸시 발송 서비스 구현.
+    * 커뮤니티 소셜 알림(좋아요/요리완료) 연동 및 자추 스킵(`authorId != actorId`), 야간 방해금지 시간(21:00~08:00) 푸시 차단 구현.
+    * 알림 센터 목록 조회(`GET /api/v1/notifications`), 미읽음 뱃지(`unreadCount`, `hasUnread`), 이동용 `targetId` 반환.
+    * 단일/전체 읽음(`PATCH /{id}/read`, `PATCH /read-all`), 단일/전체 삭제(`DELETE /{id}`, `DELETE /all`), 알림 통합 설정(`PATCH /settings`) API 구현.
+    * 단위/슬라이스/통합 테스트 23종 신규 작성 및 전체 157종 테스트 100% 통과 (DoD 달성).
+  * [ ] **모듈 6: 메인 화면 종합 브리핑 위젯 API (`GET /api/v1/home/briefing`) 구현**:
+    * 보유 재료 기반 D-0 ~ D-3 임박 재료 수 집계 및 상위 3개 임박 재료 리스트 조회.
+    * 최고 매칭 레시피(`topRecipe`) 1건 및 재료 0개 유저 커뮤니티 인기 레시피 폴백 연동.
 
 ---
 

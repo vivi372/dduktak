@@ -40,3 +40,6 @@ out/
 *.pem
 secrets/
 application-secret.yml
+*firebase*.json
+google-services.json
+firebase-service-account.json

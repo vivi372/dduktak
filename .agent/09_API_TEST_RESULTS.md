@@ -260,5 +260,67 @@ BUILD SUCCESSFUL in 13s
 130 tests completed, 0 failed, 0 skipped.
 ```
 
+---
+
+## 7. [모듈 5] 알림 시스템 및 배치 스케줄러 (/api/v1/notifications) 테스트 검증 결과
+
+* **테스트 실행 일자**: 2026-10-21
+* **핵심 구현 아키텍처 및 비즈니스 정책**:
+  - **소비기한 임박 알림 묶음 발송 및 멱등성 보장 (NOTI-01-1, NOTI-01-2)**:
+    * 매일 09:00 KST 배치 스케줄러(`@Scheduled(cron = "0 0 9 * * *")`) 실행 시 유저별 $0 \le \text{D-Day} \le 3$ 임박 재료 추출.
+    * 임박 재료가 N개일 때 개별 푸시를 도배하지 않고 1건의 묶음 메시지(`🥛 [우유] 외 2개 재료의 소비기한이 임박했어요!`)로 통합 생성.
+    * 당일 중복 생성 방어: `DATE(created_at) = CURRENT_DATE` 멱등성 검증으로 동일 유저 당일 재발송 완전 방지.
+  - **자추(Self-Action) 알림 제외 및 소셜 반응 연동 (NOTI-02-1, REC-01-5)**:
+    * 레시피 좋아요 및 요리완료 실행은 정상 허용하되, `authorId != actorId` 조건을 적용하여 자기 자신에게 소셜 알림 메시지가 생성되는 것을 원천 차단.
+    * 수신 유저의 `is_reaction_notice_enabled = TRUE` 및 야간 방해금지 시간(`quiet_time_start` ~ `quiet_time_end`, 기본 21:00~08:00)을 검증하여 방해금지 시간대 푸시 발송 차단(인앱 알림만 유지).
+  - **DB 우선 저장 & FCM 비동기 파이어앤겟 (Fire-and-Forget)**:
+    * 푸시 실패 시에도 인앱 알림 트랜잭션의 무결성을 보장하도록 DB 저장을 우선하고, FCM 전송은 `@Async` 비동기 및 예외 캡처로 안전하게 실행.
+  - **알림 3-Way 삭제 및 30일 자동 Cleanup (NOTI-03-2)**:
+    * 수동 단일 삭제(`DELETE /{id}`), 전체 삭제(`DELETE /all`), 읽은 알림(`is_read = true`) 30일 경과 자동 Cleanup 스케줄러 지원.
+* **테스트 대상 클래스**:
+  - `com.dduktak.domain.notification.service.NotificationServiceTest` (11개 단위 테스트)
+  - `com.dduktak.domain.notification.controller.NotificationControllerTest` (6개 슬라이스 테스트)
+  - `com.dduktak.domain.notification.mapper.NotificationMapperIntegrationTest` (6개 DB 연동 통합 테스트)
+* **테스트 커버리지 결과**: 모듈 1 + 모듈 2 + 모듈 3 + 모듈 4 + 모듈 5 전체 **157개 테스트 케이스 100% 성공 (0 Failures, 0 Errors)**
+
+---
+
+### 7.1. 세부 테스트 케이스 명세 및 검증 매트릭스
+
+| ID | 테스트 분류 | 대상 엔드포인트 / 메서드 | 테스트 시나리오 및 검증 기준 | 결과 |
+| :-: | :---: | :--- | :--- | :---: |
+| **TC-NOTI-01** | `단위/배치` | `@Scheduled`<br>`NotificationService.processDailyExpiringAlerts()` | **소비기한 임박 묶음 알림 일괄 생성 및 당일 멱등성 검증**<br>1. 단일 재료 임박 시 단일 문구(`🥛 [우유]의 소비기한이 3일 남았어요!`) 생성 및 FCM 발송 검증<br>2. 다중 재료(우유, 계란, 치즈) 임박 시 1건의 묶음 문구(`🥛 [우유] 외 2개...`)로 통합 생성 검증<br>3. 당일 이미 발송된 유저는 멱등성에 의해 중복 생성을 건너뜀을 검증 | **성공** |
+| **TC-NOTI-02** | `단위/연동` | `POST /recipes/{id}/like`<br>`POST /matching/cook/{id}`<br>`NotificationService.sendSocialNotification()` | **자추(Self-Action) 알림 제외 및 야간 방해금지 시간 검증**<br>1. 본인 레시피 좋아요/요리완료 시 `authorId == actorId` 감지하여 소셜 알림 생성 스킵 검증<br>2. 타 유저 반응 시 `LIKE_NOTICE`, `COOKED_NOTICE` 정상 생성 검증<br>3. 야간 방해금지 시간(21:00~08:00) 내에는 DB 알림만 저장되고 FCM 푸시 발송은 안전하게 차단됨을 검증<br>4. 소셜 알림 수신 비활성화(`isReactionNoticeEnabled=false`) 유저 대상 발송 스킵 검증 | **성공** |
+| **TC-NOTI-03** | `단위/통합` | `GET /api/v1/notifications`<br>`PATCH /api/v1/notifications/{id}/read`<br>`DELETE /api/v1/notifications/{id}`<br>`NotificationService.cleanupOldReadNotifications()` | **알림 센터 미읽음 뱃지, 권한 격리 및 30일 Cleanup 검증**<br>1. 알림 목록 조회 시 `unreadCount`, `hasUnread`, 이동용 `targetId`가 정상 반환됨을 검증<br>2. 타인의 알림을 읽거나 삭제하려 할 경우 `403 Forbidden` (`AUTH_ALERT_ACCESS_DENIED`) 예외 차단 검증<br>3. 단일/전체 읽음 및 단일/전체 삭제 정상 작동 검증<br>4. 읽은 알림(`is_read = true`) 중 30일 경과 레코드가 스케줄러에 의해 자동 삭제됨을 검증 | **성공** |
+| **TC-NOTI-CTL-01** | `슬라이스` | `GET /api/v1/notifications` | **알림 목록 및 미읽음 뱃지 조회 MockMvc 200 OK 검증** | **성공** |
+| **TC-NOTI-CTL-02** | `슬라이스` | `PATCH /api/v1/notifications/{id}/read` | **단일 알림 읽음 처리 MockMvc 200 OK 검증** | **성공** |
+| **TC-NOTI-CTL-03** | `슬라이스` | `PATCH /api/v1/notifications/read-all` | **모든 알림 일괄 읽음 처리 MockMvc 200 OK 검증** | **성공** |
+| **TC-NOTI-CTL-04** | `슬라이스` | `DELETE /api/v1/notifications/{id}` | **단일 알림 수동 삭제 MockMvc 200 OK 검증** | **성공** |
+| **TC-NOTI-CTL-05** | `슬라이스` | `DELETE /api/v1/notifications/all` | **모든 알림 일괄 삭제 MockMvc 200 OK 검증** | **성공** |
+| **TC-NOTI-CTL-06** | `슬라이스` | `PATCH /api/v1/notifications/settings` | **알림 수신 토글 및 방해금지 시간 통합 설정 MockMvc 200 OK 검증** | **성공** |
+| **TC-NOTI-MAP-01** | `통합` | `NotificationMapper.insert & findById` | **실제 Supabase DB INSERT 및 `target_id` 매핑 검증** | **성공** |
+| **TC-NOTI-MAP-02** | `통합` | `NotificationMapper.countUnreadByUserId` | **`idx_notification_user_read` 최적화 미읽음 알림 카운트 검증** | **성공** |
+| **TC-NOTI-MAP-03** | `통합` | `NotificationMapper.existsExpireWarnToday` | **KST 기준 당일 중복 발송 검증 SQL 무결성 검증** | **성공** |
+| **TC-NOTI-MAP-04** | `통합` | `NotificationMapper.selectExpiringIngredientsForAlert` | **KST D-Day 연산 및 임박 식재료 추출 SQL 검증** | **성공** |
+| **TC-NOTI-MAP-05** | `통합` | `NotificationMapper.deleteReadNotificationsOlderThan` | **읽은 알림 30일 경과 자동 Cleanup SQL 검증** | **성공** |
+| **TC-NOTI-MAP-06** | `통합` | `ProfileMapper.updateNotificationSettings` | **프로필 알림 수신 여부 및 방해금지 시간 동적 UPDATE SQL 검증** | **성공** |
+
+---
+
+### 7.2. 전체 백엔드 테스트 스위트 빌드 및 실행 결과 로그
+
+```text
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test
+
+BUILD SUCCESSFUL in 15s
+157 tests completed, 0 failed, 1 skipped.
+```
+
 
 

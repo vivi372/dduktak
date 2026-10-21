@@ -71,6 +71,15 @@ public class ProfileRepository {
     }
 
     /**
+     * 알림 통합 설정(소비기한 알림, 소셜 알림, 야간 방해금지 시간) 수정
+     */
+    public void updateNotificationSettings(UUID id, Boolean isExpireWarnEnabled, Boolean isReactionNoticeEnabled,
+                                           LocalTime quietTimeStart, LocalTime quietTimeEnd) {
+        profileMapper.updateNotificationSettings(id, isExpireWarnEnabled, isReactionNoticeEnabled,
+                quietTimeStart, quietTimeEnd);
+    }
+
+    /**
      * 회원 탈퇴 시 레시피 익명화 (user_id = NULL)
      */
     public void anonymizeRecipesByUserId(UUID id) {
