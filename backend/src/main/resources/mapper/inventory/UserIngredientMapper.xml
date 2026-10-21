@@ -185,4 +185,40 @@
           AND ui.status = 'ACTIVE'
     </select>
 
+    <!-- 임박 재료 수 집계 (0 <= D-Day <= 3, idx_user_ingredient_fifo 인덱스 스캔 최적화) -->
+    <select id="countImminentByUserId" resultType="long">
+        SELECT COUNT(*)
+        FROM public.user_ingredient
+        WHERE user_id = #{userId}
+          AND status = 'ACTIVE'
+          AND expire_date &gt;= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+          AND expire_date &lt;= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date + 3)
+    </select>
+
+    <!-- 소비기한 가장 임박한 상위 N개 식재료 조회 (expire_date ASC) -->
+    <select id="findTopImminentByUserId" resultType="com.dduktak.domain.inventory.entity.UserIngredient">
+        SELECT
+            ui.ingredient_id,
+            ui.user_id,
+            ui.master_ingredient_id,
+            ui.category_id,
+            ui.name,
+            ui.storage_type,
+            ui.quantity,
+            ui.unit,
+            ui.expire_date,
+            (ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) AS d_day,
+            ui.memo,
+            ui.status,
+            ui.created_at,
+            ui.updated_at
+        FROM public.user_ingredient ui
+        WHERE ui.user_id = #{userId}
+          AND ui.status = 'ACTIVE'
+          AND ui.expire_date &gt;= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date
+          AND ui.expire_date &lt;= ((CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date + 3)
+        ORDER BY ui.expire_date ASC, ui.created_at ASC, ui.ingredient_id ASC
+        LIMIT #{limit}
+    </select>
+
 </mapper>

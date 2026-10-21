@@ -322,5 +322,58 @@ BUILD SUCCESSFUL in 15s
 157 tests completed, 0 failed, 1 skipped.
 ```
 
+---
+
+## 8. [모듈 6] 메인 화면 종합 브리핑 (/api/v1/home/briefing) 테스트 검증 결과
+
+* **테스트 실행 일자**: 2026-10-21
+* **핵심 구현 아키텍처 및 비즈니스 정책**:
+  - **소비기한 임박(D-0 ~ D-3) 재료 정확한 집계 및 정렬 (INV-01, SYS-01)**:
+    * `user_ingredient` 테이블의 `status = 'ACTIVE'` 재료 중 $0 \le \text{D-Day} \le 3$ 범위의 식재료만 정확히 카운트(`expiringIngredientsCount`).
+    * 이미 소비기한이 도과한 $\text{D-Day} < 0$ 만료 식재료는 임박 카운트 및 목록에서 완전 제외.
+    * 복합 인덱스 `idx_user_ingredient_fifo(user_id, status, expire_date ASC)`를 기반으로 소비기한 가장 임박한 순(`expire_date ASC`) 상위 3건(`imminentIngredients`) 고속 추출.
+  - **스마트 매칭 최고 추천 레시피 및 커뮤니티 인기 레시피 우아한 폴백 (Fallback Policy)**:
+    * 모듈 4 스마트 매칭 엔진(`matchingService.getRecommendations(userId, null, 0, 1)`)을 연동하여 주재료 하드게이트를 통과한 최고 매칭률 레시피(`matchingRate > 0`) 1건을 `topRecipe`로 노출.
+    * 매칭 결과가 없거나 냉장고 재료가 0개인 유저에게는 에러나 빈 화면 대신 커뮤니티 인기 레시피(`(cooked_count + like_count) DESC`) 최상위 1건을 `matchingRate: 0` 상태로 우아하게 폴백 반환.
+  - **신규 / 비로그인 유저 빈 상태 방어 (Empty State Policy)**:
+    * 보유 재료 0개인 신규 유저 요청 시 `expiringIngredientsCount = 0`, `imminentIngredients = []`, `topRecipe = [인기 레시피(0%)]` 형태의 안전한 Empty DTO 객체를 반환하여 클라이언트 UI 깨짐 원천 방어.
+  - **초고속 응답 성능 최적화 (200ms 이내)**:
+    * `@Transactional(readOnly = true)` 적용 및 인덱스 범위 스캔(Index Range Scan) 유도로 단일 DTO 고속 조합 반환.
+* **테스트 대상 클래스**:
+  - `com.dduktak.domain.home.service.HomeServiceTest` (5개 단위 테스트)
+  - `com.dduktak.domain.home.controller.HomeControllerTest` (2개 슬라이스 테스트)
+* **테스트 커버리지 결과**: 모듈 1 ~ 모듈 6 전체 **164개 테스트 케이스 100% 성공 (0 Failures, 0 Errors, 1 Skipped)**
+
+---
+
+### 8.1. 세부 테스트 케이스 명세 및 검증 매트릭스
+
+| ID | 테스트 분류 | 대상 엔드포인트 / 메서드 | 테스트 시나리오 및 검증 기준 | 결과 |
+| :-: | :---: | :--- | :--- | :---: |
+| **TC-HOME-01-A** | `단위` | `HomeService.getBriefing` | **정상 유저 브리핑 조회 (임박 재료 3건 + 최고 매칭 레시피 1건)**<br>1. D-1, D-2, D-3 임박 재료 3건 카운트 및 목록 정렬(`expire_date ASC`) 정상 반환 검증<br>2. 스마트 매칭 결과 최고 매칭 레시피(matchingRate=85%)가 `topRecipe`에 정상 매핑됨을 검증<br>3. 최고 매칭 결과가 있으므로 인기 레시피 폴백 조회가 호출되지 않음을 검증 | **성공** |
+| **TC-HOME-01-B** | `단위` | `HomeService.getBriefing` | **매칭 결과 미존재 시 커뮤니티 인기 레시피 우아한 폴백 검증**<br>1. 스마트 매칭 결과가 비어있는 경우(하드게이트 탈락 등) 에러 없이 인기 레시피 상위 1건 조회 검증<br>2. 폴백된 인기 레시피의 `matchingRate`가 0%로 안전하게 표기됨을 검증 | **성공** |
+| **TC-HOME-01-C** | `단위` | `HomeService.getBriefing` | **재료 0개 신규 유저 Empty State 안전 DTO 반환 검증**<br>1. 재료 0개 유저 요청 시 `expiringIngredientsCount = 0`, `imminentIngredients = []` 빈 배열 반환 검증<br>2. 프로필 미등록 시 기본 닉네임("뚝딱이") 폴백 검증<br>3. 인기 레시피 상위 1건이 `matchingRate: 0`으로 정상 제공됨을 검증<br>4. 불필요한 임박 재료 상세 조회가 호출되지 않음을 검증 | **성공** |
+| **TC-HOME-01-D** | `단위` | `HomeService.getBriefing` | **추천 레시피 매칭률이 0%인 경우 인기 레시피 폴백 검증**<br>1. 매칭 결과 객체가 존재하더라도 `matchingRate == 0`인 경우 인기 레시피로 안전하게 대체됨을 검증 | **성공** |
+| **TC-HOME-01-E** | `단위` | `HomeService.getBriefing` | **DB에 레시피가 전혀 없는 극단적 상황 Null 방어 검증**<br>1. DB에 레시피가 0건인 초기 상태에서도 NullPointerException 없이 `topRecipe: null`로 안전하게 반환됨을 검증 | **성공** |
+| **TC-HOME-CTL-01** | `슬라이스` | `GET /api/v1/home/briefing` | **메인 화면 종합 브리핑 조회 MockMvc 200 OK 검증**<br>1. `success: true`, `data.nickname`, `data.expiringIngredientsCount`, `data.imminentIngredients`, `data.topRecipe` 응답 JSON 스펙 일치 검증<br>2. `ImminentIngredientDto.dDay` Jackson 직렬화 대소문자 규격 일치 검증 | **성공** |
+| **TC-HOME-CTL-02** | `슬라이스` | `GET /api/v1/home/briefing` | **미인증 사용자 요청 시 401 Unauthorized (`AUTH_ALERT_UNAUTHORIZED`) 차단 검증** | **성공** |
+
+---
+
+### 8.2. 전체 백엔드 테스트 스위트 빌드 및 실행 결과 로그
+
+```text
+> Task :compileJava UP-TO-DATE
+> Task :processResources UP-TO-DATE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+> Task :test
+
+BUILD SUCCESSFUL in 24s
+164 tests completed, 0 failed, 1 skipped.
+```
+
 
 

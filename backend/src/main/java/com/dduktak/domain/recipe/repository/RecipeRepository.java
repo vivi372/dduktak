@@ -69,4 +69,11 @@ public class RecipeRepository {
     public List<Recipe> findAllForMatching(Long recipeCategoryId) {
         return recipeMapper.findAllForMatching(recipeCategoryId);
     }
+
+    /**
+     * 커뮤니티 인기 레시피 상위 1건 조회 (cooked_count + like_count DESC)
+     */
+    public Optional<Recipe> findTopPopularRecipe() {
+        return recipeMapper.findTopPopularRecipe();
+    }
 }

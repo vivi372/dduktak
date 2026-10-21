@@ -88,4 +88,9 @@ public interface RecipeMapper {
      * 스마트 매칭용: 전체 레시피 목록 조회 (카테고리 필터 선택적 적용)
      */
     List<Recipe> findAllForMatching(@Param("recipeCategoryId") Long recipeCategoryId);
+
+    /**
+     * 커뮤니티 인기 레시피 상위 1건 조회 (cooked_count + like_count DESC)
+     */
+    Optional<Recipe> findTopPopularRecipe();
 }

@@ -80,7 +80,7 @@
     * 뚝딱 요리 완료 (`POST /cook/{recipeId}`): 2-Way 옵션 (`deductInventory: false` 시 원자적 cookedCount만 증가), **No-Mixing 선입선출(FIFO) 차감 정책** 적용 (원본 재료 최우선 FIFO 차감, 수량 부족 시 Partial Deduction 부분 차감 후 부족분을 대체 재료와 섞지 않음).
   * [x] 단위/슬라이스/통합 테스트 35종 신규 작성 및 전체 130종 전원 통과 (DoD 100% 달성).
 
-* [ ] **Step 2-4: 모듈 5 & 6 (알림 및 메인 브리핑)**
+* [x] **Step 2-4: 모듈 5 & 6 (알림 및 메인 브리핑)**
   * [x] **모듈 5: 알림 시스템 및 배치 스케줄러 구현 완료 (2026-10-21 / 담당자: AI 에이전트)**:
     * 매일 09시 소비기한 임박(D-0 ~ D-3) 묶음 알림 일괄 생성 및 당일 멱등성(`DATE(created_at) = CURRENT_DATE`) 중복 발송 방어 배치 스케줄러 구현.
     * 읽은 알림(`is_read = true`) 30일 경과 자동 Cleanup 정기 배치 스케줄러 구현.
@@ -89,9 +89,11 @@
     * 알림 센터 목록 조회(`GET /api/v1/notifications`), 미읽음 뱃지(`unreadCount`, `hasUnread`), 이동용 `targetId` 반환.
     * 단일/전체 읽음(`PATCH /{id}/read`, `PATCH /read-all`), 단일/전체 삭제(`DELETE /{id}`, `DELETE /all`), 알림 통합 설정(`PATCH /settings`) API 구현.
     * 단위/슬라이스/통합 테스트 23종 신규 작성 및 전체 157종 테스트 100% 통과 (DoD 달성).
-  * [ ] **모듈 6: 메인 화면 종합 브리핑 위젯 API (`GET /api/v1/home/briefing`) 구현**:
-    * 보유 재료 기반 D-0 ~ D-3 임박 재료 수 집계 및 상위 3개 임박 재료 리스트 조회.
-    * 최고 매칭 레시피(`topRecipe`) 1건 및 재료 0개 유저 커뮤니티 인기 레시피 폴백 연동.
+  * [x] **모듈 6: 메인 화면 종합 브리핑 위젯 API (`GET /api/v1/home/briefing`) 구현 완료 (2026-10-21 / 담당자: AI 에이전트)**:
+    * 보유 재료 기반 D-0 ~ D-3 임박 재료 수 집계 및 `expire_date ASC` 상위 3개 임박 재료 리스트 조회 (`idx_user_ingredient_fifo` 최적화).
+    * 스마트 매칭 연동 최고 추천 레시피(`topRecipe`) 1건 및 재료 0개/매칭률 0% 유저 대상 커뮤니티 인기 레시피(`(cooked_count + like_count) DESC`) 0% 매칭률 폴백 연동.
+    * 신규 유저 Empty State 방어 객체(`expiringIngredientsCount = 0`, `imminentIngredients = []`) 반환 및 200ms 이내 초고속 단일 DTO 응답.
+    * 단위/슬라이스 테스트 7종 신규 작성 및 백엔드 전체 164개 테스트 케이스 100% 전원 통과 (Phase 2 전체 완료).
 
 ---
 

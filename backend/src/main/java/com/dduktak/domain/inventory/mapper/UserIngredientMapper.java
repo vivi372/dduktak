@@ -86,4 +86,17 @@ public interface UserIngredientMapper {
             @Param("userId") UUID userId,
             @Param("masterIngredientId") Long masterIngredientId
     );
+
+    /**
+     * 소비기한 임박 식재료 수 집계 (0 <= D-Day <= 3, status='ACTIVE')
+     */
+    long countImminentByUserId(@Param("userId") UUID userId);
+
+    /**
+     * 소비기한 가장 임박한 상위 N개 활성 식재료 목록 조회 (0 <= D-Day <= 3, expire_date ASC)
+     */
+    List<UserIngredient> findTopImminentByUserId(
+            @Param("userId") UUID userId,
+            @Param("limit") int limit
+    );
 }

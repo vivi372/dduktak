@@ -232,4 +232,25 @@
         ORDER BY r.created_at DESC
     </select>
 
+    <!-- 커뮤니티 인기 레시피 상위 1건 조회 (cooked_count + like_count DESC) -->
+    <select id="findTopPopularRecipe" resultType="com.dduktak.domain.recipe.entity.Recipe">
+        SELECT
+            r.recipe_id,
+            r.user_id,
+            r.recipe_category_id,
+            r.title,
+            r.description,
+            r.servings,
+            r.cooking_time,
+            r.difficulty,
+            r.thumbnail_url,
+            r.like_count,
+            r.cooked_count,
+            r.created_at,
+            r.updated_at
+        FROM public.recipe r
+        ORDER BY (COALESCE(r.cooked_count, 0) + COALESCE(r.like_count, 0)) DESC, r.created_at DESC, r.recipe_id DESC
+        LIMIT 1
+    </select>
+
 </mapper>
