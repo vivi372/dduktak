@@ -103,18 +103,30 @@ Content-Type: application/json;charset=UTF-8
 --------------------------------------------------------------------------------
 
 ###### 3.5. [모듈 5] 알림 센터 API (/api/v1/notifications)
+> **비즈니스 & 보안 처리 가이드**:
+> 1. **헤더 뱃지(Red Dot) & 딥링크 타겟**: `GET /` 조회 시 `unreadCount` 및 `hasUnread` 수치를 함께 반환하며, 각 알림 객체는 이동용 `targetId` 및 `type` 메타데이터를 포함합니다.
+> 2. **자기 자신 액션(자추) 알림 제외**: 자추(본인 레시피 좋아요/요리완료) 실행은 전면 허용하되, `authorId != actorId` 조건을 적용하여 자기 자신에게 알림이 생성되지 않도록 필터링합니다.
+> 3. **방해금지 시간 준수**: 실시간 소셜 알림 발생 시 수신자의 `is_reaction_notice_enabled = TRUE` 및 방해금지 시간(`quiet_time_start` ~ `quiet_time_end`) 내 여부를 검증하여 푸시 발송을 차단합니다.
+> 4. **복합 인덱스 & 3-Way 삭제**: `idx_notification_user_created` 인덱스를 통한 고속 최신순 정렬, 개별 삭제(`DELETE /{id}`), 전체 삭제(`DELETE /all`), 읽은 알림 30일 경과 자동 Cleanup 배치를 지원합니다.
+
 | Method | Endpoint | Description | Auth | Request Body / Query | Response Data (data) |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| GET | / | 알림 목록 조회 | O | page, size | [ { "notificationId": 1, "type": "EXPIRE_WARN", "title": "소비기한 임박", "content": "계란의 소비기한이 2일 남았습니다.", "isRead": false, "createdAt": "2026-10-09T09:00:00" } ] |
+| GET | / | 알림 목록 및 미읽음 뱃지 조회 (idx_notification_user_created) | O | page, size | { "unreadCount": 2, "hasUnread": true, "notifications": [ { "notificationId": 1, "type": "EXPIRE_WARN", "title": "소비기한 임박", "content": "계란의 소비기한이 2일 남았습니다.", "targetId": 10, "isRead": false, "createdAt": "2026-10-09T09:00:00" } ] } |
 | PATCH | /{notificationId}/read | 단일 알림 읽음 처리 | O | Path Variable | { "notificationId": 1, "isRead": true } |
 | PATCH | /read-all | 모든 알림 읽음 처리 | O | None | { "updatedCount": 5 } |
+| DELETE | /{notificationId} | 단일 알림 수동 삭제 | O | Path Variable | null |
+| DELETE | /all | 모든 알림 일괄 삭제 | O | None | { "deletedCount": 10 } |
 | PATCH | /settings | 알림 수신 토글 및 방해금지 시간 통합 설정 (USER-PAGE-04) | O | isExpireWarnEnabled (Boolean, 선택), isReactionNoticeEnabled (Boolean, 선택), quietTimeStart (Time, 선택), quietTimeEnd (Time, 선택) | { "isExpireWarnEnabled": true, "isReactionNoticeEnabled": true, "quietTimeStart": "21:00:00", "quietTimeEnd": "08:00:00" } |
 
 
 --------------------------------------------------------------------------------
 
 ###### 3.6. [모듈 6] 메인 화면 브리핑 API (/api/v1/home)
+> **비즈니스 & 보안 처리 가이드**:
+> 1. **임박 집계 기준**: `expiringIngredientsCount` 수치는 `0 <= D-Day <= 3` (D-0 ~ D-3) 범위의 보유 재료만 정확히 집계합니다 (`D-Day < 0` 만료 재료 제외).
+> 2. **0개 유저 폴백**: 재료가 0개인 신규 유저에게는 `expiringIngredientsCount: 0`, `imminentIngredients: []` 반환과 함께 `topRecipe`로 커뮤니티 인기 레시피 1건(매칭률 0% 표기)을 폴백(Fallback)으로 노출하여 UI 안정성을 확보합니다.
+
 | Method | Endpoint | Description | Auth | Request Body / Query | Response Data (data) |
 | ------ | ------ | ------ | ------ | ------ | ------ |
-| GET | /briefing | 메인 화면 종합 브리핑 | O | None | { "nickname": "뚝딱이", "expiringIngredientsCount": 3, "imminentIngredients": [ { "ingredientId": 10, "name": "계란", "dDay": 2 } ], "topRecipe": { "recipeId": 1, "title": "계란볶음밥", "matchingRate": 90 } } |
+| GET | /briefing | 메인 화면 종합 브리핑 (임박 수 집계 & 0개 유저 인기 레시피 폴백) | O | None | { "nickname": "뚝딱이", "expiringIngredientsCount": 3, "imminentIngredients": [ { "ingredientId": 10, "name": "계란", "dDay": 2 } ], "topRecipe": { "recipeId": 1, "title": "계란볶음밥", "matchingRate": 90 } } |
 

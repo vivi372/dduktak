@@ -96,12 +96,25 @@
 ---
 
 ### 2.5. [모듈 5 & 6] 알림 센터 및 메인 브리핑 (Notification & Main Briefing Domain)
-* **TC-NOTI-01: 매일 09시 D-3, D-1 소비기한 임박 알림 그룹화 및 야간 제한**
+* **TC-NOTI-01: 매일 09시 D-3, D-1 소비기한 임박 알림 묶음 그룹화, 당일 중복 발송 방지(Idempotency), 및 방해금지 시간 제한**
   - **수행 내용**: @Scheduled 스케줄러 실행 시 임박 재료 보유 유저 대상 알림 생성.
-  - **검증 기준**: 유저별 임박 재료가 1개의 단일 알림 메시지로 그룹화 생성되며, 방해금지 시간 설정 시 발송 제외 처리.
-* **TC-HOME-01: 메인 화면 종합 브리핑 위젯 조회**
-  - **수행 내용**: 메인 화면 진입 시 브리핑 정보 요청 (`GET /api/v1/home/briefing`).
-  - **검증 기준**: 닉네임, 임박 재료 개수, D-Day 임박 리스트 top 3, 최고 매칭률 레시피 위젯 데이터가 200ms 이내 응답.
+  - **검증 기준**:
+    1. 유저별 임박 재료가 1개의 단일 알림 메시지로 그룹화되어 `notification` 테이블에 저장됨.
+    2. 당일 이미 알림이 발송된 경우 중복 생성되지 않음 (`DATE(created_at) = CURRENT_DATE` 멱등성 검증).
+* **TC-NOTI-02: 자추(본인 레시피 좋아요/요리완료) 시 자추 허용 및 본인 알림 생성 제외(`authorId != actorId`) 검증**
+  - **수행 내용**: 본인 작성 레시피에 본인이 직접 좋아요(`POST /recipes/{id}/like`) 및 요리완료(`POST /cook/{id}`) 실행.
+  - **검증 기준**: 자추 동작 및 좋아요/요리완료 카운터 연산은 정상 허용되며, 자기 자신에게 소셜 알림(`LIKE_NOTICE`, `COOKED_NOTICE`)은 생성되지 않음을 검증.
+* **TC-NOTI-03: 알림 목록 조회 시 `unreadCount` / `targetId` 반환, 개별/전체 삭제(`DELETE`) 및 30일 Cleanup 스케줄러 검증**
+  - **수행 내용**: 알림 목록 조회 (`GET /api/v1/notifications`), 단일/전체 삭제 (`DELETE /{id}`, `DELETE /all`), 30일 경과 읽은 알림 Cleanup 스케줄러 실행.
+  - **검증 기준**:
+    1. 응답 데이터에 `unreadCount`, `hasUnread`, `targetId`가 정확히 반환됨.
+    2. 개별 및 전체 삭제 시 해당 알림 레코드가 DB에서 제거됨.
+    3. 생성 후 30일이 지난 읽은 알림(`is_read = true`)이 자동 삭제됨을 검증.
+* **TC-HOME-01: 메인 화면 종합 브리핑 위젯 조회 (`0 <= D-Day <= 3` 임박 수 집계 & 0개 유저 폴백)**
+  - **수행 내용**: 일반 유저 및 재료 0개 신규 유저로 메인 화면 브리핑 요청 (`GET /api/v1/home/briefing`).
+  - **검증 기준**:
+    1. `expiringIngredientsCount`는 `0 <= D-Day <= 3` 범위 재료만 정확히 집계됨 (`D-Day < 0` 만료 재료 제외).
+    2. 재료 0개 신규 유저 요청 시 `expiringIngredientsCount: 0`, `imminentIngredients: []`와 함께 커뮤니티 인기 레시피 1건이 `topRecipe` 폴백으로 노출되고 200ms 이내 응답함을 검증.
 
 ---
 
