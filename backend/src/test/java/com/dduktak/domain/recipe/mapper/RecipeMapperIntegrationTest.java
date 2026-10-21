@@ -12,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -55,8 +53,7 @@ class RecipeMapperIntegrationTest {
     @DisplayName("레시피 목록 페이징 및 카테고리 JOIN 쿼리 무결성 검증 (30선 시드)")
     void findRecipesByFilter_success() {
         List<RecipeSummaryResponseDto> recipes = recipeMapper.findRecipesByFilter(
-                TEST_USER_ID, null, "ALL", null, "latest", 0, 10
-        );
+                TEST_USER_ID, null, "ALL", null, "latest", 0, 10);
         assertThat(recipes).isNotEmpty();
         assertThat(recipes.size()).isLessThanOrEqualTo(10);
         assertThat(recipes.get(0).getTitle()).isNotBlank();
@@ -68,8 +65,7 @@ class RecipeMapperIntegrationTest {
     void recipe_detail_mapping_success() {
         // 첫 번째 시드 레시피 조회
         List<RecipeSummaryResponseDto> list = recipeMapper.findRecipesByFilter(
-                TEST_USER_ID, null, "ALL", null, "latest", 0, 1
-        );
+                TEST_USER_ID, null, "ALL", null, "latest", 0, 1);
         assertThat(list).isNotEmpty();
         Long recipeId = list.get(0).getRecipeId();
 
@@ -89,8 +85,7 @@ class RecipeMapperIntegrationTest {
     @DisplayName("원자적 카운터 업데이트 및 좋아요/스크랩 토글 DB 무결성 검증")
     void atomic_counter_and_like_scrap_success() {
         List<RecipeSummaryResponseDto> list = recipeMapper.findRecipesByFilter(
-                TEST_USER_ID, null, "ALL", null, "latest", 0, 1
-        );
+                TEST_USER_ID, null, "ALL", null, "latest", 0, 1);
         assertThat(list).isNotEmpty();
         Long recipeId = list.get(0).getRecipeId();
 
