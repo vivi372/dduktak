@@ -1,11 +1,13 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { PencilLine, Receipt, ScanBarcode, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '@/constants/routes';
 
 interface QuickAddTrayProps {
   open: boolean;
   onClose: () => void;
+  onSelectAction?: (key: 'manual' | 'barcode' | 'receipt') => void;
 }
 
 const ACTIONS = [
@@ -14,8 +16,10 @@ const ACTIONS = [
   { key: 'receipt', label: '영수증 스캔', desc: '영수증 사진 한 장으로 한 번에 등록해요', Icon: Receipt },
 ] as const;
 
-/** FAB에서 열리는 재료 퀵 등록 바텀시트 (Thumb Zone). 실제 폼/카메라는 3A-2~3A-3 단계에서 구현 */
-export function QuickAddTray({ open, onClose }: QuickAddTrayProps) {
+/** FAB에서 열리는 재료 퀵 등록 바텀시트 (Thumb Zone) */
+export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProps) {
+  const navigate = useNavigate();
+
   // ESC 키로 닫기
   useEffect(() => {
     if (!open) return;
@@ -24,9 +28,13 @@ export function QuickAddTray({ open, onClose }: QuickAddTrayProps) {
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  const handleSelect = (label: string) => {
+  const handleSelect = (key: 'manual' | 'barcode' | 'receipt') => {
     onClose();
-    toast.info(`${label} 화면은 다음 단계에서 만들어져요 🍳`);
+    if (onSelectAction) {
+      onSelectAction(key);
+    } else {
+      navigate(`${ROUTES.INVENTORY}?action=${key}`);
+    }
   };
 
   return (
@@ -67,9 +75,10 @@ export function QuickAddTray({ open, onClose }: QuickAddTrayProps) {
                 <li key={key}>
                   <button
                     type="button"
-                    onClick={() => handleSelect(label)}
+                    onClick={() => handleSelect(key)}
                     className="flex min-h-[68px] w-full items-center gap-4 rounded-2xl border bg-card p-3.5 text-left shadow-card transition-all hover:border-brand-300 active:scale-[0.98]"
                   >
+
                     <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
                       <Icon className="h-5 w-5" />
                     </span>
