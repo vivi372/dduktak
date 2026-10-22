@@ -22,11 +22,25 @@ function MatchBadge({ rate }: { rate: number }) {
 /** 레시피 카드 (홈 캐러셀 / 레시피 피드 공용) */
 export function RecipeCard({ recipe, matchingRate, variant = 'list', className }: RecipeCardProps) {
   const meta = (
-    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-      <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" aria-hidden />{recipe.cookingTime}분</span>
-      <span>{recipe.difficulty}</span>
-      <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5" aria-hidden />{recipe.likeCount}</span>
-      <span className="flex items-center gap-1"><ChefHat className="h-3.5 w-3.5" aria-hidden />{recipe.cookedCount}</span>
+    <div className="flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/40 gap-1">
+      <div className="flex items-center gap-1.5 whitespace-nowrap">
+        <span className="flex items-center gap-0.5">
+          <Clock className="h-3 w-3 shrink-0 text-muted-foreground/80" aria-hidden />
+          <span>{recipe.cookingTime}분</span>
+        </span>
+        <span className="text-muted-foreground/40">·</span>
+        <span>{recipe.difficulty}</span>
+      </div>
+      <div className="flex items-center gap-2 whitespace-nowrap">
+        <span className="flex items-center gap-0.5">
+          <Heart className="h-3 w-3 shrink-0 text-rose-500/80" aria-hidden />
+          <span>{recipe.likeCount}</span>
+        </span>
+        <span className="flex items-center gap-0.5">
+          <ChefHat className="h-3 w-3 shrink-0 text-amber-500/80" aria-hidden />
+          <span>{recipe.cookedCount}</span>
+        </span>
+      </div>
     </div>
   );
 
@@ -63,17 +77,23 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
         className,
       )}
     >
-      <div className="relative h-24 w-28 shrink-0 overflow-hidden rounded-xl">
+      <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
         <img src={recipe.thumbnailUrl} alt={recipe.title} loading="lazy" className="h-full w-full object-cover" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <p className="text-[11px] font-semibold text-brand-600 dark:text-brand-300">{recipe.categoryName}</p>
+        <div className="space-y-0.5 sm:space-y-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-bold text-brand-600 dark:text-brand-300 truncate">
+              {recipe.categoryName}
+            </span>
             {matchingRate !== undefined && <MatchBadge rate={matchingRate} />}
           </div>
-          <h3 className="line-clamp-1 text-[15px] font-bold">{recipe.title}</h3>
-          <p className="text-[11px] text-muted-foreground">by {recipe.authorNickname}#{recipe.authorTag}</p>
+          <h3 className="line-clamp-1 text-sm sm:text-[15px] font-bold text-foreground">
+            {recipe.title}
+          </h3>
+          <p className="text-[11px] text-muted-foreground truncate">
+            by {recipe.authorNickname}#{recipe.authorTag}
+          </p>
         </div>
         {meta}
       </div>

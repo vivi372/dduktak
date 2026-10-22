@@ -57,25 +57,25 @@ export default function HomePage() {
 
       {/* 2. 환영 Hero 섹션: 브랜드 공식 로고 & 웰컴 메시지 */}
       <section
-        className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-brand-100 via-cream-100 to-mint-100 p-4 shadow-soft dark:border-white/10 dark:from-brand-900/40 dark:via-card dark:to-mint-700/20 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]"
+        className="relative overflow-hidden rounded-3xl border border-border/80 bg-gradient-to-br from-brand-100 via-cream-100 to-mint-100 p-3.5 sm:p-5 shadow-soft dark:border-white/10 dark:from-brand-900/40 dark:via-card dark:to-mint-700/20 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]"
         aria-label="환영 인사"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
           <img
             src={logo}
             alt="오늘의 뚝딱 로고"
-            className="h-28 w-28 shrink-0 rounded-2xl object-cover shadow-card"
+            className="h-20 w-20 sm:h-28 sm:w-28 shrink-0 rounded-2xl object-cover shadow-card"
           />
-          <div className="min-w-0">
-            <p className="text-xs font-bold text-brand-700 dark:text-brand-300">
+          <div className="min-w-0 flex-1">
+            <p className="text-[11px] sm:text-xs font-bold text-brand-700 dark:text-brand-300 truncate">
               {isLoggedIn ? `안녕하세요, ${user.nickname}님 👋` : '반가워요, 자취 요리사님 👋'}
             </p>
-            <h1 className="mt-1 text-xl font-black leading-snug tracking-tight text-foreground">
+            <h1 className="mt-1 text-base sm:text-xl font-black leading-tight sm:leading-snug tracking-tight text-foreground break-keep">
               오늘도 냉장고를
               <br />
               뚝딱 비워볼까요?
             </h1>
-            <p className="mt-1 text-xs text-muted-foreground">
+            <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground break-keep leading-tight">
               {hasIngredients ? '남은 재료로 맛있는 요리를 추천해요' : '재료를 등록하고 맞춤 요리를 찾아보세요'}
             </p>
           </div>

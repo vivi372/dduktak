@@ -22,7 +22,7 @@ export function SectionHeader({ title, moreTo, description, action }: SectionHea
       {moreTo && (
         <Link
           to={moreTo}
-          className="flex min-h-11 items-center gap-0.5 pl-3 text-[13px] font-semibold text-brand-600 dark:text-brand-300"
+          className="flex min-h-11 shrink-0 whitespace-nowrap items-center gap-0.5 pl-3 text-[13px] font-semibold text-brand-600 dark:text-brand-300"
         >
           더보기
           <ChevronRight className="h-4 w-4" aria-hidden />
