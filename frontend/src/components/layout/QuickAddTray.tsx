@@ -1,0 +1,89 @@
+import { useEffect } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { PencilLine, Receipt, ScanBarcode, X } from 'lucide-react';
+import { toast } from 'sonner';
+
+interface QuickAddTrayProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+const ACTIONS = [
+  { key: 'manual', label: '직접 입력', desc: '재료 이름과 소비기한을 직접 적어요', Icon: PencilLine },
+  { key: 'barcode', label: '바코드 스캔', desc: '카메라로 바코드를 찍으면 자동으로 채워요', Icon: ScanBarcode },
+  { key: 'receipt', label: '영수증 스캔', desc: '영수증 사진 한 장으로 한 번에 등록해요', Icon: Receipt },
+] as const;
+
+/** FAB에서 열리는 재료 퀵 등록 바텀시트 (Thumb Zone). 실제 폼/카메라는 3A-2~3A-3 단계에서 구현 */
+export function QuickAddTray({ open, onClose }: QuickAddTrayProps) {
+  // ESC 키로 닫기
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  const handleSelect = (label: string) => {
+    onClose();
+    toast.info(`${label} 화면은 다음 단계에서 만들어져요 🍳`);
+  };
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label="재료 추가 방법 선택">
+          <motion.div
+            className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+          />
+          <motion.div
+            className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px] rounded-t-[28px] bg-background px-5 pb-safe pt-3 shadow-2xl"
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            transition={{ type: 'spring', damping: 30, stiffness: 320 }}
+          >
+            <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-border" aria-hidden />
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-extrabold">재료 추가하기</h2>
+                <p className="text-xs text-muted-foreground">어떤 방법으로 냉장고에 넣어 볼까요?</p>
+              </div>
+              <button
+                type="button"
+                onClick={onClose}
+                aria-label="닫기"
+                className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent active:scale-95"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <ul className="space-y-2.5 pb-6">
+              {ACTIONS.map(({ key, label, desc, Icon }) => (
+                <li key={key}>
+                  <button
+                    type="button"
+                    onClick={() => handleSelect(label)}
+                    className="flex min-h-[68px] w-full items-center gap-4 rounded-2xl border bg-card p-3.5 text-left shadow-card transition-all hover:border-brand-300 active:scale-[0.98]"
+                  >
+                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
+                      <Icon className="h-5 w-5" />
+                    </span>
+                    <span>
+                      <span className="block text-[15px] font-bold">{label}</span>
+                      <span className="block text-xs text-muted-foreground">{desc}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </div>
+      )}
+    </AnimatePresence>
+  );
+}

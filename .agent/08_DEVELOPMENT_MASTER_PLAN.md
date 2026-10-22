@@ -94,10 +94,10 @@
 ##### 🎨 [1단계] Phase 3A: UI/UX 디자인 퍼블리싱 & 목업 화면 확정 (Design & UI Publishing First)
 > **개념:** 백엔드 API 연동 전, 더미 데이터(Dummy/Mock Data)를 활용하여 모든 화면의 마크업, 레이아웃, 컴포넌트 디자인 및 인터랙션을 선 구현하고 유저 디자인 검수/확정을 진행합니다.
 
-* [ ] **Step 3A-1: 디자인 시스템, 공통 레이아웃 & 라우팅 세팅** (완료일시: - / 담당자: -)
-    * [ ] Tailwind CSS, Shadcn UI, Lucide Icons, Framer Motion 초기 세팅.
-    * [ ] 모바일 퍼스트 반응형 레이아웃 (`components/layout/` Header, Bottom Navigation, Thumb Zone).
-    * [ ] 라우터 설정 및 목업 페이지 프레임 구축.
+* [x] **Step 3A-1: 디자인 시스템, 공통 레이아웃 & 라우팅 세팅** (완료일시: 2026-10-22 15:15 / 담당자: AI 에이전트)
+    * [x] Tailwind CSS, Shadcn UI, Lucide Icons, Framer Motion 초기 세팅 및 브랜드 디자인 토큰(코랄/민트/크림) 구성.
+    * [x] 모바일 퍼스트 반응형 레이아웃 (`components/layout/` Header, Bottom Navigation, 56px Thumb Zone FAB).
+    * [x] React Router 설정 및 5개 목업 페이지 프레임 스캐폴딩(`src/mocks/` 분리) 구축.
 * [ ] **Step 3A-2: 메인 홈 & 로그인/온보딩 화면 UI 퍼블리싱 (모듈 1, 6)** (완료일시: - / 담당자: -)
     * [ ] Supabase OAuth (카카오/구글) 로그인 버튼 & 웰컴 모달 UI.
     * [ ] 메인 브리핑 위젯 카드, 임박 재료 D-Day 신호등 배지, Carousel 추천 레시피, Vertical 인기 레시피 UI.

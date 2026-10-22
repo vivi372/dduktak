@@ -36,9 +36,15 @@
 *   **Form & Validation** :
     *  react-hook-form: 복잡한 Form 상태 및 입력 제어
     *  zod: TypeScript First Schema Validation (DTO 검증용)
+*   **Routing & Navigation** :
+    *  react-router-dom: 단일 페이지 애플리케이션(SPA) 클라이언트 라우팅 및 중첩 레이아웃(AppShell Outlet)
 *   **Styling & Design System** :
+*   **공식 에셋 (Assets)** : 브랜드 공식 로고(`오늘의_뚝딱_로고.png` / `logo-icon.png`), 기본 프로필 이미지(`Default Profile.png`) 및 브랜드 대표 코랄 핑크(`#FF8A7A`, `#E5604F`) / 민트 티얼(`#4ECDC4`) 테마 팔레트를 프론트엔드/웹뷰 전체 UI 스타일링 및 Tailwind Config 설정에 연동한다.
     *  Tailwind CSS: 기본 유틸리티 클래스 스타일링
     *  clsx, tailwind-merge: 조건부 클래스 조합 유틸리티
+    *  class-variance-authority (cva): Shadcn 스타일 컴포넌트 변형(Variant) 선언 유틸리티
+    *  @radix-ui/react-slot: Shadcn 컴포넌트 합성(asChild) 슬롯
+    *  tailwindcss-animate: 테일윈드 기반 마이크로 인터랙션 및 애니메이션 플러그인
 
 --------------------------------------------------------------------------------
 
