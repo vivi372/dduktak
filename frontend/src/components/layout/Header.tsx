@@ -20,7 +20,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-header items-center justify-between border-b border-border/60 bg-background/85 px-3 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex h-header items-center justify-between border-b border-border/80 bg-background/85 px-3 backdrop-blur-md dark:border-white/10 dark:bg-background/90">
       {handle?.showBack ? (
         <div className="flex items-center gap-1">
           <button

@@ -61,7 +61,7 @@ export function BottomNav() {
     <>
       <nav
         aria-label="하단 메뉴"
-        className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border/60 bg-background/90 pb-safe backdrop-blur-lg"
+        className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border/80 border-x dark:border-white/10 bg-background/90 pb-safe backdrop-blur-lg"
       >
         <div className="grid h-tabbar grid-cols-5">
           {LEFT_TABS.map((t) => <Tab key={t.to} {...t} />)}

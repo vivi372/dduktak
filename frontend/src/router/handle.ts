@@ -8,4 +8,6 @@ export interface RouteHandle {
   showBack?: boolean;
   /** 하단 탭바 숨김 여부 */
   hideBottomNav?: boolean;
+  /** 상단 헤더 숨김 여부 (로그인/온보딩 풀스크린 뷰 등) */
+  hideHeader?: boolean;
 }

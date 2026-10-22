@@ -15,7 +15,7 @@ export function EmptyState({ emoji, title, description, children, className }: E
   return (
     <div
       className={cn(
-        'flex flex-col items-center rounded-3xl border border-dashed border-brand-300/70 bg-brand-50/60 px-6 py-10 text-center dark:border-brand-700/50 dark:bg-brand-900/10',
+        'flex flex-col items-center rounded-3xl border border-dashed border-brand-300/70 bg-brand-50/60 px-6 py-10 text-center dark:border-brand-400/40 dark:bg-card/70 dark:shadow-[0_2px_14px_rgba(0,0,0,0.4)]',
         className,
       )}
     >

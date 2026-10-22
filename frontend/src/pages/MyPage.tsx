@@ -1,9 +1,12 @@
 import { useState, type ReactNode } from 'react';
-import { BellRing, ChevronRight, LogOut, Moon, MoonStar, UserX } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { BellRing, ChevronRight, LogIn, LogOut, Moon, MoonStar, UserX } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { mockUser } from '@/mocks';
 import { useThemeStore } from '@/store/themeStore';
+import { useMockAuthStore } from '@/store/mockAuthStore';
+import { ROUTES } from '@/constants/routes';
 import { cn } from '@/utils/cn';
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -41,28 +44,53 @@ function Row({ icon, label, right, onClick }: { icon: ReactNode; label: string; 
 
 /** 마이페이지 프레임 (프로필 수정/설정 상세는 Step 3A-5) */
 export default function MyPage() {
+  const navigate = useNavigate();
   const { theme, toggle } = useThemeStore();
+  const { isLoggedIn, logout } = useMockAuthStore();
   const [expireWarn, setExpireWarn] = useState(true);
   const [reaction, setReaction] = useState(true);
   const soon = (m: string) => toast.info(`${m} 기능은 다음 단계에서 만들어져요 🍳`);
+
+  const handleLogout = () => {
+    logout();
+    toast.success('로그아웃 되었습니다.');
+    navigate(ROUTES.LOGIN);
+  };
 
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-black tracking-tight">마이페이지</h1>
 
-      <Card className="flex items-center gap-4 p-4">
-        <img src={mockUser.profileImage} alt="프로필 이미지" className="h-16 w-16 rounded-full bg-brand-100 object-cover ring-2 ring-brand-200" />
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-lg font-extrabold">
-            {mockUser.nickname}
-            <span className="ml-1 text-sm font-semibold text-muted-foreground">#{mockUser.userTag}</span>
-          </p>
-          <p className="truncate text-sm text-muted-foreground">{mockUser.email}</p>
-        </div>
-        <button type="button" onClick={() => soon('프로필 수정')} className="min-h-11 rounded-full bg-brand-100 px-4 text-sm font-bold text-brand-700 active:scale-95 dark:bg-brand-900/40 dark:text-brand-200">
-          수정
-        </button>
-      </Card>
+      {isLoggedIn ? (
+        <Card className="flex items-center gap-4 p-4">
+          <img src={mockUser.profileImage} alt="프로필 이미지" className="h-16 w-16 rounded-full bg-brand-100 object-cover ring-2 ring-brand-200" />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-lg font-extrabold">
+              {mockUser.nickname}
+              <span className="ml-1 text-sm font-semibold text-muted-foreground">#{mockUser.userTag}</span>
+            </p>
+            <p className="truncate text-sm text-muted-foreground">{mockUser.email}</p>
+          </div>
+          <button type="button" onClick={() => soon('프로필 수정')} className="min-h-11 rounded-full bg-brand-100 px-4 text-sm font-bold text-brand-700 active:scale-95 dark:bg-brand-900/40 dark:text-brand-200">
+            수정
+          </button>
+        </Card>
+      ) : (
+        <Card className="flex items-center justify-between gap-4 p-4">
+          <div>
+            <p className="text-base font-extrabold text-foreground">로그인이 필요해요</p>
+            <p className="text-xs text-muted-foreground">로그인하고 나만의 냉장고 레시피를 관리해보세요.</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => navigate(ROUTES.LOGIN)}
+            className="flex min-h-11 items-center gap-1.5 rounded-full bg-brand-500 px-4 text-sm font-bold text-white shadow-sm transition hover:bg-brand-600 active:scale-95"
+          >
+            <LogIn className="h-4 w-4" />
+            로그인
+          </button>
+        </Card>
+      )}
 
       <section aria-label="알림 설정">
         <h2 className="mb-2 px-1 text-sm font-bold text-muted-foreground">알림 설정</h2>
@@ -92,8 +120,14 @@ export default function MyPage() {
 
       <section aria-label="계정">
         <Card className="divide-y divide-border overflow-hidden p-0">
-          <Row icon={<LogOut className="h-5 w-5" />} label="로그아웃" onClick={() => soon('로그아웃')} />
-          <Row icon={<UserX className="h-5 w-5" />} label="회원 탈퇴" onClick={() => soon('회원 탈퇴')} />
+          {isLoggedIn ? (
+            <>
+              <Row icon={<LogOut className="h-5 w-5" />} label="로그아웃" onClick={handleLogout} />
+              <Row icon={<UserX className="h-5 w-5" />} label="회원 탈퇴" onClick={() => soon('회원 탈퇴')} />
+            </>
+          ) : (
+            <Row icon={<LogIn className="h-5 w-5" />} label="소셜 로그인 하러가기" onClick={() => navigate(ROUTES.LOGIN)} />
+          )}
         </Card>
       </section>
     </div>

@@ -5,13 +5,14 @@ import InventoryPage from '@/pages/InventoryPage';
 import RecipeFeedPage from '@/pages/RecipeFeedPage';
 import MyPage from '@/pages/MyPage';
 import NotificationPage from '@/pages/NotificationPage';
+import LoginPage from '@/pages/LoginPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { ROUTES } from '@/constants/routes';
 import type { RouteHandle } from './handle';
 
 const h = (handle: RouteHandle) => handle;
 
-/** 앱 라우터: AppShell(공통 레이아웃) 아래에 5개 탭/서브 페이지 + 404 */
+/** 앱 라우터: AppShell(공통 레이아웃) 아래에 5개 탭/서브 페이지 + 로그인 + 404 */
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
@@ -21,6 +22,11 @@ export const router = createBrowserRouter([
       { path: ROUTES.RECIPES, element: <RecipeFeedPage />, handle: h({ title: '뚝딱 레시피', brand: true }) },
       { path: ROUTES.MYPAGE, element: <MyPage />, handle: h({ title: '마이페이지', brand: true }) },
       { path: ROUTES.NOTIFICATIONS, element: <NotificationPage />, handle: h({ title: '알림함', showBack: true }) },
+      {
+        path: ROUTES.LOGIN,
+        element: <LoginPage />,
+        handle: h({ title: '로그인', hideBottomNav: true, hideHeader: true }),
+      },
       { path: '*', element: <NotFoundPage />, handle: h({ title: '길을 잃었어요', brand: true }) },
     ],
   },

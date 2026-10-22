@@ -98,10 +98,11 @@
     * [x] Tailwind CSS, Shadcn UI, Lucide Icons, Framer Motion 초기 세팅 및 브랜드 디자인 토큰(코랄/민트/크림) 구성.
     * [x] 모바일 퍼스트 반응형 레이아웃 (`components/layout/` Header, Bottom Navigation, 56px Thumb Zone FAB).
     * [x] React Router 설정 및 5개 목업 페이지 프레임 스캐폴딩(`src/mocks/` 분리) 구축.
-* [ ] **Step 3A-2: 메인 홈 & 로그인/온보딩 화면 UI 퍼블리싱 (모듈 1, 6)** (완료일시: - / 담당자: -)
-    * [ ] Supabase OAuth (카카오/구글) 로그인 버튼 & 웰컴 모달 UI.
-    * [ ] 메인 브리핑 위젯 카드, 임박 재료 D-Day 신호등 배지, Carousel 추천 레시피, Vertical 인기 레시피 UI.
-    * [ ] 퀵 등록 버튼 트레이 & 재료 0개 유저용 Empty State 카드 마크업.
+* [x] **Step 3A-2: 메인 홈 & 로그인/온보딩 화면 UI 퍼블리싱 (모듈 1, 6)** (완료일시: 2026-10-22 16:00 / 담당자: AI 에이전트)
+    * [x] Supabase OAuth (카카오/구글) 로그인 화면 & 웰컴 모달 UI (`LoginPage.tsx`, `WelcomeModal.tsx`).
+    * [x] 메인 브리핑 위젯 카드, 임박 재료 D-Day 신호등 배지, Carousel 추천 레시피, Vertical 인기 레시피 UI (`HomePage.tsx`).
+    * [x] 퀵 등록 버튼 트레이 & 재료 0개 유저용 Empty State 카드 마크업 및 인기 레시피 0% 매칭 폴백 연동.
+    * [x] 개발자 검수용 플로팅 상태 스위처 (`FloatingDevSwitcher.tsx`) 탑재 (재료 0개↔보유, 로그인↔비로그인, 웰컴 모달 즉시 호출).
 * [ ] **Step 3A-3: 내 냉장고 관리 화면 UI 퍼블리싱 (모듈 2)** (완료일시: - / 담당자: -)
     * [ ] 표준 식재료 검색 Combobox (Searchable Select) UI.
     * [ ] 식재료 메인 카드 & **2-Tier 아코디언** 열림/닫힘 프레임 모션 애니메이션.
