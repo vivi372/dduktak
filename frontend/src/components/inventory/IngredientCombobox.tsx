@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
-import { Search, Check, ChevronDown, Sparkles } from 'lucide-react';
+import { Search, Check, ChevronDown, Sparkles, X } from 'lucide-react';
 import { mockMasterIngredients, mockCategories } from '@/mocks';
 import { cn } from '@/utils/cn';
 import type { MasterIngredient } from '@/types/inventory';
@@ -30,6 +30,12 @@ export function IngredientCombobox({
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | 'ALL'>('ALL');
   const containerRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // 모바일 가상 키보드 내리기
+  const handleDismissKeyboard = () => {
+    inputRef.current?.blur();
+  };
 
   // 현재 선택된 마스터 재료 객체
   const selectedIngredient = useMemo(
@@ -108,24 +114,60 @@ export function IngredientCombobox({
           role="listbox"
           className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in fade-in-0 zoom-in-95"
         >
-          {/* 검색창 */}
-          <div className="relative mb-2">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              autoFocus
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="재료명 검색 (예: 양파, 계란, 삼겹살)"
-              className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
-            />
-          </div>
+          {/* 검색창 & 모바일 키보드 닫기 바 */}
+          <div className="relative mb-2 flex items-center gap-1.5">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                ref={inputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === 'Escape') {
+                    handleDismissKeyboard();
+                  }
+                }}
+                placeholder="재료명 검색 (예: 양파, 계란, 삼겹살)"
+                className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    inputRef.current?.focus();
+                  }}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  aria-label="검색어 지우기"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
 
-          {/* 카테고리 탭 칩 */}
-          <div className="mb-2 flex gap-1 overflow-x-auto pb-1 scrollbar-none">
+            {/* 모바일 키보드 닫기 버튼 */}
             <button
               type="button"
-              onClick={() => setSelectedCategory('ALL')}
+              onClick={handleDismissKeyboard}
+              className="shrink-0 flex items-center justify-center rounded-xl border border-border/80 bg-muted/60 px-2.5 h-10 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-colors"
+              title="키보드 내리고 목록 보기"
+            >
+              키보드 닫기
+            </button>
+          </div>
+
+          {/* 카테고리 탭 칩 (터치 시 키보드 자동 blur) */}
+          <div
+            className="mb-2 flex gap-1 overflow-x-auto pb-1 scrollbar-none"
+            onTouchStart={handleDismissKeyboard}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedCategory('ALL');
+                handleDismissKeyboard();
+              }}
               className={cn(
                 'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
                 selectedCategory === 'ALL'
@@ -139,7 +181,10 @@ export function IngredientCombobox({
               <button
                 key={cat.categoryId}
                 type="button"
-                onClick={() => setSelectedCategory(cat.categoryId)}
+                onClick={() => {
+                  setSelectedCategory(cat.categoryId);
+                  handleDismissKeyboard();
+                }}
                 className={cn(
                   'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
                   selectedCategory === cat.categoryId
@@ -152,8 +197,12 @@ export function IngredientCombobox({
             ))}
           </div>
 
-          {/* 재료 리스트 */}
-          <div className="max-h-52 overflow-y-auto space-y-1 pr-1">
+          {/* 재료 리스트 (스크롤 및 터치 시 키보드 자동 blur) */}
+          <div
+            className="max-h-52 overflow-y-auto space-y-1 pr-1"
+            onScroll={handleDismissKeyboard}
+            onTouchStart={handleDismissKeyboard}
+          >
             {filteredList.length === 0 ? (
               <div className="py-6 text-center text-xs text-muted-foreground">
                 <p>일치하는 표준 식재료가 없어요 😢</p>

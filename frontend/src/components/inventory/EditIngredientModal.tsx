@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Check, Calendar, AlertTriangle } from 'lucide-react';
+import { X, Check, AlertTriangle } from 'lucide-react';
 import { format, addDays } from 'date-fns';
+import { CustomDatePicker } from '../common/CustomDatePicker';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { cn } from '@/utils/cn';
 import type { InventoryItem, StorageType } from '@/types/inventory';
@@ -184,53 +185,31 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
               </div>
             )}
 
-            {/* 4. 소비기한 DatePicker (모던 스타일 & 퀵 프리셋 칩) */}
+            {/* 4. 소비기한 DatePicker (모던 커스텀 데이트피커 & 슬림 프리셋 칩) */}
             <div>
-              <label htmlFor="edit-expire-date-input" className="block text-xs font-bold text-muted-foreground mb-1.5">
+              <label className="block text-xs font-bold text-muted-foreground mb-1.5">
                 소비기한 <span className="text-brand-500">*</span>
               </label>
 
-              {/* 커스텀 데이트피커 래퍼 */}
-              <div className="relative flex items-center rounded-xl border border-input bg-background px-3.5 py-2.5 transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
-                <Calendar className="h-4 w-4 shrink-0 text-brand-500 mr-2.5" />
-                <input
-                  id="edit-expire-date-input"
-                  type="date"
-                  required
-                  value={expireDate}
-                  onChange={(e) => setExpireDate(e.target.value)}
-                  className="w-full bg-transparent text-sm font-bold text-foreground focus:outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
-                />
-                <div className="shrink-0 pl-2">
-                  <span
-                    className={cn(
-                      'rounded-lg px-2 py-0.5 text-xs font-extrabold',
-                      currentDDay <= 3
-                        ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400'
-                        : currentDDay <= 7
-                        ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'
-                        : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
-                    )}
-                  >
-                    {currentDDay === 0 ? 'D-Day' : currentDDay > 0 ? `D-${currentDDay}` : `D+${Math.abs(currentDDay)}`}
-                  </span>
-                </div>
-              </div>
+              {/* 커스텀 브랜드 캘린더 데이트피커 */}
+              <CustomDatePicker
+                value={expireDate}
+                onChange={(dateStr) => setExpireDate(dateStr)}
+              />
 
-              {/* D-Day 빠른 설정 프리셋 칩 */}
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground font-semibold mr-0.5">빠른 설정:</span>
+              {/* D-Day 빠른 설정 프리셋 칩 (1줄 슬림화) */}
+              <div className="mt-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
                 {[
                   { label: '+3일', days: 3 },
-                  { label: '+7일 (1주)', days: 7 },
-                  { label: '+14일 (2주)', days: 14 },
-                  { label: '+30일 (1달)', days: 30 },
+                  { label: '+7일', days: 7 },
+                  { label: '+14일', days: 14 },
+                  { label: '+30일', days: 30 },
                 ].map((preset) => (
                   <button
                     key={preset.days}
                     type="button"
                     onClick={() => handleQuickExpire(preset.days)}
-                    className="rounded-full bg-muted hover:bg-accent border border-border/60 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground transition-colors"
+                    className="shrink-0 rounded-full bg-muted hover:bg-accent border border-border/60 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors"
                   >
                     {preset.label}
                   </button>

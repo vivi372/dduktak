@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Plus, Calendar, Sparkles } from 'lucide-react';
+import { X, Plus, Sparkles } from 'lucide-react';
 import { format, addDays } from 'date-fns';
 import { IngredientCombobox } from './IngredientCombobox';
+import { CustomDatePicker } from '../common/CustomDatePicker';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { cn } from '@/utils/cn';
 import type { MasterIngredient, StorageType, InventoryItem } from '@/types/inventory';
@@ -199,70 +200,47 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
               </div>
             </div>
 
-            {/* 4. 소비기한 DatePicker (모던 스타일 & 퀵 프리셋 칩) */}
+            {/* 4. 소비기한 DatePicker (모던 커스텀 데이트피커 & 슬림 프리셋 칩) */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="expire-date-input" className="text-xs font-bold text-muted-foreground">
+                <label className="text-xs font-bold text-muted-foreground">
                   소비기한 <span className="text-brand-500">*</span>
                 </label>
                 {selectedMaster && (
                   <span className="flex items-center gap-1 text-[11px] font-semibold text-brand-600 dark:text-brand-300">
                     <Sparkles className="h-3 w-3" />
-                    권장 +{selectedMaster.defaultShelfDays}일 자동 반영
+                    권장 +{selectedMaster.defaultShelfDays}일
                   </span>
                 )}
               </div>
 
-              {/* 커스텀 데이트피커 래퍼 */}
-              <div className="relative flex items-center rounded-xl border border-input bg-background px-3.5 py-2.5 transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
-                <Calendar className="h-4 w-4 shrink-0 text-brand-500 mr-2.5" />
-                <input
-                  id="expire-date-input"
-                  type="date"
-                  required
-                  value={expireDate}
-                  onChange={(e) => setExpireDate(e.target.value)}
-                  className="w-full bg-transparent text-sm font-bold text-foreground focus:outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
-                />
-                <div className="shrink-0 pl-2">
-                  <span
-                    className={cn(
-                      'rounded-lg px-2 py-0.5 text-xs font-extrabold',
-                      currentDDay <= 3
-                        ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400'
-                        : currentDDay <= 7
-                        ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'
-                        : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
-                    )}
-                  >
-                    {currentDDay === 0 ? 'D-Day' : currentDDay > 0 ? `D-${currentDDay}` : `D+${Math.abs(currentDDay)}`}
-                  </span>
-                </div>
-              </div>
+              {/* 커스텀 브랜드 캘린더 데이트피커 */}
+              <CustomDatePicker
+                value={expireDate}
+                onChange={(dateStr) => setExpireDate(dateStr)}
+              />
 
-              {/* D-Day 빠른 설정 프리셋 칩 */}
-              <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] text-muted-foreground font-semibold mr-0.5">빠른 설정:</span>
+              {/* D-Day 빠른 설정 프리셋 칩 (1줄 슬림화) */}
+              <div className="mt-2 flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
                 {selectedMaster && (
                   <button
                     type="button"
                     onClick={() => handleQuickExpire(selectedMaster.defaultShelfDays)}
-                    className="rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 px-2 py-0.5 text-[11px] font-bold text-brand-600 dark:text-brand-300 hover:bg-brand-100 transition-colors"
+                    className="shrink-0 rounded-full bg-brand-50 dark:bg-brand-950/60 border border-brand-200 dark:border-brand-800 px-2.5 py-1 text-[11px] font-bold text-brand-600 dark:text-brand-300 hover:bg-brand-100 transition-colors"
                   >
                     권장 (+{selectedMaster.defaultShelfDays}일)
                   </button>
                 )}
                 {[
                   { label: '+3일', days: 3 },
-                  { label: '+7일 (1주)', days: 7 },
-                  { label: '+14일 (2주)', days: 14 },
-                  { label: '+30일 (1달)', days: 30 },
+                  { label: '+7일', days: 7 },
+                  { label: '+14일', days: 14 },
                 ].map((preset) => (
                   <button
                     key={preset.days}
                     type="button"
                     onClick={() => handleQuickExpire(preset.days)}
-                    className="rounded-full bg-muted hover:bg-accent border border-border/60 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground transition-colors"
+                    className="shrink-0 rounded-full bg-muted hover:bg-accent border border-border/60 px-2.5 py-1 text-[11px] font-semibold text-muted-foreground transition-colors"
                   >
                     {preset.label}
                   </button>
