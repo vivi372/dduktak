@@ -51,17 +51,13 @@ export function InventoryAccordionItem({
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <h2 className="truncate text-base font-extrabold tracking-tight">{group.name}</h2>
-              <Badge variant="mint" className="text-[11px] font-bold">
+              <Badge variant="mint" className="shrink-0 text-[11px] font-bold">
                 {STORAGE_LABEL[group.storageType]}
               </Badge>
-              {isMultiple && (
-                <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-bold text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
-                  {group.items.length}개 보관 중
-                </span>
-              )}
             </div>
 
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground font-medium">
+
+            <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground font-medium">
               <span>총 {group.totalQuantity} {group.primaryUnit}</span>
               {group.categoryName && (
                 <>
@@ -69,9 +65,18 @@ export function InventoryAccordionItem({
                   <span>{group.categoryName}</span>
                 </>
               )}
+              {isMultiple && (
+                <>
+                  <span>·</span>
+                  <span className="font-semibold text-brand-600 dark:text-brand-300">
+                    {group.items.length}개 보관 중
+                  </span>
+                </>
+              )}
             </p>
           </div>
         </div>
+
 
         {/* 가장 임박한 D-Day 배지 및 토글 아이콘 */}
         <div className="flex shrink-0 items-center gap-2">

@@ -3,9 +3,11 @@ import { useSearchParams } from 'react-router-dom';
 import { Search, Plus, ScanBarcode, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { mockInventory, mockCategories } from '@/mocks';
+import { useMockAuthStore } from '@/store/mockAuthStore';
 import { cn } from '@/utils/cn';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { EmptyState } from '@/components/common/EmptyState';
+import { HorizontalCarousel } from '@/components/common/HorizontalCarousel';
 import {
   InventoryAccordionItem,
   ConsumeModal,
@@ -41,9 +43,16 @@ const STORAGE_FILTERS: { key: StorageFilter; label: string }[] = [
  */
 export default function InventoryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { hasIngredients, setHasIngredients } = useMockAuthStore();
 
   // 인벤토리 상태 (목 데이터 기반 클라이언트 인터랙션)
   const [inventoryList, setInventoryList] = useState<InventoryItem[]>(mockInventory);
+
+  // 개발자 검수 / 테스트용: hasIngredients=false일 때 빈 냉장고 상태 제공
+  const effectiveList = useMemo(
+    () => (hasIngredients ? inventoryList : []),
+    [hasIngredients, inventoryList],
+  );
 
   // 검색 및 필터 상태
   const [searchQuery, setSearchQuery] = useState('');
@@ -81,14 +90,15 @@ export default function InventoryPage() {
 
   // 1. 신선 보관 중인 재료(dDay >= 0)와 만료된 재료(dDay < 0) 분리 (INV-02-4)
   const activeItems = useMemo(
-    () => inventoryList.filter((item) => item.dDay >= 0),
-    [inventoryList],
+    () => effectiveList.filter((item) => item.dDay >= 0),
+    [effectiveList],
   );
 
   const expiredItems = useMemo(
-    () => inventoryList.filter((item) => item.dDay < 0),
-    [inventoryList],
+    () => effectiveList.filter((item) => item.dDay < 0),
+    [effectiveList],
   );
+
 
   // 2. 검색어 및 보관장소/카테고리 필터링 적용
   const filteredActiveItems = useMemo(() => {
@@ -205,6 +215,19 @@ export default function InventoryPage() {
             <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
               신선 {activeItems.length}종
             </span>
+            {/* 개발/검수 편의용: 빈 냉장고 화면 즉시 확인 토글 버튼 */}
+            <button
+              type="button"
+              onClick={() => {
+                const nextState = !hasIngredients;
+                setHasIngredients(nextState);
+                toast.info(nextState ? '🟢 기본 식재료 목데이터를 복원했어요' : '⚪ 빈 냉장고(재료 0개) 상태로 전환했어요');
+              }}
+              title="등록된 재료가 없을 때의 UI를 즉시 테스트할 수 있어요"
+              className="rounded-full border border-border/80 bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-accent active:scale-95 transition-all"
+            >
+              {hasIngredients ? '비우기 테스트' : '목데이터 복원'}
+            </button>
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">
             소비기한이 가장 임박한 순서대로 그룹화하여 보여드려요.
@@ -270,8 +293,8 @@ export default function InventoryPage() {
         )}
       </div>
 
-      {/* 3. 보관 장소 탭 필터 */}
-      <div role="tablist" aria-label="보관 장소" className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+      {/* 3. 보관 장소 탭 필터 (스크롤바 완전 숨김) */}
+      <div role="tablist" aria-label="보관 장소" className="no-scrollbar flex gap-1.5 overflow-x-auto pb-0.5">
         {STORAGE_FILTERS.map(({ key, label }) => (
           <button
             key={key}
@@ -291,36 +314,39 @@ export default function InventoryPage() {
         ))}
       </div>
 
-      {/* 4. 카테고리 필터 칩 */}
-      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-        <button
-          type="button"
-          onClick={() => setCategoryFilter('ALL')}
-          className={cn(
-            'shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors',
-            categoryFilter === 'ALL'
-              ? 'bg-secondary text-secondary-foreground font-bold'
-              : 'text-muted-foreground hover:bg-accent',
-          )}
-        >
-          카테고리 전체
-        </button>
-        {mockCategories.map((cat) => (
+      {/* 4. 카테고리 필터 칩 (가로 스크롤바 제거 & PC 좌우 < > 이동 지원) */}
+      <div className="relative">
+        <HorizontalCarousel scrollDistance={160} className="gap-1.5 pb-1 pt-0">
           <button
-            key={cat.categoryId}
             type="button"
-            onClick={() => setCategoryFilter(cat.categoryId)}
+            onClick={() => setCategoryFilter('ALL')}
             className={cn(
-              'shrink-0 rounded-xl px-3 py-1.5 text-xs font-semibold transition-colors',
-              categoryFilter === cat.categoryId
-                ? 'bg-secondary text-secondary-foreground font-bold'
-                : 'text-muted-foreground hover:bg-accent',
+              'min-h-[36px] shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95',
+              categoryFilter === 'ALL'
+                ? 'bg-secondary text-secondary-foreground font-bold shadow-xs'
+                : 'bg-card border text-muted-foreground hover:bg-accent',
             )}
           >
-            {cat.categoryName}
+            카테고리 전체
           </button>
-        ))}
+          {mockCategories.map((cat) => (
+            <button
+              key={cat.categoryId}
+              type="button"
+              onClick={() => setCategoryFilter(cat.categoryId)}
+              className={cn(
+                'min-h-[36px] shrink-0 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95',
+                categoryFilter === cat.categoryId
+                  ? 'bg-secondary text-secondary-foreground font-bold shadow-xs'
+                  : 'bg-card border text-muted-foreground hover:bg-accent',
+              )}
+            >
+              {cat.categoryName}
+            </button>
+          ))}
+        </HorizontalCarousel>
       </div>
+
 
       {/* 5. 2-Tier 아코디언 메인 리스트 영역 */}
       {groupedItems.length === 0 ? (
