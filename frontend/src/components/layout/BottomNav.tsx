@@ -50,18 +50,32 @@ function Tab({ to, label, Icon }: TabItem) {
   );
 }
 
+interface BottomNavProps {
+  /** 외부 트레이 열기 제어 콜백 */
+  onOpenTray?: () => void;
+}
+
 /**
  * 하단 탭바 (Thumb Zone)
- * - 480px 프레임 폭 안에 고정, 중앙 FAB(56px)은 탭바 위로 20px 돌출
+ * - 모바일/태블릿(lg 미만): 480px 프레임 폭 안에 고정, 중앙 FAB(56px)은 탭바 위로 20px 돌출
+ * - 데스크톱(lg 이상): 2-컬럼 좌측 사이드 패널에 퀵 메뉴가 상시 노출되므로 하단 탭바는 숨김 (lg:hidden)
  */
-export function BottomNav() {
-  const [trayOpen, setTrayOpen] = useState(false);
+export function BottomNav({ onOpenTray }: BottomNavProps = {}) {
+  const [internalTrayOpen, setInternalTrayOpen] = useState(false);
+
+  const handleOpen = () => {
+    if (onOpenTray) {
+      onOpenTray();
+    } else {
+      setInternalTrayOpen(true);
+    }
+  };
 
   return (
     <>
       <nav
         aria-label="하단 메뉴"
-        className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border/80 border-x dark:border-white/10 bg-background/90 pb-safe backdrop-blur-lg"
+        className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border/80 border-x bg-background/90 pb-safe backdrop-blur-lg dark:border-white/10 lg:hidden"
       >
         <div className="grid h-tabbar grid-cols-5">
           {LEFT_TABS.map((t) => <Tab key={t.to} {...t} />)}
@@ -70,10 +84,10 @@ export function BottomNav() {
           <div className="relative flex items-end justify-center pb-2">
             <button
               type="button"
-              onClick={() => setTrayOpen(true)}
+              onClick={handleOpen}
               aria-label="재료 추가"
               aria-haspopup="dialog"
-              aria-expanded={trayOpen}
+              aria-expanded={internalTrayOpen}
               className="absolute -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-500 text-brand-foreground shadow-fab ring-4 ring-background transition-transform animate-pulse-ring hover:scale-105 active:scale-90"
             >
               <Plus className="h-7 w-7" strokeWidth={3} />
@@ -84,7 +98,9 @@ export function BottomNav() {
           {RIGHT_TABS.map((t) => <Tab key={t.to} {...t} />)}
         </div>
       </nav>
-      <QuickAddTray open={trayOpen} onClose={() => setTrayOpen(false)} />
+      {!onOpenTray && (
+        <QuickAddTray open={internalTrayOpen} onClose={() => setInternalTrayOpen(false)} />
+      )}
     </>
   );
 }

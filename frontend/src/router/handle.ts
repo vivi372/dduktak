@@ -10,4 +10,6 @@ export interface RouteHandle {
   hideBottomNav?: boolean;
   /** 상단 헤더 숨김 여부 (로그인/온보딩 풀스크린 뷰 등) */
   hideHeader?: boolean;
+  /** 데스크톱 2-컬럼 사이드바 숨김 및 중앙 단독 집중 레이아웃 여부 (로그인 등) */
+  hideSidePanel?: boolean;
 }

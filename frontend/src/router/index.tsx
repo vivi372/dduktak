@@ -25,7 +25,7 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.LOGIN,
         element: <LoginPage />,
-        handle: h({ title: '로그인', hideBottomNav: true, hideHeader: true }),
+        handle: h({ title: '로그인', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
       },
       { path: '*', element: <NotFoundPage />, handle: h({ title: '길을 잃었어요', brand: true }) },
     ],
