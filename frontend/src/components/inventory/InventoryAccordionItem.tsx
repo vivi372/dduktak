@@ -48,27 +48,26 @@ export function InventoryAccordionItem({
         className="flex min-h-[64px] w-full items-center justify-between gap-3 p-4 text-left transition-colors hover:bg-accent/40 active:bg-accent/70"
       >
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h2 className="truncate text-base font-extrabold tracking-tight">{group.name}</h2>
-              <Badge variant="mint" className="shrink-0 text-[11px] font-bold">
+              <h2 className="truncate text-sm sm:text-base font-extrabold tracking-tight">{group.name}</h2>
+              <Badge variant="mint" className="shrink-0 text-[10px] sm:text-[11px] font-bold">
                 {STORAGE_LABEL[group.storageType]}
               </Badge>
             </div>
 
-
             <p className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground font-medium">
-              <span>총 {group.totalQuantity} {group.primaryUnit}</span>
+              <span className="whitespace-nowrap">총 {group.totalQuantity} {group.primaryUnit}</span>
               {group.categoryName && (
                 <>
                   <span>·</span>
-                  <span>{group.categoryName}</span>
+                  <span className="whitespace-nowrap">{group.categoryName}</span>
                 </>
               )}
               {isMultiple && (
                 <>
                   <span>·</span>
-                  <span className="font-semibold text-brand-600 dark:text-brand-300">
+                  <span className="font-semibold text-brand-600 dark:text-brand-300 whitespace-nowrap">
                     {group.items.length}개 보관 중
                   </span>
                 </>
@@ -77,10 +76,15 @@ export function InventoryAccordionItem({
           </div>
         </div>
 
-
         {/* 가장 임박한 D-Day 배지 및 토글 아이콘 */}
-        <div className="flex shrink-0 items-center gap-2">
-          <DDayBadge dDay={group.mostUrgentDDay} verbose className="shadow-xs" />
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+          {/* 모바일 좁은 화면에서는 컴팩트 D-1 배지로 공간 확보, sm 이상에서는 verbose 노출 */}
+          <div className="hidden sm:inline-flex">
+            <DDayBadge dDay={group.mostUrgentDDay} verbose className="shadow-xs" />
+          </div>
+          <div className="inline-flex sm:hidden">
+            <DDayBadge dDay={group.mostUrgentDDay} verbose={false} className="shadow-xs" />
+          </div>
           <motion.div
             animate={{ rotate: isOpen ? 180 : 0 }}
             transition={{ duration: 0.2 }}
@@ -102,7 +106,7 @@ export function InventoryAccordionItem({
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="overflow-hidden border-t bg-muted/20"
           >
-            <div className="space-y-2.5 p-3.5 sm:p-4">
+            <div className="space-y-2.5 p-3 sm:p-4">
               <div className="flex items-center justify-between px-1 text-[11px] font-semibold text-muted-foreground">
                 <span>보관 인스턴스 ({sortedItems.length}건)</span>
                 <span>소비기한 임박순</span>
@@ -111,30 +115,23 @@ export function InventoryAccordionItem({
               {sortedItems.map((item, idx) => (
                 <div
                   key={item.ingredientId}
-                  className="rounded-xl border bg-card p-3 shadow-xs transition-all hover:border-brand-200"
+                  className="rounded-xl border bg-card p-2.5 sm:p-3 shadow-xs transition-all hover:border-brand-200"
                 >
-                  <div className="flex items-start justify-between gap-2">
+                  {/* 상단 1행: [수량 D-Day / 소비기한]  ---  [액션 버튼 3종] */}
+                  <div className="flex items-center justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-foreground">
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <span className="text-xs font-bold text-foreground whitespace-nowrap">
                           {idx + 1}. {item.quantity} {item.unit}
                         </span>
-                        <DDayBadge dDay={item.dDay} className="scale-90 origin-left" />
+                        <DDayBadge dDay={item.dDay} className="scale-90 origin-left shrink-0" />
                       </div>
 
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        <span>소비기한: {item.expireDate}</span>
-                        <span className="mx-1.5">·</span>
-                        <span>{STORAGE_LABEL[item.storageType]}</span>
+                      <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] text-muted-foreground">
+                        <span className="whitespace-nowrap font-medium">소비기한: {item.expireDate}</span>
+                        <span>·</span>
+                        <span className="whitespace-nowrap">{STORAGE_LABEL[item.storageType]}</span>
                       </div>
-
-                      {/* 유저 개별 메모 (존재할 경우 말풍선 UI) */}
-                      {item.memo && (
-                        <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-accent/60 px-2.5 py-1 text-xs font-medium text-foreground">
-                          <MessageSquareQuote className="h-3.5 w-3.5 shrink-0 text-brand-500" />
-                          <span className="truncate">{item.memo}</span>
-                        </div>
-                      )}
                     </div>
 
                     {/* 개별 액션 버튼 3종: 소비, 수정, 삭제 */}
@@ -146,10 +143,10 @@ export function InventoryAccordionItem({
                           onConsume(item);
                         }}
                         aria-label={`${item.name} 소비`}
-                        className="flex h-9 items-center gap-1 rounded-lg bg-brand-50 px-2.5 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-100 active:scale-95 dark:bg-brand-950/60 dark:text-brand-300"
+                        className="flex h-8 items-center gap-1 rounded-lg bg-brand-50 px-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-100 active:scale-95 dark:bg-brand-950/60 dark:text-brand-300"
                       >
-                        <Utensils className="h-3.5 w-3.5" />
-                        <span>소비</span>
+                        <Utensils className="h-3 w-3" />
+                        <span className="text-[11px] sm:text-xs">소비</span>
                       </button>
 
                       <button
@@ -159,7 +156,7 @@ export function InventoryAccordionItem({
                           onEdit(item);
                         }}
                         aria-label={`${item.name} 수정`}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
@@ -171,13 +168,20 @@ export function InventoryAccordionItem({
                           onDelete(item);
                         }}
                         aria-label={`${item.name} 삭제`}
-                        className="flex h-9 w-9 items-center justify-center rounded-lg border border-destructive/20 bg-background text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-destructive/20 bg-background text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
-
                   </div>
+
+                  {/* 하단 2행: 유저 개별 메모 (가로 100% Full Width를 온전히 활용하여 좁은 화면에서도 말줄임 없이 전체 노출) */}
+                  {item.memo && (
+                    <div className="mt-2.5 flex items-start gap-1.5 rounded-lg bg-accent/60 px-2.5 py-1.5 text-xs font-medium text-foreground">
+                      <MessageSquareQuote className="h-3.5 w-3.5 shrink-0 text-brand-500 mt-0.5" />
+                      <span className="flex-1 break-words text-[11px] sm:text-xs leading-relaxed">{item.memo}</span>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

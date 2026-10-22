@@ -49,7 +49,7 @@ export function ExpiredIngredientsSection({
             <h2 className="text-sm font-extrabold text-destructive tracking-tight">
               소비기한이 지난 재료 {items.length}개
             </h2>
-            <p className="text-[11px] text-muted-foreground">버리거나 뒤늦게 소비하셨다면 정리해 주세요.</p>
+            <p className="text-[11px] text-muted-foreground break-keep">버리거나 뒤늦게 소비하셨다면 정리해 주세요.</p>
           </div>
         </div>
 
@@ -76,58 +76,72 @@ export function ExpiredIngredientsSection({
             {items.map((item) => (
               <div
                 key={item.ingredientId}
-                className="flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-card p-3 shadow-xs"
+                className="rounded-xl border border-destructive/20 bg-card p-2.5 sm:p-3 shadow-xs"
               >
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-bold text-foreground truncate">{item.name}</span>
-                    <span className="text-xs text-muted-foreground">
-                      {item.quantity} {item.unit}
-                    </span>
-                    <span className="text-[11px] text-muted-foreground/80">
-                      ({STORAGE_LABEL[item.storageType]})
-                    </span>
+                {/* 1행: [이름 + 수량 + (보관)]  ---  [3가지 관리 액션: 연장, 먹음, 폐기] */}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-sm font-bold text-foreground truncate">{item.name}</span>
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {item.quantity} {item.unit}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground/80 whitespace-nowrap">
+                        ({STORAGE_LABEL[item.storageType]})
+                      </span>
+                    </div>
                   </div>
-                  <div className="mt-1 flex items-center gap-2 text-xs">
-                    <DDayBadge dDay={item.dDay} verbose />
-                    {item.memo && <span className="text-muted-foreground truncate">· {item.memo}</span>}
+
+                  {/* 3가지 관리 액션: 폐기, 먹음, 연장 */}
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => onExtend(item)}
+                      title="소비기한 연장"
+                      aria-label={`${item.name} 소비기한 연장`}
+                      className="flex h-8 items-center gap-1 rounded-lg border bg-background px-2 text-xs font-semibold text-foreground hover:bg-accent active:scale-95"
+                    >
+                      <CalendarPlus className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="hidden sm:inline">연장</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onConsume(item)}
+                      title="먹음 (소비 완료)"
+                      aria-label={`${item.name} 먹음 처리`}
+                      className="flex h-8 items-center gap-1 rounded-lg bg-brand-50 px-2 text-xs font-bold text-brand-700 hover:bg-brand-100 active:scale-95 dark:bg-brand-950/60 dark:text-brand-300"
+                    >
+                      <Utensils className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">먹음</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => onDiscard(item)}
+                      title="버리기 (폐기)"
+                      aria-label={`${item.name} 버리기`}
+                      className="flex h-8 items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2 text-xs font-bold text-destructive hover:bg-destructive/20 active:scale-95"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                      <span className="hidden sm:inline">폐기</span>
+                    </button>
                   </div>
                 </div>
 
-                {/* 3가지 관리 액션: 폐기, 먹음, 연장 */}
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => onExtend(item)}
-                    title="소비기한 연장"
-                    aria-label={`${item.name} 소비기한 연장`}
-                    className="flex h-8 items-center gap-1 rounded-lg border bg-background px-2 text-xs font-semibold text-foreground hover:bg-accent active:scale-95"
-                  >
-                    <CalendarPlus className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="hidden sm:inline">연장</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onConsume(item)}
-                    title="먹음 (소비 완료)"
-                    aria-label={`${item.name} 먹음 처리`}
-                    className="flex h-8 items-center gap-1 rounded-lg bg-brand-50 px-2 text-xs font-bold text-brand-700 hover:bg-brand-100 active:scale-95 dark:bg-brand-950/60 dark:text-brand-300"
-                  >
-                    <Utensils className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">먹음</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => onDiscard(item)}
-                    title="버리기 (폐기)"
-                    aria-label={`${item.name} 버리기`}
-                    className="flex h-8 items-center gap-1 rounded-lg border border-destructive/30 bg-destructive/10 px-2 text-xs font-bold text-destructive hover:bg-destructive/20 active:scale-95"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">폐기</span>
-                  </button>
+                {/* 2행: [DDayBadge (모바일 컴팩트 / PC verbose)] + [메모] */}
+                <div className="mt-1.5 flex items-center gap-1.5 text-xs">
+                  <div className="inline-flex sm:hidden">
+                    <DDayBadge dDay={item.dDay} verbose={false} className="shrink-0" />
+                  </div>
+                  <div className="hidden sm:inline-flex">
+                    <DDayBadge dDay={item.dDay} verbose={true} className="shrink-0" />
+                  </div>
+                  {item.memo && (
+                    <span className="min-w-0 flex-1 truncate text-[11px] text-muted-foreground">
+                      · {item.memo}
+                    </span>
+                  )}
                 </div>
               </div>
             ))}

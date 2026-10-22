@@ -27,6 +27,8 @@ interface CustomDatePickerProps {
   minDate?: string;
   /** 라벨 텍스트 */
   label?: string;
+  /** 인라인 확장 모드 (absolute 팝오버 대신 부모 흐름 내에서 아래 요소를 자연스럽게 밀어내는 방식) */
+  inline?: boolean;
   /** 추가 클래스 */
   className?: string;
 }
@@ -41,6 +43,7 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 export function CustomDatePicker({
   value,
   onChange,
+  inline = false,
   className,
 }: CustomDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -147,52 +150,57 @@ export function CustomDatePicker({
         </div>
       </button>
 
-      {/* 2. 커스텀 캘린더 팝오버 */}
+      {/* 2. 커스텀 캘린더 (inline 확장형 vs absolute 팝오버) */}
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: -4 }}
+            initial={{ opacity: 0, scale: 0.96, y: -4 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: -4 }}
+            exit={{ opacity: 0, scale: 0.96, y: -4 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 right-0 top-full z-50 mt-1.5 overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-2xl ring-1 ring-black/10 dark:ring-white/10"
+            className={cn(
+              'overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2.5 sm:p-4 shadow-xl ring-1 ring-black/5 dark:ring-white/10',
+              inline
+                ? 'relative mt-2 w-full shadow-md'
+                : 'absolute left-0 right-0 top-full z-50 mt-1.5 shadow-2xl ring-black/10',
+            )}
           >
             {/* 캘린더 헤더 (년월 & 월 이동) */}
-            <div className="flex items-center justify-between pb-3 border-b border-border/60">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm font-extrabold text-foreground">
+            <div className="flex items-center justify-between pb-2 sm:pb-3 border-b border-border/60 gap-1">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-xs sm:text-sm font-extrabold text-foreground whitespace-nowrap">
                   {format(currentMonth, 'yyyy년 M월')}
                 </span>
                 <button
                   type="button"
                   onClick={handleJumpToday}
-                  className="rounded-md bg-muted px-1.5 py-0.5 text-[11px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                  className="shrink-0 whitespace-nowrap rounded-md bg-muted px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
                 >
                   오늘
                 </button>
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-0.5 sm:gap-1 shrink-0">
                 <button
                   type="button"
                   onClick={handlePrevMonth}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg border hover:bg-accent text-muted-foreground transition-colors"
+                  className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg border hover:bg-accent text-muted-foreground transition-colors"
                   aria-label="이전 달"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={handleNextMonth}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg border hover:bg-accent text-muted-foreground transition-colors"
+                  className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg border hover:bg-accent text-muted-foreground transition-colors"
                   aria-label="다음 달"
                 >
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-accent text-muted-foreground transition-colors ml-1"
+                  className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-lg hover:bg-accent text-muted-foreground transition-colors ml-0.5"
                   aria-label="달력 닫기"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -201,12 +209,12 @@ export function CustomDatePicker({
             </div>
 
             {/* 요일 헤더 */}
-            <div className="mt-2.5 grid grid-cols-7 text-center">
+            <div className="mt-2 grid grid-cols-7 text-center">
               {WEEKDAYS.map((day, idx) => (
                 <span
                   key={day}
                   className={cn(
-                    'py-1 text-xs font-bold',
+                    'py-0.5 sm:py-1 text-[11px] sm:text-xs font-bold',
                     idx === 0 ? 'text-red-500' : idx === 6 ? 'text-blue-500' : 'text-muted-foreground',
                   )}
                 >
@@ -216,7 +224,7 @@ export function CustomDatePicker({
             </div>
 
             {/* 날짜 그리드 */}
-            <div className="mt-1 grid grid-cols-7 gap-1">
+            <div className="mt-1 grid grid-cols-7 gap-0.5 sm:gap-1">
               {calendarDays.map((day) => {
                 const isSelected = isSameDay(day, selectedDate);
                 const isCurrentMonth = isSameMonth(day, currentMonth);
@@ -228,7 +236,7 @@ export function CustomDatePicker({
                     type="button"
                     onClick={() => handleSelectDay(day)}
                     className={cn(
-                      'flex h-8 w-full items-center justify-center rounded-xl text-xs font-semibold transition-all',
+                      'flex h-7 sm:h-8 w-full items-center justify-center rounded-lg sm:rounded-xl text-xs font-semibold transition-all',
                       !isCurrentMonth && 'text-muted-foreground/30',
                       isCurrentMonth && !isSelected && 'text-foreground hover:bg-brand-50 dark:hover:bg-slate-800',
                       isDayToday && !isSelected && 'border border-brand-500 text-brand-600 font-bold',

@@ -6,6 +6,7 @@ import { IngredientCombobox } from './IngredientCombobox';
 import { CustomDatePicker } from '../common/CustomDatePicker';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { cn } from '@/utils/cn';
+import { useBodyScrollLock } from '@/hooks';
 import type { MasterIngredient, StorageType, InventoryItem } from '@/types/inventory';
 
 interface ManualAddModalProps {
@@ -27,6 +28,8 @@ const STORAGE_OPTIONS: StorageType[] = ['REFRIGERATED', 'FROZEN', 'ROOM_TEMP'];
  * - 수량(numeric), 보관장소 라디오, 퀵 프리셋 DatePicker, 30자 메모 입력
  */
 export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAddModalProps) {
+  useBodyScrollLock(open);
+
   const [selectedMaster, setSelectedMaster] = useState<MasterIngredient | null>(initialMaster ?? null);
   const [storageType, setStorageType] = useState<StorageType>(initialMaster?.defaultStorageType ?? 'REFRIGERATED');
   const [quantity, setQuantity] = useState<number>(1);
@@ -95,7 +98,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
 
         {/* 모달 창 */}
         <motion.div
-          className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border bg-card p-6 shadow-2xl"
+          className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl border bg-card p-4 sm:p-6 shadow-2xl"
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -104,7 +107,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
           <div className="flex items-center justify-between pb-3 border-b">
             <div>
               <h2 className="text-lg font-extrabold tracking-tight">재료 직접 넣기</h2>
-              <p className="text-xs text-muted-foreground">표준 식재료를 검색하여 손쉽게 등록해 보세요.</p>
+              <p className="text-xs text-muted-foreground break-keep">표준 식재료를 검색하여 손쉽게 등록해 보세요.</p>
             </div>
             <button
               type="button"
@@ -214,10 +217,11 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
                 )}
               </div>
 
-              {/* 커스텀 브랜드 캘린더 데이트피커 */}
+              {/* 커스텀 브랜드 캘린더 데이트피커 (인라인 확장 모드로 아래 요소를 자연스럽게 밀어냄) */}
               <CustomDatePicker
                 value={expireDate}
                 onChange={(dateStr) => setExpireDate(dateStr)}
+                inline
               />
 
               {/* D-Day 빠른 설정 프리셋 칩 (1줄 슬림화) */}
@@ -269,8 +273,8 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
               />
             </div>
 
-            {/* 하단 액션 버튼 */}
-            <div className="flex gap-2 pt-2">
+            {/* 하단 액션 버튼 (바닥 여유 공간 pb-2 적용) */}
+            <div className="flex gap-2 pt-2 pb-2">
               <button
                 type="button"
                 onClick={onClose}

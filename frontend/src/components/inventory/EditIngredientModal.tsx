@@ -5,6 +5,7 @@ import { format, addDays } from 'date-fns';
 import { CustomDatePicker } from '../common/CustomDatePicker';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { cn } from '@/utils/cn';
+import { useBodyScrollLock } from '@/hooks';
 import type { InventoryItem, StorageType } from '@/types/inventory';
 
 interface EditIngredientModalProps {
@@ -22,6 +23,8 @@ const STORAGE_OPTIONS: StorageType[] = ['REFRIGERATED', 'FROZEN', 'ROOM_TEMP'];
  * - 표준 식재료 및 단위는 요리 차감 호환을 위해 고정
  */
 export function EditIngredientModal({ item, onClose, onSave }: EditIngredientModalProps) {
+  useBodyScrollLock(!!item);
+
   if (!item) return null;
 
   const [quantity, setQuantity] = useState<number>(item.quantity);
@@ -80,7 +83,7 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
 
         {/* 모달 본문 */}
         <motion.div
-          className="relative z-10 w-full max-w-md overflow-hidden rounded-3xl border bg-card p-6 shadow-2xl"
+          className="relative z-10 w-full max-w-md max-h-[90vh] overflow-y-auto no-scrollbar rounded-3xl border bg-card p-4 sm:p-6 shadow-2xl"
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
@@ -89,7 +92,7 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
           <div className="flex items-center justify-between pb-3 border-b">
             <div>
               <h2 className="text-lg font-extrabold tracking-tight">재료 정보 수정</h2>
-              <p className="text-xs text-muted-foreground">보관 장소, 수량, 소비기한을 수정할 수 있어요.</p>
+              <p className="text-xs text-muted-foreground break-keep">보관 장소, 수량, 소비기한을 수정할 수 있어요.</p>
             </div>
             <button
               type="button"
@@ -191,10 +194,11 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
                 소비기한 <span className="text-brand-500">*</span>
               </label>
 
-              {/* 커스텀 브랜드 캘린더 데이트피커 */}
+              {/* 커스텀 브랜드 캘린더 데이트피커 (인라인 확장형) */}
               <CustomDatePicker
                 value={expireDate}
                 onChange={(dateStr) => setExpireDate(dateStr)}
+                inline
               />
 
               {/* D-Day 빠른 설정 프리셋 칩 (1줄 슬림화) */}
@@ -236,8 +240,8 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
               />
             </div>
 
-            {/* 액션 버튼 */}
-            <div className="flex gap-2 pt-2">
+            {/* 액션 버튼 (바닥 여유 공간 pb-2 적용) */}
+            <div className="flex gap-2 pt-2 pb-2">
               <button
                 type="button"
                 onClick={onClose}

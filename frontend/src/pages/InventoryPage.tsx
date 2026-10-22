@@ -234,18 +234,18 @@ export default function InventoryPage() {
           </p>
         </div>
 
-        {/* 3대 추가 CTA: 직접 추가 / 바코드 / 영수증 */}
-        <div className="flex items-center gap-2">
+        {/* 3대 추가 CTA: 직접 추가 / 바코드 / 영수증 (모바일에서도 3버튼 텍스트 균등 노출) */}
+        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-2">
           <button
             type="button"
             onClick={() => {
               setBarcodePrefillMaster(null);
               setIsManualModalOpen(true);
             }}
-            className="flex min-h-[42px] flex-1 sm:flex-none items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-3.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
+            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-2 sm:px-3.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
           >
-            <Plus className="h-4 w-4" />
-            <span>재료 추가</span>
+            <Plus className="h-4 w-4 shrink-0" />
+            <span className="truncate">재료 추가</span>
           </button>
 
           <button
@@ -253,10 +253,10 @@ export default function InventoryPage() {
             onClick={() => setIsBarcodeModalOpen(true)}
             title="바코드 스캔"
             aria-label="바코드 스캔으로 재료 추가"
-            className="flex min-h-[42px] w-10 sm:w-auto items-center justify-center gap-1.5 rounded-xl border bg-card px-2.5 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95"
+            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95"
           >
-            <ScanBarcode className="h-4 w-4 text-brand-500" />
-            <span className="hidden sm:inline">바코드</span>
+            <ScanBarcode className="h-4 w-4 text-brand-500 shrink-0" />
+            <span className="truncate">바코드</span>
           </button>
 
           <button
@@ -264,10 +264,10 @@ export default function InventoryPage() {
             onClick={() => setIsReceiptModalOpen(true)}
             title="영수증 OCR 스캔"
             aria-label="영수증 스캔으로 재료 추가"
-            className="flex min-h-[42px] w-10 sm:w-auto items-center justify-center gap-1.5 rounded-xl border bg-card px-2.5 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95"
+            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95"
           >
-            <Receipt className="h-4 w-4 text-brand-500" />
-            <span className="hidden sm:inline">영수증</span>
+            <Receipt className="h-4 w-4 text-brand-500 shrink-0" />
+            <span className="truncate">영수증</span>
           </button>
         </div>
       </div>
@@ -279,7 +279,7 @@ export default function InventoryPage() {
           type="text"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="재료명 또는 메모로 검색해 보세요 (예: 계란, 1+1, 소분)"
+          placeholder="재료명 또는 메모로 검색해 보세요"
           className="h-11 w-full rounded-2xl border bg-card pl-10 pr-4 text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-xs"
         />
         {searchQuery && (

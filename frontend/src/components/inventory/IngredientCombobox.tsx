@@ -91,18 +91,22 @@ export function IngredientCombobox({
           isOpen && 'border-brand-500 ring-2 ring-brand-500/20',
         )}
       >
-        <span className="truncate">
+        <div className="flex min-w-0 flex-1 items-center gap-2 mr-2">
           {selectedIngredient ? (
-            <span className="flex items-center gap-2">
-              <span className="font-bold text-foreground">{selectedIngredient.name}</span>
-              <span className="rounded-md bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">
+            <>
+              <span className="min-w-0 flex-1 truncate font-bold text-foreground">
+                {selectedIngredient.name}
+              </span>
+              <span className="shrink-0 whitespace-nowrap rounded-md bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">
                 {selectedIngredient.categoryName}
               </span>
-            </span>
+            </>
           ) : (
-            '표준 식재료를 검색하여 선택하세요'
+            <span className="truncate text-muted-foreground">
+              표준 식재료를 검색하여 선택하세요
+            </span>
           )}
-        </span>
+        </div>
         <ChevronDown
           className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', isOpen && 'rotate-180')}
         />
@@ -112,7 +116,7 @@ export function IngredientCombobox({
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in fade-in-0 zoom-in-95"
+          className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-72 w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in fade-in-0 zoom-in-95"
         >
           {/* 검색창 & 모바일 키보드 닫기 바 */}
           <div className="relative mb-2 flex items-center gap-1.5">
@@ -128,8 +132,8 @@ export function IngredientCombobox({
                     handleDismissKeyboard();
                   }
                 }}
-                placeholder="재료명 검색 (예: 양파, 계란, 삼겹살)"
-                className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 pl-9 pr-8 text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                placeholder="재료명 검색 (양파, 계란 등)"
+                className="h-9 sm:h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 pl-8 sm:pl-9 pr-7 text-xs sm:text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
               {searchQuery && (
                 <button
@@ -138,10 +142,10 @@ export function IngredientCombobox({
                     setSearchQuery('');
                     inputRef.current?.focus();
                   }}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
                   aria-label="검색어 지우기"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X className="h-3 w-3" />
                 </button>
               )}
             </div>
@@ -150,7 +154,7 @@ export function IngredientCombobox({
             <button
               type="button"
               onClick={handleDismissKeyboard}
-              className="shrink-0 flex items-center justify-center rounded-xl border border-border/80 bg-muted/60 px-2.5 h-10 text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-colors"
+              className="shrink-0 flex items-center justify-center rounded-xl border border-border/80 bg-muted/60 px-2 sm:px-2.5 h-9 sm:h-10 text-[11px] sm:text-xs font-bold text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-colors whitespace-nowrap"
               title="키보드 내리고 목록 보기"
             >
               키보드 닫기
@@ -169,7 +173,7 @@ export function IngredientCombobox({
                 handleDismissKeyboard();
               }}
               className={cn(
-                'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
+                'shrink-0 rounded-full px-2.5 py-1 text-[11px] sm:text-xs font-semibold transition-colors',
                 selectedCategory === 'ALL'
                   ? 'bg-brand-500 text-white'
                   : 'bg-muted text-muted-foreground hover:bg-accent',
@@ -186,7 +190,7 @@ export function IngredientCombobox({
                   handleDismissKeyboard();
                 }}
                 className={cn(
-                  'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors',
+                  'shrink-0 rounded-full px-2.5 py-1 text-[11px] sm:text-xs font-semibold transition-colors',
                   selectedCategory === cat.categoryId
                     ? 'bg-brand-500 text-white'
                     : 'bg-muted text-muted-foreground hover:bg-accent',
@@ -199,7 +203,7 @@ export function IngredientCombobox({
 
           {/* 재료 리스트 (스크롤 및 터치 시 키보드 자동 blur) */}
           <div
-            className="max-h-52 overflow-y-auto space-y-1 pr-1"
+            className="max-h-48 overflow-y-auto space-y-1 pr-1"
             onScroll={handleDismissKeyboard}
             onTouchStart={handleDismissKeyboard}
           >
@@ -219,23 +223,32 @@ export function IngredientCombobox({
                     type="button"
                     onClick={() => handleSelect(item)}
                     className={cn(
-                      'flex min-h-[44px] w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm transition-colors hover:bg-accent active:scale-[0.99]',
+                      'flex min-h-[48px] w-full items-center justify-between rounded-xl px-3 py-2 text-left transition-colors hover:bg-accent active:scale-[0.99] gap-2',
                       isSelected && 'bg-brand-50 text-brand-700 dark:bg-brand-950/40 dark:text-brand-300 font-bold',
                     )}
                   >
-                    <div className="flex items-center gap-2">
-                      <span>{item.name}</span>
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-[11px] text-muted-foreground">
-                        {item.categoryName}
+                    {/* 좌측 정보: 1행(식재료명 100% 가로 확보) + 2행(카테고리 배지 & 권장일) */}
+                    <div className="min-w-0 flex-1">
+                      {/* 1행: 식재료명 (카테고리와 같은 줄에 두지 않아 절대 잘리지 않음) */}
+                      <span className="block text-xs sm:text-sm font-bold text-foreground break-keep">
+                        {item.name}
                       </span>
+
+                      {/* 2행: 카테고리 배지 + 권장 소비기한 메타 캡션 */}
+                      <div className="mt-1 flex items-center gap-1.5 text-muted-foreground">
+                        <span className="rounded bg-muted/90 px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground whitespace-nowrap">
+                          {item.categoryName}
+                        </span>
+                        <span className="text-[10px] text-muted-foreground/60">·</span>
+                        <span className="flex items-center gap-1 text-[11px] whitespace-nowrap">
+                          <Sparkles className="h-2.5 w-2.5 text-brand-400 shrink-0" />
+                          권장 {item.defaultShelfDays}일
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1 text-[11px]">
-                        <Sparkles className="h-3 w-3 text-brand-400" />
-                        권장 {item.defaultShelfDays}일
-                      </span>
-                      {isSelected && <Check className="h-4 w-4 text-brand-500" />}
-                    </div>
+
+                    {/* 우측: 선택된 항목일 때 체크마크 */}
+                    {isSelected && <Check className="h-4 w-4 text-brand-500 shrink-0 ml-1" />}
                   </button>
                 );
               })

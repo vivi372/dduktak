@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { X, Zap, ZapOff, ScanBarcode, CheckCircle2, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { mockMasterIngredients } from '@/mocks';
+import { useBodyScrollLock } from '@/hooks';
 import type { MasterIngredient } from '@/types/inventory';
 
 interface BarcodeScannerModalProps {
@@ -26,6 +27,8 @@ export function BarcodeScannerModal({
   onScanSuccess,
   onManualSwitch,
 }: BarcodeScannerModalProps) {
+  useBodyScrollLock(open);
+
   const [torchOn, setTorchOn] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
 

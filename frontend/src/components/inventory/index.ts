@@ -6,3 +6,4 @@ export * from './BarcodeScannerModal';
 export * from './ReceiptOcrModal';
 export * from './ExpiredIngredientsSection';
 export * from './EditIngredientModal';
+export * from './receipt';

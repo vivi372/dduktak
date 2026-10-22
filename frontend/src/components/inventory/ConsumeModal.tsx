@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, Utensils, X, AlertTriangle } from 'lucide-react';
 import { STORAGE_LABEL } from '@/utils/dday';
+import { useBodyScrollLock } from '@/hooks';
 import type { InventoryItem } from '@/types/inventory';
 
 interface ConsumeModalProps {
@@ -20,6 +21,8 @@ interface ConsumeModalProps {
  * - 초과 입력 시 제출 버튼 비활성화 및 경고 문구 안내
  */
 export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
+  useBodyScrollLock(!!item);
+
   if (!item) return null;
 
   // 기본 차감 수량은 1 또는 보유 수량

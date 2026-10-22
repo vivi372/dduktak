@@ -96,7 +96,7 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     expect(screen.getByText('바코드를 사각 프레임 안에 맞춰주세요')).toBeInTheDocument();
   });
 
-  it('영수증 버튼 클릭 시 영수증 OCR 수동 검수 모달이 열려야 한다', async () => {
+  it('영수증 버튼 클릭 시 영수증 OCR 등록 모달이 열려야 한다', async () => {
     const user = userEvent.setup();
     render(
       <MemoryRouter>
@@ -107,7 +107,7 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     const receiptBtn = screen.getByRole('button', { name: /영수증 스캔으로 재료 추가/ });
     await user.click(receiptBtn);
 
-    expect(screen.getByRole('heading', { name: '영수증 OCR 결과 검수' })).toBeInTheDocument();
-    expect(screen.getByText(/전체 선택/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '영수증 사진 등록' })).toBeInTheDocument();
+    expect(screen.getByText(/샘플 영수증으로 바로 체험하기/)).toBeInTheDocument();
   });
 });
