@@ -12,7 +12,7 @@
 *  메타데이터 전달: 회원가입 요청 시 입력된 닉네임 등 기본 프로필 데이터는 Supabase Auth의 raw_user_meta_data에 저장되며, 가입 시점에는 public.profiles 레코드가 생성되지 않음 (미인증 쓰레기 프로필 생성 차단).
 *   **AUTH-01-2 [이메일 로그인 & 지연 프로필 생성 (Lazy Profile Creation)]**  :
 *  이메일 인증 승인 후 첫 로그인 시, 백엔드(Spring Boot) 서비스가 public.profiles 존재 여부를 확인.
-*  public.profiles 미존재 시: Supabase Auth raw_user_meta_data에서 닉네임 정보를 읽어와 4자리 무작위 유저태그(#1024) 생성, 기본 프로필 이미지 세팅, 알림 기본값 부여 등 백엔드 비즈니스 로직을 온전히 수행한 후 public.profiles 테이블에 프로필 레코드를 지연 생성함.
+*  public.profiles 미존재 시: Supabase Auth raw_user_meta_data에서 닉네임 정보를 읽어와 4자리 무작위 유저태그(#1024) 생성, 기본 프로필 이미지 세팅 (`https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png`), 알림 기본값 부여 등 백엔드 비즈니스 로직을 온전히 수행한 후 public.profiles 테이블에 프로필 레코드를 지연 생성함.
 *  검증 후 JWT 토큰(Access/Refresh) 발급 및 세션 생성.
 *  로그인 불가 시 '비밀번호 찾기' 버튼을 클릭 해 이메일 입력 후 비밀변호 변경 이메일 전송.
 ###### 2.2. 소셜 간편 로그인 (AUTH-02)
@@ -28,7 +28,7 @@
 *  프로필 및 레시피 작성자 정보에 닉네임(#유저태그) 형태로 노출하여 식별성 보장.
 *   **USER-01-3 [프로필 수정]**  :
 *  마이페이지 내에서 닉네임 변경 가능 (2~10자 이내, 유저 태그는 유지).
-*  프로필 이미지 변경: 회원가입 시에는 기본 캐릭터 아바타가 세팅되며, 이메일 인증 승인(ACTIVE 상태) 완료 및 첫 로그인 후 마이페이지 프로필 수정 화면에서 지정 이미지(Supabase Storage) 업로드 또는 소셜 기본 이미지로 언제든 변경 가능.
+*  프로필 이미지 변경: 회원가입 시에는 기본 프로필 이미지(`https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png`)가 세팅되며, 이메일 인증 승인(ACTIVE 상태) 완료 및 첫 로그인 후 마이페이지 프로필 수정 화면에서 지정 이미지(Supabase Storage) 업로드 또는 소셜 기본 이미지로 언제든 변경 가능.
 
 --------------------------------------------------------------------------------
 

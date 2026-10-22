@@ -1,33 +1,29 @@
-# PostgreSQL 데이터베이스 스키마 명세서 (04_DATABASE_SCHEMA.md)
+### PostgreSQL 데이터베이스 스키마 명세서 (04_DATABASE_SCHEMA.md)
+#### 1. 개요
+본 문서는 '오늘의 뚝딱' 프로젝트의 Supabase PostgreSQL 15+ 데이터베이스 스키마 및 DDL을 정의한다. Supabase Auth의 내장 회원 테이블(auth.users, UUID)과 연동되는 public.profiles (회원 프로필) 구조를 채택하여, OAuth 소셜 로그인, 이메일 인증, 비밀번호 재설정 등의 보안 기능을 Supabase Auth 인프라와 완벽히 통합한다.
 
-## 1. 개요
+--------------------------------------------------------------------------------
 
-본 문서는 '오늘의 뚝딱' 프로젝트의 Supabase PostgreSQL 15+ 데이터베이스 스키마 및 DDL을 정의한다.
-Supabase Auth의 내장 회원 테이블(`auth.users`, UUID)과 연동되는 `public.profiles` (회원 프로필) 구조를 채택하여, OAuth 소셜 로그인, 이메일 인증, 비밀번호 재설정 등의 보안 기능을 Supabase Auth 인프라와 완벽히 통합한다.
+#### 2. 테이블 목록 요약
+| No | 테이블명 (Physical) | 논리 테이블명 (Logical) | 설명 및 핵심 정책 |
+| ------ | ------ | ------ | ------ |
+| - | auth.users | Supabase 인증 회원 | Supabase Auth 내장 테이블 (UUID PK, 이메일, 암호화 비밀번호, OAuth 메타데이터) |
+| 1 | public.profiles | 회원 프로필 | auth.users(id)와 1:1 매핑 (UUID PK), 닉네임, 유저태그, 프로필 이미지, 알림 설정 |
+| 2 | ingredient_category | 식재료 카테고리 | 6개 표준 식재료 카테고리 (양념/소스 차감 제외 여부 포함) |
+| 3 | ingredient_master | 표준 식재료 마스터 | 검색/선택용 표준 재료, 기본 단위 및 권장 소비기한 |
+| 4 | user_ingredient | 내 냉장고 식재료 | 유저별 냉장고 재료 (user_id UUID, 독립 레코드 저장, memo 표시용 메모/별칭) |
+| 5 | recipe_category | 레시피 카테고리 | 8개 고정 레시피 카테고리 |
+| 6 | recipe | 뚝딱 레시피 마스터 | 레시피 기본 정보, 작성자 익명 보존 (user_id UUID NULL) |
+| 7 | recipe_ingredient | 레시피 필요 재료 | 주재료(MAIN) / 부재료(SUB) 구분 및 대체재료 |
+| 8 | recipe_step | 레시피 조리 순서 | Step별 설명 및 이미지 URL |
+| 9 | recipe_like | 레시피 좋아요 | 유저-레시피 좋아요 매핑 (user_id UUID) |
+| 10 | recipe_scrap | 레시피 스크랩 | 유저별 즐겨찾기/스크랩 매핑 (user_id UUID) |
+| 11 | notification | 알림 센터 | 소비기한 임박 및 시스템 알림 (user_id UUID) |
 
----
 
-## 2. 테이블 목록 요약
+--------------------------------------------------------------------------------
 
-| No  | 테이블명 (Physical)   | 논리 테이블명 (Logical) | 설명 및 핵심 정책                                                                 |
-| :-: | :-------------------- | :---------------------- | :-------------------------------------------------------------------------------- |
-|  -  | `auth.users`          | Supabase 인증 회원      | Supabase Auth 내장 테이블 (UUID PK, 이메일, 암호화 비밀번호, OAuth 메타데이터)    |
-|  1  | `public.profiles`     | 회원 프로필             | `auth.users(id)`와 1:1 매핑 (UUID PK), 닉네임, 유저태그, 프로필 이미지, 알림 설정 |
-|  2  | `ingredient_category` | 식재료 카테고리         | 6개 표준 식재료 카테고리 (양념/소스 차감 제외 여부 포함)                          |
-|  3  | `ingredient_master`   | 표준 식재료 마스터      | 검색/선택용 표준 재료, 기본 단위 및 권장 소비기한                                 |
-|  4  | `user_ingredient`     | 내 냉장고 식재료        | 유저별 냉장고 재료 (`user_id UUID`, 독립 레코드 저장, memo 표시용 메모/별칭)      |
-|  5  | `recipe_category`     | 레시피 카테고리         | 8개 고정 레시피 카테고리                                                          |
-|  6  | `recipe`              | 뚝딱 레시피 마스터      | 레시피 기본 정보, 작성자 익명 보존 (`user_id UUID NULL`)                          |
-|  7  | `recipe_ingredient`   | 레시피 필요 재료        | 주재료(MAIN) / 부재료(SUB) 구분 및 대체재료                                       |
-|  8  | `recipe_step`         | 레시피 조리 순서        | Step별 설명 및 이미지 URL                                                         |
-|  9  | `recipe_like`         | 레시피 좋아요           | 유저-레시피 좋아요 매핑 (`user_id UUID`)                                          |
-| 10  | `recipe_scrap`        | 레시피 스크랩           | 유저별 즐겨찾기/스크랩 매핑 (`user_id UUID`)                                      |
-| 11  | `notification`        | 알림 센터               | 소비기한 임박 및 시스템 알림 (`user_id UUID`)                                     |
-
----
-
-## 3. DDL 스크립트 (PostgreSQL 15+)
-
+#### 3. DDL 스크립트 (PostgreSQL 15+)
 ```sql
 -- ========================================================
 -- [참고] Supabase Auth 내장 테이블 구조 (auth.users)
@@ -43,7 +39,7 @@ CREATE TABLE public.profiles (
     id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     nickname VARCHAR(30) NOT NULL,
     user_tag VARCHAR(10) NOT NULL,
-    profile_image TEXT,
+    profile_image TEXT DEFAULT 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png',
     quiet_time_start TIME DEFAULT '21:00:00',
     quiet_time_end TIME DEFAULT '08:00:00',
     is_expire_warn_enabled BOOLEAN NOT NULL DEFAULT TRUE,
@@ -98,7 +94,10 @@ CREATE TABLE user_ingredient (
     unit VARCHAR(20) NOT NULL DEFAULT '개',
     expire_date DATE NOT NULL,
     memo VARCHAR(30), -- 표시용 메모/별칭 (예: "편의점 1+1", "엄마표 김치")
-    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'CONSUMED', 'DELETED', 'EXPIRED')),
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'CONSUMED', 'DELE
+```
+```sql
+TED', 'EXPIRED')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -185,7 +184,10 @@ CREATE TABLE scrap (
 
 -- ========================================================
 -- 11. 알림 센터 테이블 (notification)
--- ========================================================
+-- =========================================
+```
+```sql
+===============
 CREATE TABLE notification (
     notification_id BIGSERIAL PRIMARY KEY,
     user_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
@@ -196,10 +198,9 @@ CREATE TABLE notification (
     is_read BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
 ```
-
-## 4. 성능 최적화 인덱스 (Indexes)
-
+#### 4. 성능 최적화 인덱스 (Indexes)
 ```sql
 -- 1. 내 냉장고 FIFO 차감 및 D-Day 정렬 최적화 인덱스
 CREATE INDEX idx_user_ingredient_fifo ON user_ingredient(user_id, status, expire_date ASC);
@@ -217,4 +218,34 @@ CREATE INDEX idx_recipe_ingredient_master ON recipe_ingredient(master_ingredient
 -- 4. 알림 안읽은 목록 및 최신순 조회 인덱스
 CREATE INDEX idx_notification_user_read ON notification(user_id, is_read, created_at DESC);
 CREATE INDEX idx_notification_user_created ON notification(user_id, created_at DESC);
+
 ```
+
+
+-- ========================================================
+-- 5. Supabase Storage 버킷 생성 및 RLS 보안 정책 (MCP 연동 지원)
+-- ========================================================
+-- Supabase MCP(Model Context Protocol) 도구 또는 SQL Editor를 통해 버킷 생성 및 RLS 보안 정책을 자동으로 일괄 적용할 수 있습니다.
+
+-- 1) Storage 버킷 생성 (profiles, recipes)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES 
+    ('profiles', 'profiles', true, 5242880, ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp']),
+    ('recipes', 'recipes', true, 5242880, ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp'])
+ON CONFLICT (id) DO UPDATE 
+SET public = true, file_size_limit = 5242880, allowed_mime_types = ARRAY['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+-- 2) Storage RLS (Row Level Security) 정책 설정
+-- 누구나 조회 가능 (SELECT)
+CREATE POLICY "Public Read Profiles" ON storage.objects FOR SELECT USING (bucket_id = 'profiles');
+CREATE POLICY "Public Read Recipes" ON storage.objects FOR SELECT USING (bucket_id = 'recipes');
+
+-- 인증된 회원 업로드 허용 (INSERT)
+CREATE POLICY "Auth Insert Profiles" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'profiles' AND auth.role() = 'authenticated');
+CREATE POLICY "Auth Insert Recipes" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'recipes' AND auth.role() = 'authenticated');
+
+-- 본인 소유 파일 수정/삭제 허용 (UPDATE, DELETE)
+CREATE POLICY "Auth Update Profiles" ON storage.objects FOR UPDATE USING (bucket_id = 'profiles' AND (auth.uid() = owner OR auth.role() = 'authenticated'));
+CREATE POLICY "Auth Delete Profiles" ON storage.objects FOR DELETE USING (bucket_id = 'profiles' AND (auth.uid() = owner OR auth.role() = 'authenticated'));
+CREATE POLICY "Auth Update Recipes" ON storage.objects FOR UPDATE USING (bucket_id = 'recipes' AND (auth.uid() = owner OR auth.role() = 'authenticated'));
+CREATE POLICY "Auth Delete Recipes" ON storage.objects FOR DELETE USING (bucket_id = 'recipes' AND (auth.uid() = owner OR auth.role() = 'authenticated'));

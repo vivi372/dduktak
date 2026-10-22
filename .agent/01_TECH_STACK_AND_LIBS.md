@@ -23,7 +23,12 @@
 --------------------------------------------------------------------------------
 
 #### 3. 프론트엔드 기술 스택 (Frontend Stack)
-*   **Framework** : React (Vite 기반) 또는 Next.js (App Router)
+*   **Framework** : React (Vite 기반)
+*   **Hybrid Mobile App** : **Capacitor 6.x (React 통합형 하이브리드 앱)**
+    *  Android / iOS 웹뷰 패키징 및 React 단일 코드베이스 통합
+    *  Google ML Kit 바코드 스캐너 네이티브 카메라 플러그인 연동 (@capacitor/camera, @capacitor-community/barcode-scanner)
+    *  FCM (Firebase Cloud Messaging) 네이티브 푸시 수신기 연동 (@capacitor/push-notifications)
+    *  앱 딥링크(Deep Link) 라우터 파싱 및 네이티브 앱 상태 제어 (@capacitor/app)
 *   **Language** : TypeScript
 *   **State Management** :
     *  Zustand: 유저 세션 및 클라이언트 로컬 상태 관리 (경량)
@@ -74,3 +79,8 @@
 ##### 6.3. 백엔드 (Spring Boot / Render) 보안 규칙
 *   **설정 파일 분리** : application.yml 내 DB 비밀번호, JWT Secret Key, 외부 API 연동 키 등은 하드코딩을 금지하고 Spring 환경변수 매핑 규격(${ENV_NAME:defaultValue})을 엄격히 준수한다.
 *   **영구 저장 이미지 업로드 금지** : 프로필/레시피 이미지는 클라이언트 direct upload 방식을 사용하므로 백엔드 멀티파트 업로드 컨트롤러를 두지 않으며, OCR 전용 휘발성 이미지 요청 크기만 제한(max-file-size: 2MB)한다.
+
+##### 5.3. Supabase Storage 버킷 & RLS 설정 (Supabase MCP 지원)
+*   **기본 프로필 이미지 URL**: `https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png`
+*   **버킷 구성**: `profiles` (유저 프로필 전용), `recipes` (레시피 썸네일 및 조리 Step 전용) - 모두 Public 버킷으로 구성.
+*   **MCP(Model Context Protocol) 자동화**: Supabase MCP 도구/통합을 활용하여 Storage 버킷 생성 및 RLS 보안 정책(Public Read, Authenticated Insert/Update/Delete)을 일괄 자동으로 설정할 수 있습니다.
