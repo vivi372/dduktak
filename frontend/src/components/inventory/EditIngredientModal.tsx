@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Check, Calendar, AlertTriangle } from 'lucide-react';
+import { format, addDays } from 'date-fns';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { cn } from '@/utils/cn';
 import type { InventoryItem, StorageType } from '@/types/inventory';
@@ -13,43 +14,51 @@ interface EditIngredientModalProps {
 }
 
 const STORAGE_OPTIONS: StorageType[] = ['REFRIGERATED', 'FROZEN', 'ROOM_TEMP'];
-const COMMON_UNITS = ['개', 'g', 'ml', '팩', '모', '봉지', '뿌리', '통', '장'];
 
 /**
  * 개별 식재료 인스턴스 수정 모달 (INV-03-1)
- * - 특정 개별 레코드의 수량, 단위, 소비기한, 보관장소, 메모 수정 가능
- * - 표준 식재료 자체는 변경 불가
+ * - 특정 개별 레코드의 수량, 소비기한, 보관장소, 메모 수정 가능
+ * - 표준 식재료 및 단위는 요리 차감 호환을 위해 고정
  */
 export function EditIngredientModal({ item, onClose, onSave }: EditIngredientModalProps) {
   if (!item) return null;
 
   const [quantity, setQuantity] = useState<number>(item.quantity);
-  const [unit, setUnit] = useState<string>(item.unit);
   const [storageType, setStorageType] = useState<StorageType>(item.storageType);
   const [expireDate, setExpireDate] = useState<string>(item.expireDate);
   const [memo, setMemo] = useState<string>(item.memo ?? '');
 
   const isInvalidQuantity = quantity <= 0;
 
+  // 빠른 소비기한 세팅 핸들러
+  const handleQuickExpire = (days: number) => {
+    setExpireDate(format(addDays(new Date(), days), 'yyyy-MM-dd'));
+  };
+
+  // 실시간 D-Day 계산
+  const currentDDay = (() => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const targetDate = new Date(expireDate);
+      targetDate.setHours(0, 0, 0, 0);
+      return Math.round((targetDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    } catch {
+      return 0;
+    }
+  })();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isInvalidQuantity) return;
 
-    // dDay 재계산
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const targetDate = new Date(expireDate);
-    targetDate.setHours(0, 0, 0, 0);
-    const diffTime = targetDate.getTime() - today.getTime();
-    const dDay = Math.round(diffTime / (1000 * 60 * 60 * 24));
-
     onSave({
       ...item,
       quantity,
-      unit,
+      unit: item.unit,
       storageType,
       expireDate,
-      dDay,
+      dDay: currentDDay,
       memo: memo.trim() || undefined,
     });
 
@@ -120,40 +129,51 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
               </div>
             </div>
 
-            {/* 수량 및 단위 */}
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor="edit-quantity-input" className="block text-xs font-bold text-muted-foreground mb-1.5">
-                  수량
+            {/* 3. 수량 및 식재료 고정 단위 */}
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="edit-quantity-input" className="text-xs font-bold text-muted-foreground">
+                  수량 <span className="text-brand-500">*</span>
                 </label>
-                <input
-                  id="edit-quantity-input"
-                  type="number"
-                  inputMode="numeric"
-                  min={1}
-                  required
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  className="h-11 w-full rounded-xl border bg-background px-3 text-sm font-bold text-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                />
+                <span className="text-[11px] text-muted-foreground">
+                  보유 단위: <strong className="text-foreground">{item.unit}</strong> (고정)
+                </span>
               </div>
-
-              <div>
-                <label htmlFor="edit-unit-select" className="block text-xs font-bold text-muted-foreground mb-1.5">
-                  단위
-                </label>
-                <select
-                  id="edit-unit-select"
-                  value={unit}
-                  onChange={(e) => setUnit(e.target.value)}
-                  className="h-11 w-full rounded-xl border bg-background px-3 text-sm font-semibold text-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
+                  disabled={quantity <= 1}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95 disabled:opacity-40"
+                  aria-label="1개 감소"
                 >
-                  {COMMON_UNITS.map((u) => (
-                    <option key={u} value={u}>
-                      {u}
-                    </option>
-                  ))}
-                </select>
+                  <span className="text-base font-bold">−</span>
+                </button>
+                <div className="relative flex-1">
+                  <input
+                    id="edit-quantity-input"
+                    type="number"
+                    inputMode="numeric"
+                    min={1}
+                    required
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className="h-11 w-full rounded-xl border bg-background px-3 pr-16 text-center text-base font-bold tabular-nums text-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
+                    <span className="rounded-lg bg-muted px-2 py-0.5 text-xs font-bold text-muted-foreground border border-border/50">
+                      {item.unit}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setQuantity((prev) => prev + 1)}
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95"
+                  aria-label="1개 증가"
+                >
+                  <span className="text-base font-bold">+</span>
+                </button>
               </div>
             </div>
 
@@ -164,21 +184,57 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
               </div>
             )}
 
-            {/* 소비기한 */}
+            {/* 4. 소비기한 DatePicker (모던 스타일 & 퀵 프리셋 칩) */}
             <div>
               <label htmlFor="edit-expire-date-input" className="block text-xs font-bold text-muted-foreground mb-1.5">
-                소비기한
+                소비기한 <span className="text-brand-500">*</span>
               </label>
-              <div className="relative">
+
+              {/* 커스텀 데이트피커 래퍼 */}
+              <div className="relative flex items-center rounded-xl border border-input bg-background px-3.5 py-2.5 transition-all focus-within:border-brand-500 focus-within:ring-2 focus-within:ring-brand-500/20">
+                <Calendar className="h-4 w-4 shrink-0 text-brand-500 mr-2.5" />
                 <input
                   id="edit-expire-date-input"
                   type="date"
                   required
                   value={expireDate}
                   onChange={(e) => setExpireDate(e.target.value)}
-                  className="h-11 w-full rounded-xl border bg-background px-3 text-sm font-semibold text-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                  className="w-full bg-transparent text-sm font-bold text-foreground focus:outline-none cursor-pointer [color-scheme:light] dark:[color-scheme:dark]"
                 />
-                <Calendar className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <div className="shrink-0 pl-2">
+                  <span
+                    className={cn(
+                      'rounded-lg px-2 py-0.5 text-xs font-extrabold',
+                      currentDDay <= 3
+                        ? 'bg-red-100 text-red-600 dark:bg-red-900/40 dark:text-red-400'
+                        : currentDDay <= 7
+                        ? 'bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400'
+                        : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400',
+                    )}
+                  >
+                    {currentDDay === 0 ? 'D-Day' : currentDDay > 0 ? `D-${currentDDay}` : `D+${Math.abs(currentDDay)}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* D-Day 빠른 설정 프리셋 칩 */}
+              <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                <span className="text-[11px] text-muted-foreground font-semibold mr-0.5">빠른 설정:</span>
+                {[
+                  { label: '+3일', days: 3 },
+                  { label: '+7일 (1주)', days: 7 },
+                  { label: '+14일 (2주)', days: 14 },
+                  { label: '+30일 (1달)', days: 30 },
+                ].map((preset) => (
+                  <button
+                    key={preset.days}
+                    type="button"
+                    onClick={() => handleQuickExpire(preset.days)}
+                    className="rounded-full bg-muted hover:bg-accent border border-border/60 px-2 py-0.5 text-[11px] font-semibold text-muted-foreground transition-colors"
+                  >
+                    {preset.label}
+                  </button>
+                ))}
               </div>
             </div>
 

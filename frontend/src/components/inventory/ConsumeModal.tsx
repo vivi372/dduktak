@@ -126,9 +126,9 @@ export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
                     max={item.quantity}
                     value={quantity}
                     onChange={(e) => setQuantity(Number(e.target.value))}
-                    className="h-11 w-full rounded-xl border bg-background px-3 text-center text-lg font-bold tabular-nums focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+                    className="h-11 w-full rounded-xl border bg-background px-3 text-center text-lg font-bold tabular-nums focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-muted-foreground">
+                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">
                     {item.unit}
                   </span>
                 </div>

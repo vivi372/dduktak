@@ -102,11 +102,11 @@ export function IngredientCombobox({
         />
       </button>
 
-      {/* 2. 드롭다운 팝업 레이어 */}
+      {/* 2. 드롭다운 팝업 레이어 (불투명 솔리드 배경 적용) */}
       {isOpen && (
         <div
           role="listbox"
-          className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 w-full overflow-hidden rounded-2xl border bg-popover p-2 shadow-xl animate-in fade-in-0 zoom-in-95"
+          className="absolute left-0 right-0 top-full z-50 mt-1.5 max-h-80 w-full overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-2 shadow-2xl ring-1 ring-black/10 dark:ring-white/10 animate-in fade-in-0 zoom-in-95"
         >
           {/* 검색창 */}
           <div className="relative mb-2">
@@ -117,7 +117,7 @@ export function IngredientCombobox({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="재료명 검색 (예: 양파, 계란, 삼겹살)"
-              className="h-10 w-full rounded-xl border bg-muted/40 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:bg-background focus:outline-none focus:ring-1 focus:ring-brand-500"
+              className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/70 pl-9 pr-3 text-sm placeholder:text-muted-foreground focus:border-brand-500 focus:bg-white dark:focus:bg-slate-800 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </div>
 
