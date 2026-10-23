@@ -8,10 +8,8 @@ import {
   Calendar,
   Check,
   RotateCcw,
-  Tag,
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { format } from 'date-fns';
 import { CustomDatePicker } from '@/components/common/CustomDatePicker';
 import { DDayBadge } from '@/components/common/DDayBadge';
 import { mockOcrParsedItems, type OcrParsedItemWithRaw } from '@/mocks/ocr_scan.mock';

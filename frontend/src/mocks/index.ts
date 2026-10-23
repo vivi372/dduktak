@@ -5,3 +5,4 @@ export * from './master_ingredients.mock';
 export * from './recipes.mock';
 export * from './notifications.mock';
 export * from './ocr_scan.mock';
+export * from './matching.mock';

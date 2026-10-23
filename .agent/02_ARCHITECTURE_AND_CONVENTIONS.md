@@ -98,6 +98,20 @@ dduktak/                              # 루트 (Git Repository Root)
 
 ---
 
+
+##### 3.3. 프론트엔드 아키텍처 규칙 (스파게티 코드 방지 3대 철칙)
+프론트엔드 개발 시 코드가 어지럽혀지거나 컴포넌트가 비대해지는 것을 방지하기 위해 다음 규칙을 강제한다.
+1. **관심사 철저 분리 (Separation of Concerns)**:
+   * **UI 컴포넌트 (`.tsx`)**: 오직 화면 렌더링, Tailwind 스타일링, props 전달만 담당.
+   * **데이터 패칭 및 로직**: API 호출 및 TanStack Query 훅은 `src/hooks/` 또는 `src/services/`로 분리.
+   * **순수 함수**: 날짜 포맷 계산, D-Day 연산 등은 `src/utils/`로 격리. 하나의 컴포넌트에 뷰와 로직을 섞어 파일이 비대해지면 리젝 대상.
+2. **인라인 로직 금지 (No Inline Complex Logic)**:
+   * JSX 내부에서 복잡한 익명 함수나 거대한 삼항 연산자를 장황하게 늘어놓지 않고, 상단 헬퍼 변수나 핸들러 함수로 깔끔하게 추출.
+3. **타입 격리 (Type Isolation)**:
+   * DTO 및 인터페이스 타입 정의는 절대 컴포넌트 파일 내부에 선언하지 않고, `src/types/` 하위 파일에서 import.
+
+---
+
 #### 4. AOP 로깅 & MDC 트레이싱 정책 (AOP Logging & Tracing Policy)
 ##### 4.1. 동작 방식 및 X-Trace-Id 헤더 주입 규격
 * **AOP 대상** : `com.dduktak.domain..*Controller.*(..)`, `Service.*(..)`, `Mapper.*(..)`

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Sparkles, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Bot, Sparkles, AlertCircle } from 'lucide-react';
 
 interface ReceiptScanningProgressProps {
   /** 분석 완료 시 호출 (isSuccess 여부 전달) */
@@ -18,7 +18,6 @@ interface ReceiptScanningProgressProps {
  */
 export function ReceiptScanningProgress({
   onComplete,
-  previewUrl,
 }: ReceiptScanningProgressProps) {
   const [progress, setProgress] = useState(15);
   const [statusMessage, setStatusMessage] = useState('영수증 이미지를 분석하는 중...');

@@ -4,6 +4,10 @@ export const ROUTES = {
   LOGIN: '/login',
   INVENTORY: '/inventory',
   RECIPES: '/recipes',
+  RECIPE_DETAIL: '/recipes/:id',
+  RECIPE_NEW: '/recipes/new',
+  RECIPE_EDIT: '/recipes/:id/edit',
   MYPAGE: '/mypage',
   NOTIFICATIONS: '/notifications',
 } as const;
+

@@ -1,4 +1,5 @@
-import { Clock, Heart, ChefHat } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Clock, Heart, ChefHat, Sparkles } from 'lucide-react';
 import { cn } from '@/utils/cn';
 import type { RecipeSummary } from '@/types/recipe';
 
@@ -13,8 +14,9 @@ interface RecipeCardProps {
 
 function MatchBadge({ rate }: { rate: number }) {
   return (
-    <span className="inline-flex items-center rounded-full bg-mint-500 px-2.5 py-1 text-xs font-extrabold text-mint-foreground shadow-sm">
-      매칭 {rate}%
+    <span className="inline-flex items-center gap-1 rounded-full bg-mint-500 px-2.5 py-1 text-[11px] font-black text-mint-foreground shadow-sm">
+      <Sparkles className="h-3 w-3" />
+      <span>{rate}% 뚝딱 매칭</span>
     </span>
   );
 }
@@ -46,9 +48,10 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
 
   if (variant === 'carousel') {
     return (
-      <article
+      <Link
+        to={`/recipes/${recipe.recipeId}`}
         className={cn(
-          'group w-56 shrink-0 snap-start overflow-hidden rounded-2xl border bg-card shadow-card transition-transform active:scale-[0.98] dark:border-white/10 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]',
+          'group block w-56 shrink-0 snap-start overflow-hidden rounded-2xl border bg-card shadow-card transition-all hover:border-brand-300 active:scale-[0.98] dark:border-white/10 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]',
           className,
         )}
       >
@@ -66,19 +69,20 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
           <h3 className="line-clamp-1 text-[15px] font-bold">{recipe.title}</h3>
           {meta}
         </div>
-      </article>
+      </Link>
     );
   }
 
   return (
-    <article
+    <Link
+      to={`/recipes/${recipe.recipeId}`}
       className={cn(
-        'group flex gap-3 overflow-hidden rounded-2xl border bg-card p-2.5 shadow-card transition-transform active:scale-[0.99] dark:border-white/10 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]',
+        'group flex gap-3 overflow-hidden rounded-2xl border bg-card p-2.5 shadow-card transition-all hover:border-brand-300 active:scale-[0.99] dark:border-white/10 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]',
         className,
       )}
     >
       <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
-        <img src={recipe.thumbnailUrl} alt={recipe.title} loading="lazy" className="h-full w-full object-cover" />
+        <img src={recipe.thumbnailUrl} alt={recipe.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
         <div className="space-y-0.5 sm:space-y-1 min-w-0">
@@ -88,7 +92,7 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
             </span>
             {matchingRate !== undefined && <MatchBadge rate={matchingRate} />}
           </div>
-          <h3 className="line-clamp-1 text-sm sm:text-[15px] font-bold text-foreground">
+          <h3 className="line-clamp-1 text-sm sm:text-[15px] font-bold text-foreground group-hover:text-brand-600 transition-colors">
             {recipe.title}
           </h3>
           <p className="text-[11px] text-muted-foreground truncate">
@@ -97,6 +101,6 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
         </div>
         {meta}
       </div>
-    </article>
+    </Link>
   );
 }

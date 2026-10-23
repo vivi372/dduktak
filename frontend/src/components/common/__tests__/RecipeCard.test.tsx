@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import { RecipeCard } from '@/components/common/RecipeCard';
 import type { RecipeSummary } from '@/types/recipe';
 
@@ -17,20 +18,24 @@ const mockRecipe: RecipeSummary = {
   authorTag: '1234',
 };
 
+const renderWithRouter = (ui: React.ReactElement) => {
+  return render(<MemoryRouter>{ui}</MemoryRouter>);
+};
+
 describe('RecipeCard 컴포넌트 단위 테스트', () => {
   it('레시피 제목과 카테고리를 렌더링해야 한다', () => {
-    render(<RecipeCard recipe={mockRecipe} />);
+    renderWithRouter(<RecipeCard recipe={mockRecipe} />);
     expect(screen.getByText('뚝딱 김치볶음밥')).toBeInTheDocument();
     expect(screen.getByText('한식')).toBeInTheDocument();
   });
 
   it('기본(list) 모드에서 작성자 닉네임과 태그가 표시되어야 한다', () => {
-    render(<RecipeCard recipe={mockRecipe} variant="list" />);
+    renderWithRouter(<RecipeCard recipe={mockRecipe} variant="list" />);
     expect(screen.getByText(/by 뚝딱요리사#1234/)).toBeInTheDocument();
   });
 
   it('조리 시간, 난이도, 좋아요/요리완료 수가 표시되어야 한다', () => {
-    render(<RecipeCard recipe={mockRecipe} />);
+    renderWithRouter(<RecipeCard recipe={mockRecipe} />);
     expect(screen.getByText(/15분/)).toBeInTheDocument();
     expect(screen.getByText('쉬움')).toBeInTheDocument();
     expect(screen.getByText('42')).toBeInTheDocument();
@@ -38,18 +43,18 @@ describe('RecipeCard 컴포넌트 단위 테스트', () => {
   });
 
   it('matchingRate prop이 전달되면 매칭률 배지를 노출해야 한다', () => {
-    render(<RecipeCard recipe={mockRecipe} matchingRate={85} />);
-    expect(screen.getByText('매칭 85%')).toBeInTheDocument();
+    renderWithRouter(<RecipeCard recipe={mockRecipe} matchingRate={85} />);
+    expect(screen.getByText(/85% 뚝딱 매칭/)).toBeInTheDocument();
   });
 
   it('matchingRate prop이 없으면 매칭률 배지를 노출하지 않아야 한다', () => {
-    render(<RecipeCard recipe={mockRecipe} />);
-    expect(screen.queryByText(/매칭 \d+%/)).not.toBeInTheDocument();
+    renderWithRouter(<RecipeCard recipe={mockRecipe} />);
+    expect(screen.queryByText(/뚝딱 매칭/)).not.toBeInTheDocument();
   });
 
   it('variant="carousel" 모드에서도 제목과 매칭률이 올바르게 렌더링되어야 한다', () => {
-    render(<RecipeCard recipe={mockRecipe} variant="carousel" matchingRate={100} />);
+    renderWithRouter(<RecipeCard recipe={mockRecipe} variant="carousel" matchingRate={100} />);
     expect(screen.getByText('뚝딱 김치볶음밥')).toBeInTheDocument();
-    expect(screen.getByText('매칭 100%')).toBeInTheDocument();
+    expect(screen.getByText(/100% 뚝딱 매칭/)).toBeInTheDocument();
   });
 });

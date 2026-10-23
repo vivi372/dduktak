@@ -1,4 +1,4 @@
-import { AlertCircle, Camera, PencilLine, X } from 'lucide-react';
+import { AlertCircle, Camera, PencilLine } from 'lucide-react';
 
 interface ReceiptFailSafeViewProps {
   /** 영수증 다시 촬영/선택 (STEP 1으로 복귀) */
@@ -6,7 +6,7 @@ interface ReceiptFailSafeViewProps {
   /** 수동 등록 Combobox 화면으로 전환 (부모 모달 스위칭) */
   onManualSwitch: () => void;
   /** 닫기 */
-  onClose: () => void;
+  onClose?: () => void;
 }
 
 /**
@@ -17,7 +17,6 @@ interface ReceiptFailSafeViewProps {
 export function ReceiptFailSafeView({
   onRetry,
   onManualSwitch,
-  onClose,
 }: ReceiptFailSafeViewProps) {
   return (
     <div className="py-6 px-2 text-center space-y-6">

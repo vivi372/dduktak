@@ -3,6 +3,8 @@ import { AppShell } from '@/components/layout/AppShell';
 import HomePage from '@/pages/HomePage';
 import InventoryPage from '@/pages/InventoryPage';
 import RecipeFeedPage from '@/pages/RecipeFeedPage';
+import RecipeDetailPage from '@/pages/RecipeDetailPage';
+import RecipeFormPage from '@/pages/RecipeFormPage';
 import MyPage from '@/pages/MyPage';
 import NotificationPage from '@/pages/NotificationPage';
 import LoginPage from '@/pages/LoginPage';
@@ -12,7 +14,7 @@ import type { RouteHandle } from './handle';
 
 const h = (handle: RouteHandle) => handle;
 
-/** 앱 라우터: AppShell(공통 레이아웃) 아래에 5개 탭/서브 페이지 + 로그인 + 404 */
+/** 앱 라우터: AppShell(공통 레이아웃) 아래에 5개 탭/서브 페이지 + 레시피 상세/작성 + 로그인 + 404 */
 export const router = createBrowserRouter([
   {
     element: <AppShell />,
@@ -20,6 +22,21 @@ export const router = createBrowserRouter([
       { path: ROUTES.HOME, element: <HomePage />, handle: h({ title: '홈', brand: true }) },
       { path: ROUTES.INVENTORY, element: <InventoryPage />, handle: h({ title: '내 냉장고', brand: true }) },
       { path: ROUTES.RECIPES, element: <RecipeFeedPage />, handle: h({ title: '뚝딱 레시피', brand: true }) },
+      {
+        path: ROUTES.RECIPE_NEW,
+        element: <RecipeFormPage />,
+        handle: h({ title: '레시피 작성', showBack: true, hideBottomNav: true }),
+      },
+      {
+        path: ROUTES.RECIPE_EDIT,
+        element: <RecipeFormPage />,
+        handle: h({ title: '레시피 수정', showBack: true, hideBottomNav: true }),
+      },
+      {
+        path: ROUTES.RECIPE_DETAIL,
+        element: <RecipeDetailPage />,
+        handle: h({ title: '레시피 상세', showBack: true }),
+      },
       { path: ROUTES.MYPAGE, element: <MyPage />, handle: h({ title: '마이페이지', brand: true }) },
       { path: ROUTES.NOTIFICATIONS, element: <NotificationPage />, handle: h({ title: '알림함', showBack: true }) },
       {

@@ -32,6 +32,10 @@
 
 - **모노레포 구조**: `backend/` (Spring Boot 3.x + MyBatis) 및 `frontend/` (Vite + React + TS) 분리 유지.
 - **에러 코드 규격**: 백엔드 에러 응답은 `[도메인]_[UX태그]_[상세원인]` (예: `INV_FIELD_INVALID_DATE`, `AUTH_WARN_USER_NOT_FOUND`) 포맷을 엄수할 것.
+*   **프론트엔드 아키텍처 규칙 (스파게티 코드 방지 3대 철칙)** :
+    1. **관심사 철저 분리** : UI 컴포넌트(.tsx)는 렌더링/스타일링만 담당하고, API/쿼리 훅은 `src/hooks/` 또는 `src/services/`, 연산 유틸은 `src/utils/`로 격리.
+    2. **인라인 로직 금지** : JSX 내 거대한 삼항 연산자/익명 함수 금지 ➔ 상단 헬퍼 변수/핸들러 함수로 추출.
+    3. **타입 격리** : DTO/인터페이스 타입 정의는 반드시 `src/types/`에서 import.
 
 ## 4.보안 규칙
 
