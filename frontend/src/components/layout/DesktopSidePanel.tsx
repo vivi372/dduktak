@@ -87,7 +87,7 @@ export function DesktopSidePanel({ onOpenAddTray }: DesktopSidePanelProps) {
               </span>
             </div>
             <div>
-              <span className="block text-2xl font-black tracking-tight text-brand-600 dark:text-brand-300">
+              <span className="block text-2xl font-yanolja font-black tracking-tight text-brand-600 dark:text-brand-300">
                 오늘의 뚝딱
               </span>
               <span className="block text-xs font-semibold text-muted-foreground">

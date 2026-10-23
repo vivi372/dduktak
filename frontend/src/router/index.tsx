@@ -25,12 +25,12 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.RECIPE_NEW,
         element: <RecipeFormPage />,
-        handle: h({ title: '레시피 작성', showBack: true, hideBottomNav: true }),
+        handle: h({ title: '레시피 작성', showBack: true }),
       },
       {
         path: ROUTES.RECIPE_EDIT,
         element: <RecipeFormPage />,
-        handle: h({ title: '레시피 수정', showBack: true, hideBottomNav: true }),
+        handle: h({ title: '레시피 수정', showBack: true }),
       },
       {
         path: ROUTES.RECIPE_DETAIL,

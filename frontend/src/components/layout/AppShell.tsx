@@ -28,7 +28,7 @@ export function AppShell() {
 
   const [trayOpen, setTrayOpen] = useState(false);
 
-  const showNav = !handle?.hideBottomNav;
+  const showNav = pathname !== ROUTES.LOGIN && !handle?.hideBottomNav;
   const showHeader = !handle?.hideHeader;
   const hideSidePanel = Boolean(handle?.hideSidePanel || pathname === ROUTES.LOGIN);
 
@@ -90,20 +90,23 @@ export function AppShell() {
             >
               <motion.div
                 key={pathname}
-                initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                initial={reduceMotion ? false : { opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.28, ease: 'easeOut' }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
                 className="h-full"
               >
                 <Outlet />
               </motion.div>
             </main>
-
-            {/* 모바일 하단 탭바 (데스크톱에서는 lg:hidden) */}
-            {showNav && <BottomNav onOpenTray={() => setTrayOpen(true)} />}
           </motion.div>
         </motion.div>
       </LayoutGroup>
+
+      {/* 모바일 하단 탭바 (ThumbZone):
+          - 부모 transform 및 layout 애니메이션 간섭으로부터 100% 격리된 순수 Viewport Fixed 요소
+          - 페이지 이동 시에도 0% 플리커 및 상시 고정 유지 (데스크톱에서는 lg:hidden)
+      */}
+      {showNav && <BottomNav onOpenTray={() => setTrayOpen(true)} />}
 
       {/* 재료 추가 퀵 트레이 바텀시트/모달 (모바일/데스크톱 공통 사용) */}
       <QuickAddTray open={trayOpen} onClose={() => setTrayOpen(false)} />

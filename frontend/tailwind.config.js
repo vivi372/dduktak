@@ -115,6 +115,12 @@ export default {
           '"Malgun Gothic"',
           'sans-serif',
         ],
+        yanolja: [
+          'Yanolja',
+          'Pretendard',
+          '-apple-system',
+          'sans-serif',
+        ],
       },
       keyframes: {
         'fade-in-up': {

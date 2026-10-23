@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { LayoutGroup, motion } from 'framer-motion';
 import { ChefHat, Home, Plus, Refrigerator, User, type LucideIcon } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/utils/cn';
@@ -37,7 +37,7 @@ function Tab({ to, label, Icon }: TabItem) {
         <>
           {isActive && (
             <motion.span
-              layoutId="tab-indicator"
+              layoutId="bottom-tab-active-indicator"
               className="absolute top-0 h-1 w-8 rounded-b-full bg-brand-500"
               transition={{ type: 'spring', stiffness: 500, damping: 35 }}
             />
@@ -59,6 +59,7 @@ interface BottomNavProps {
  * 하단 탭바 (Thumb Zone)
  * - 모바일/태블릿(lg 미만): 480px 프레임 폭 안에 고정, 중앙 FAB(56px)은 탭바 위로 20px 돌출
  * - 데스크톱(lg 이상): 2-컬럼 좌측 사이드 패널에 퀵 메뉴가 상시 노출되므로 하단 탭바는 숨김 (lg:hidden)
+ * - 전역 페이지 레이아웃과 완전 격리된 LayoutGroup을 사용하여 0% 플리커 보장
  */
 export function BottomNav({ onOpenTray }: BottomNavProps = {}) {
   const [internalTrayOpen, setInternalTrayOpen] = useState(false);
@@ -75,28 +76,30 @@ export function BottomNav({ onOpenTray }: BottomNavProps = {}) {
     <>
       <nav
         aria-label="하단 메뉴"
-        className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border/80 border-x bg-background/90 pb-safe backdrop-blur-lg dark:border-white/10 lg:hidden"
+        className="fixed bottom-0 left-1/2 z-40 w-full max-w-[480px] -translate-x-1/2 border-t border-border/80 border-x bg-background/95 pb-safe backdrop-blur-lg dark:border-white/10 lg:hidden will-change-transform translate-z-0"
       >
-        <div className="grid h-tabbar grid-cols-5">
-          {LEFT_TABS.map((t) => <Tab key={t.to} {...t} />)}
+        <LayoutGroup id="bottom-tab-group">
+          <div className="grid h-tabbar grid-cols-5">
+            {LEFT_TABS.map((t) => <Tab key={t.to} {...t} />)}
 
-          {/* 중앙 재료 추가 FAB: 직경 56px, 탭바 위로 20px 돌출 */}
-          <div className="relative flex items-end justify-center pb-2">
-            <button
-              type="button"
-              onClick={handleOpen}
-              aria-label="재료 추가"
-              aria-haspopup="dialog"
-              aria-expanded={internalTrayOpen}
-              className="absolute -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-500 text-brand-foreground shadow-fab ring-4 ring-background transition-transform animate-pulse-ring hover:scale-105 active:scale-90"
-            >
-              <Plus className="h-7 w-7" strokeWidth={3} />
-            </button>
-            <span className="text-[11px] font-bold text-brand-600 dark:text-brand-300">재료 추가</span>
+            {/* 중앙 재료 추가 FAB: 직경 56px, 탭바 위로 20px 돌출 */}
+            <div className="relative flex items-end justify-center pb-2">
+              <button
+                type="button"
+                onClick={handleOpen}
+                aria-label="재료 추가"
+                aria-haspopup="dialog"
+                aria-expanded={internalTrayOpen}
+                className="absolute -top-5 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-500 text-brand-foreground shadow-fab ring-4 ring-background transition-transform animate-pulse-ring hover:scale-105 active:scale-90"
+              >
+                <Plus className="h-7 w-7" strokeWidth={3} />
+              </button>
+              <span className="text-[11px] font-bold text-brand-600 dark:text-brand-300">재료 추가</span>
+            </div>
+
+            {RIGHT_TABS.map((t) => <Tab key={t.to} {...t} />)}
           </div>
-
-          {RIGHT_TABS.map((t) => <Tab key={t.to} {...t} />)}
-        </div>
+        </LayoutGroup>
       </nav>
       {!onOpenTray && (
         <QuickAddTray open={internalTrayOpen} onClose={() => setInternalTrayOpen(false)} />

@@ -43,7 +43,7 @@ export function Header() {
             height={36}
             className="h-9 w-9 rounded-full object-cover ring-2 ring-brand-200 dark:ring-brand-700/60"
           />
-          <span className="text-xl font-black tracking-tight text-brand-600 dark:text-brand-300">오늘의 뚝딱</span>
+          <span className="text-2xl font-yanolja font-black tracking-tight text-brand-600 dark:text-brand-300">오늘의 뚝딱</span>
         </Link>
       )}
 
