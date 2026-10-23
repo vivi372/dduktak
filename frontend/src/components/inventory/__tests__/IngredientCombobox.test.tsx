@@ -8,7 +8,7 @@ describe('IngredientCombobox 표준 식재료 검색 컴포넌트 단위 테스�
     const handleChange = vi.fn();
     render(<IngredientCombobox onChange={handleChange} />);
 
-    expect(screen.getByText('표준 식재료를 검색하여 선택하세요')).toBeInTheDocument();
+    expect(screen.getByText('식재료를 검색하여 선택하세요')).toBeInTheDocument();
   });
 
   it('트리거 버튼 클릭 시 검색창과 카테고리 탭, 식재료 목록이 열려야 한다', async () => {

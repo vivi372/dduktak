@@ -208,11 +208,11 @@ export default function InventoryPage() {
   return (
     <div className="space-y-5 pb-12">
       {/* 1. 상단 타이틀 & 3종 퀵 액션 버튼 바 */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-black tracking-tight">내 냉장고</h1>
-            <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-600 dark:bg-brand-950/60 dark:text-brand-300">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl font-black tracking-tight whitespace-nowrap">내 냉장고</h1>
+            <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-600 dark:bg-brand-950/60 dark:text-brand-300 shrink-0">
               신선 {activeItems.length}종
             </span>
             {/* 개발/검수 편의용: 빈 냉장고 화면 즉시 확인 토글 버튼 */}
@@ -224,18 +224,18 @@ export default function InventoryPage() {
                 toast.info(nextState ? '🟢 기본 식재료 목데이터를 복원했어요' : '⚪ 빈 냉장고(재료 0개) 상태로 전환했어요');
               }}
               title="등록된 재료가 없을 때의 UI를 즉시 테스트할 수 있어요"
-              className="rounded-full border border-border/80 bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-accent active:scale-95 transition-all"
+              className="rounded-full border border-border/80 bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground hover:bg-accent active:scale-95 transition-all shrink-0"
             >
               {hasIngredients ? '비우기 테스트' : '목데이터 복원'}
             </button>
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground break-keep">
             소비기한이 가장 임박한 순서대로 그룹화하여 보여드려요.
           </p>
         </div>
 
         {/* 3대 추가 CTA: 직접 추가 / 바코드 / 영수증 (모바일에서도 3버튼 텍스트 균등 노출) */}
-        <div className="grid grid-cols-3 gap-1.5 sm:flex sm:items-center sm:gap-2">
+        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 shrink-0">
           <button
             type="button"
             onClick={() => {

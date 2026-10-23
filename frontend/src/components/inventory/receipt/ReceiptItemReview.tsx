@@ -176,10 +176,10 @@ export function ReceiptItemReview({
                     <span className="text-sm font-extrabold text-foreground truncate">
                       {item.name}
                     </span>
-                    {/* 표준 매핑 배지 */}
-                    <span className="inline-flex items-center gap-1 rounded-md bg-mint-100 px-1.5 py-0.5 text-[10px] font-bold text-mint-700 dark:bg-mint-950/60 dark:text-mint-300">
+                    {/* 자동 분류 완료 배지 */}
+                    <span className="inline-flex items-center gap-1 rounded-md bg-mint-100 px-1.5 py-0.5 text-[10px] font-bold text-mint-700 dark:bg-mint-400/20 dark:text-mint-300 dark:border dark:border-mint-500/30">
                       <Sparkles className="h-2.5 w-2.5" />
-                      표준 매핑 완료
+                      자동 분류 완료
                     </span>
                   </div>
 

@@ -168,7 +168,7 @@ export function CookConfirmationModal({
                   className={cn(
                     'group relative flex cursor-pointer items-start gap-3.5 rounded-2xl border p-4 transition-all active:scale-[0.99]',
                     deductOption === 'AUTO'
-                      ? 'border-mint-500 bg-mint-50/70 shadow-soft dark:bg-mint-950/25 dark:border-mint-600'
+                      ? 'border-mint-500 bg-mint-50/70 shadow-soft dark:bg-card dark:border-mint-500/50 dark:ring-1 dark:ring-mint-500/30'
                       : 'border-border/80 bg-background hover:border-mint-300 dark:border-white/10',
                   )}
                 >
@@ -176,11 +176,11 @@ export function CookConfirmationModal({
                     className={cn(
                       'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition-colors',
                       deductOption === 'AUTO'
-                        ? 'border-mint-500 bg-mint-500 text-white'
+                        ? 'border-mint-500 bg-mint-500 text-slate-950 dark:bg-mint-400 dark:border-mint-400'
                         : 'border-muted-foreground/40',
                     )}
                   >
-                    {deductOption === 'AUTO' && <div className="h-2 w-2 rounded-full bg-white" />}
+                    {deductOption === 'AUTO' && <div className="h-2 w-2 rounded-full bg-slate-950" />}
                   </div>
 
                   <div className="flex-1 space-y-1">
@@ -188,12 +188,12 @@ export function CookConfirmationModal({
                       <span className="text-sm font-extrabold text-foreground">
                         재료 자동으로 차감하고 요리하기
                       </span>
-                      <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-black text-white">
+                      <span className="rounded-full bg-mint-500 px-2 py-0.5 text-[10px] font-black text-slate-950 dark:bg-mint-400 dark:text-slate-950">
                         추천
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      내 냉장고에서 소비기한이 가장 임박한 재료부터 선입선출(FIFO)로 자동 차감해요.
+                      내 냉장고에서 소비기한이 가장 임박한 재료부터 자동으로 차감해요.
                     </p>
                   </div>
                 </div>
@@ -248,10 +248,10 @@ export function CookConfirmationModal({
                   type="button"
                   onClick={handleStep1Submit}
                   className={cn(
-                    'flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl font-black text-sm text-white shadow-soft active:scale-[0.98] transition-all',
+                    'flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl font-black text-sm shadow-soft active:scale-[0.98] transition-all',
                     deductOption === 'AUTO'
-                      ? 'bg-mint-500 hover:bg-mint-600'
-                      : 'bg-brand-500 hover:bg-brand-600',
+                      ? 'bg-mint-500 text-slate-950 hover:bg-mint-400 dark:bg-mint-400 dark:text-slate-950'
+                      : 'bg-brand-500 text-white hover:bg-brand-600',
                   )}
                 >
                   {deductOption === 'AUTO' ? (
@@ -270,45 +270,47 @@ export function CookConfirmationModal({
             </div>
           )}
 
-          {/* ======================= STEP 2: FIFO 차감 검수 ======================= */}
+          {/* ======================= STEP 2: 차감 검수 ======================= */}
           {step === 2 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b pb-3">
-                <div>
-                  <h2 className="text-base sm:text-lg font-black tracking-tight text-foreground flex items-center gap-1.5">
-                    <span>냉장고 재료 차감 검수</span>
-                    <span className="text-xs font-bold text-mint-600 dark:text-mint-400 bg-mint-50 dark:bg-mint-950/40 px-2 py-0.5 rounded-full">
-                      선입선출(FIFO)
-                    </span>
-                  </h2>
-                  <p className="text-xs text-muted-foreground mt-0.5">
+              {/* 상단 타이틀 영역 (우상단 닫기 버튼과 겹침 방지를 위해 pr-10 확보) */}
+              <div className="border-b pb-3 pr-10">
+                <h2 className="text-base sm:text-lg font-black tracking-tight text-foreground flex flex-wrap items-center gap-1.5">
+                  <span>냉장고 재료 차감 검수</span>
+                  <span className="text-xs font-bold text-mint-700 dark:text-mint-300 bg-mint-500/15 dark:bg-mint-400/20 px-2.5 py-0.5 rounded-full border border-mint-500/20 whitespace-nowrap">
+                    임박한 재료부터 자동 차감
+                  </span>
+                </h2>
+
+                <div className="mt-2.5 flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground">
                     ✏️ 수량을 터치하여 직접 변경할 수 있어요
                   </p>
-                </div>
 
-                {/* 인분 수 조절 스텝퍼 */}
-                <div className="flex items-center gap-1 rounded-xl border bg-muted/40 p-1">
-                  <button
-                    type="button"
-                    onClick={() => setServings((prev) => Math.max(1, prev - 1))}
-                    disabled={servings <= 1}
-                    aria-label="인분 감소"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground hover:bg-card disabled:opacity-30 active:scale-90"
-                  >
-                    <Minus className="h-3 w-3" />
-                  </button>
-                  <span className="min-w-8 text-center text-xs font-black text-foreground">
-                    {servings}인분
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setServings((prev) => prev + 1)}
-                    disabled={servings >= 10}
-                    aria-label="인분 증가"
-                    className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground hover:bg-card disabled:opacity-30 active:scale-90"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </button>
+                  {/* 인분 수 조절 스텝퍼 */}
+                  <div className="flex items-center gap-1 rounded-xl border bg-muted/40 p-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setServings((prev) => Math.max(1, prev - 1))}
+                      disabled={servings <= 1}
+                      aria-label="인분 감소"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground hover:bg-card disabled:opacity-30 active:scale-90"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="min-w-8 text-center text-xs font-black text-foreground">
+                      {servings}인분
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setServings((prev) => prev + 1)}
+                      disabled={servings >= 10}
+                      aria-label="인분 증가"
+                      className="flex h-7 w-7 items-center justify-center rounded-lg text-foreground hover:bg-card disabled:opacity-30 active:scale-90"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -428,9 +430,9 @@ export function CookConfirmationModal({
                 <button
                   type="button"
                   onClick={handleFinalConfirm}
-                  className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-mint-500 font-black text-sm text-white shadow-soft hover:bg-mint-600 active:scale-[0.98] transition-all"
+                  className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-mint-500 font-black text-sm text-slate-950 shadow-soft hover:bg-mint-400 active:scale-[0.98] transition-all dark:bg-mint-400 dark:text-slate-950"
                 >
-                  <Sparkles className="h-4 w-4" />
+                  <Sparkles className="h-4 w-4 stroke-[2.5]" />
                   <span>냉장고 차감하고 요리 완료 🎉</span>
                 </button>
               </div>

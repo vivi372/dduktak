@@ -74,15 +74,22 @@ export function IngredientBadgeList({
           {mainList.map((item) => (
             <li
               key={item.masterIngredientId}
-              className="flex items-center justify-between py-2.5 text-sm"
+              className="flex items-center justify-between py-2.5 text-sm gap-2"
             >
-              <div className="flex items-center gap-2 min-w-0 pr-2">
+              <div className="flex flex-wrap items-center gap-1.5 min-w-0 pr-2">
                 <span className="font-bold text-foreground truncate">{item.name}</span>
-                <span className="font-medium text-brand-600 dark:text-brand-300 shrink-0">
+                <span className="font-semibold text-brand-600 dark:text-brand-300 shrink-0 text-xs">
                   {item.requiredQuantity} {item.unit}
                 </span>
+                {item.altIngredientName && (
+                  <span className="rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 px-2 py-0.5 text-[10px] font-extrabold shrink-0">
+                    {item.altIngredientName} 대체 가능
+                  </span>
+                )}
               </div>
-              <IngredientStatusBadge status={item} />
+              <div className="shrink-0">
+                <IngredientStatusBadge status={item} />
+              </div>
             </li>
           ))}
         </ul>
@@ -97,30 +104,36 @@ export function IngredientBadgeList({
                 부재료
               </span>
               <span className="text-sm font-extrabold text-foreground">
-                풍미 및 양념류 ({subList.length})
+                풍미 및 부가 재료 ({subList.length})
               </span>
             </div>
-            <span className="text-[11px] text-muted-foreground">생략/대체 가능</span>
           </div>
 
           <ul className="divide-y divide-border/60">
             {subList.map((item) => (
               <li
                 key={item.masterIngredientId}
-                className="flex items-center justify-between py-2.5 text-sm"
+                className="flex items-center justify-between py-2.5 text-sm gap-2"
               >
-                <div className="flex items-center gap-2 min-w-0 pr-2">
+                <div className="flex flex-wrap items-center gap-1.5 min-w-0 pr-2">
                   <span className="font-bold text-foreground truncate">{item.name}</span>
-                  {item.isOptional && (
-                    <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground shrink-0">
-                      선택
-                    </span>
-                  )}
-                  <span className="font-medium text-muted-foreground shrink-0">
+                  <span className="font-semibold text-muted-foreground shrink-0 text-xs">
                     {item.requiredQuantity} {item.unit}
                   </span>
+                  {item.isOptional && (
+                    <span className="rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 text-[10px] font-extrabold shrink-0 border border-border/40">
+                      생략 가능
+                    </span>
+                  )}
+                  {item.altIngredientName && (
+                    <span className="rounded-full bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-300/60 dark:border-amber-700/60 px-2 py-0.5 text-[10px] font-extrabold shrink-0">
+                      {item.altIngredientName} 대체 가능
+                    </span>
+                  )}
                 </div>
-                <IngredientStatusBadge status={item} />
+                <div className="shrink-0">
+                  <IngredientStatusBadge status={item} />
+                </div>
               </li>
             ))}
           </ul>

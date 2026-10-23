@@ -43,7 +43,7 @@ export function RecipeStepList({ steps, className }: RecipeStepListProps) {
               className={cn(
                 'group flex gap-3.5 rounded-2xl border p-3.5 sm:p-4 transition-all cursor-pointer select-none active:scale-[0.99]',
                 isDone
-                  ? 'border-mint-500/40 bg-mint-50/40 opacity-75 dark:bg-mint-950/20'
+                  ? 'border-mint-500/40 bg-mint-50/40 opacity-75 dark:bg-card dark:border-mint-500/40'
                   : 'border-border/80 bg-card hover:border-brand-200 dark:border-white/10 dark:hover:border-brand-800/60',
               )}
             >
@@ -54,7 +54,7 @@ export function RecipeStepList({ steps, className }: RecipeStepListProps) {
                 className={cn(
                   'flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-black transition-colors',
                   isDone
-                    ? 'bg-mint-500 text-white'
+                    ? 'bg-mint-500 text-slate-950 font-black dark:bg-mint-400 dark:text-slate-950'
                     : 'bg-brand-100 text-brand-700 group-hover:bg-brand-500 group-hover:text-white dark:bg-brand-900/60 dark:text-brand-300',
                 )}
               >

@@ -10,7 +10,7 @@ export interface RecipeCategory {
 }
 
 /** 레시피 조리 난이도 */
-export type RecipeDifficulty = '쉬움' | '보통' | '조금복잡' | '어려움';
+export type RecipeDifficulty = '쉬움' | '보통' | '어려움';
 
 /** 레시피 필요 재료 (표준 마스터 식재료 바인딩) */
 export interface RecipeIngredient {

@@ -109,7 +109,7 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <div className="space-y-6 pb-24">
+    <div className="space-y-6 pb-28">
       {/* 1. 레시피 대표 히어로 썸네일 & 오버레이 */}
       <div className="relative -mx-4 -mt-4 overflow-hidden aspect-[16/10] sm:aspect-[2/1] sm:rounded-3xl sm:mx-0 sm:mt-0 bg-muted">
         <img
@@ -212,16 +212,16 @@ export default function RecipeDetailPage() {
       )}
 
       {/* 3. 스마트 매칭 스코어 브리핑 배너 */}
-      <div className="rounded-2xl border border-mint-500/40 bg-mint-50/70 p-4 shadow-soft dark:bg-mint-950/25 dark:border-mint-600/40">
+      <div className="rounded-2xl border border-mint-500/40 bg-mint-50/70 p-4 shadow-soft dark:bg-card dark:border-mint-500/40 dark:ring-1 dark:ring-mint-500/20">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500 text-white shadow-sm">
-              <Sparkles className="h-5 w-5" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-mint-500 text-slate-950 font-black shadow-sm dark:bg-mint-400 dark:text-slate-950">
+              <Sparkles className="h-5 w-5 stroke-[2.5]" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-extrabold text-foreground">내 냉장고 뚝딱 매칭률</span>
-                <span className="rounded-full bg-mint-500 px-2 py-0.5 text-xs font-black text-white">
+                <span className="rounded-full bg-mint-500 px-2.5 py-0.5 text-xs font-black text-slate-950 dark:bg-mint-400 dark:text-slate-950">
                   {matchingScore.finalScore}%
                 </span>
               </div>
@@ -234,13 +234,16 @@ export default function RecipeDetailPage() {
           </div>
         </div>
 
-        {/* 임박 가산점 안내 칩 */}
+        {/* 소비기한 임박 재료 포함 안내 칩 */}
         {matchingScore.urgentIngredients.length > 0 && (
-          <div className="mt-3 flex items-center gap-1.5 rounded-xl bg-background/80 p-2 text-xs font-bold text-foreground border border-mint-500/30">
+          <div className="mt-3 flex items-center gap-2 rounded-xl bg-background/90 p-2.5 text-xs font-bold text-foreground border border-mint-500/30 dark:bg-muted/40 dark:border-mint-500/30">
             <AlertCircle className="h-4 w-4 text-rose-500 shrink-0" />
             <span>
-              소비기한 임박 재료({matchingScore.urgentIngredients.join(', ')}) 포함 가산점{' '}
-              <strong className="text-mint-600 dark:text-mint-400">+{matchingScore.bonusScore}점</strong> 반영!
+              소비기한이 임박한 재료(
+              <strong className="text-rose-500 dark:text-rose-400">
+                {matchingScore.urgentIngredients.join(', ')}
+              </strong>
+              )가 포함되어 있어 먼저 활용하기 좋아요! ⏰
             </span>
           </div>
         )}
@@ -260,7 +263,7 @@ export default function RecipeDetailPage() {
       <RecipeStepList steps={recipe.steps} />
 
       {/* 7. 하단 고정 액션 바 [이 레시피로 요리하기] CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 border-t border-border/80 bg-background/90 p-3 backdrop-blur-md dark:border-white/10 dark:bg-background/95">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md dark:border-white/10 dark:bg-background/95 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
         <div className="mx-auto max-w-[480px] lg:max-w-5xl flex items-center gap-3">
           <button
             type="button"

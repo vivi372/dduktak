@@ -107,7 +107,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
           <div className="flex items-center justify-between pb-3 border-b">
             <div>
               <h2 className="text-lg font-extrabold tracking-tight">재료 직접 넣기</h2>
-              <p className="text-xs text-muted-foreground break-keep">표준 식재료를 검색하여 손쉽게 등록해 보세요.</p>
+              <p className="text-xs text-muted-foreground break-keep">식재료를 검색하여 손쉽게 등록해 보세요.</p>
             </div>
             <button
               type="button"
@@ -123,7 +123,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
             {/* 1. 표준 식재료 선택 Combobox */}
             <div>
               <label className="block text-xs font-bold text-muted-foreground mb-1.5">
-                표준 식재료 <span className="text-brand-500">*</span>
+                식재료 <span className="text-brand-500">*</span>
               </label>
               <IngredientCombobox
                 value={selectedMaster?.masterIngredientId}
@@ -162,7 +162,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
                   수량 <span className="text-brand-500">*</span>
                 </label>
                 <span className="text-[11px] text-muted-foreground">
-                  표준 단위: <strong className="text-foreground">{selectedMaster?.defaultUnit ?? '개'}</strong> (고정)
+                  기본 단위: <strong className="text-foreground">{selectedMaster?.defaultUnit ?? '개'}</strong>
                 </span>
               </div>
               <div className="flex items-center gap-2">

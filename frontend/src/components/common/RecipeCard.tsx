@@ -14,8 +14,8 @@ interface RecipeCardProps {
 
 function MatchBadge({ rate }: { rate: number }) {
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-mint-500 px-2.5 py-1 text-[11px] font-black text-mint-foreground shadow-sm">
-      <Sparkles className="h-3 w-3" />
+    <span className="inline-flex items-center gap-1 rounded-full bg-mint-500 px-2.5 py-1 text-[11px] font-black text-slate-950 dark:bg-mint-400 dark:text-slate-950 shadow-sm">
+      <Sparkles className="h-3 w-3 stroke-[2.5]" />
       <span>{rate}% 뚝딱 매칭</span>
     </span>
   );

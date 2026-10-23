@@ -94,8 +94,8 @@ describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 �
       expect(screen.getByText('두부')).toBeInTheDocument();
       expect(screen.getByText('계란')).toBeInTheDocument();
 
-      // 표준 매핑 완료 배지 노출 확인
-      const mappedBadges = screen.getAllByText('표준 매핑 완료');
+      // 자동 분류 완료 배지 노출 확인
+      const mappedBadges = screen.getAllByText('자동 분류 완료');
       expect(mappedBadges.length).toBe(mockOcrParsedItems.length);
     });
 

@@ -103,7 +103,7 @@ export function IngredientCombobox({
             </>
           ) : (
             <span className="truncate text-muted-foreground">
-              표준 식재료를 검색하여 선택하세요
+              식재료를 검색하여 선택하세요
             </span>
           )}
         </div>
@@ -209,9 +209,9 @@ export function IngredientCombobox({
           >
             {filteredList.length === 0 ? (
               <div className="py-6 text-center text-xs text-muted-foreground">
-                <p>일치하는 표준 식재료가 없어요 😢</p>
+                <p>일치하는 식재료가 없어요 😢</p>
                 <p className="mt-1 text-[11px] text-muted-foreground/80">
-                  마스터에 없는 재료는 커뮤니티 요청을 이용해 주세요.
+                  찾으시는 재료가 없다면 다른 키워드로 검색해 보세요.
                 </p>
               </div>
             ) : (

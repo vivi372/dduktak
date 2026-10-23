@@ -20,7 +20,7 @@ import { cn } from '@/utils/cn';
 const DIFFICULTY_OPTIONS: { label: RecipeDifficulty; desc: string }[] = [
   { label: '쉬움', desc: '초보자도 뚝딱 가능' },
   { label: '보통', desc: '기본적인 조리 지식 필요' },
-  { label: '조금복잡', desc: '정성과 시간이 필요' },
+  { label: '어려움', desc: '정성과 손길이 필요' },
 ];
 
 const QUICK_TIMES = [5, 10, 15, 20, 30, 45, 60];
@@ -444,7 +444,7 @@ export default function RecipeFormPage() {
             <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
               <Info className="h-3.5 w-3.5 text-brand-500 shrink-0" />
               <span>
-                표준 74종 식재료만 선택 가능하며, 주재료는 냉장고 매칭의 필수 조건이 됩니다.
+                식재료를 선택해 주세요. 주재료는 냉장고 매칭의 필수 조건이 됩니다.
               </span>
             </p>
           </div>
@@ -500,7 +500,7 @@ export default function RecipeFormPage() {
               {/* 표준 식재료 Combobox 검색 및 선택 */}
               <div>
                 <label className="block text-[11px] font-bold text-muted-foreground mb-1">
-                  표준 식재료 선택
+                  식재료 선택
                 </label>
                 <IngredientCombobox
                   value={ing.masterIngredientId}
@@ -565,9 +565,6 @@ export default function RecipeFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-[10px] text-muted-foreground mb-1">
-                      대체 가능한 표준 재료 (선택 시 매칭 70% 인정)
-                    </label>
                     <IngredientCombobox
                       value={ing.altIngredientId ?? null}
                       onChange={(master) => handleSelectAltMaster(idx, master)}
@@ -587,7 +584,7 @@ export default function RecipeFormPage() {
             className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-brand-500/40 bg-brand-50/50 text-xs sm:text-sm font-extrabold text-brand-700 hover:bg-brand-50 active:scale-98 transition-all dark:bg-brand-950/20 dark:text-brand-300"
           >
             <Plus className="h-4 w-4" />
-            <span>+ 주재료 추가</span>
+            <span>주재료 추가</span>
           </button>
           <button
             type="button"
@@ -595,7 +592,7 @@ export default function RecipeFormPage() {
             className="flex min-h-[44px] flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background text-xs sm:text-sm font-extrabold text-foreground hover:bg-accent active:scale-98 transition-all"
           >
             <Plus className="h-4 w-4" />
-            <span>+ 부재료 추가</span>
+            <span>부재료 추가</span>
           </button>
         </div>
       </section>
@@ -706,7 +703,7 @@ export default function RecipeFormPage() {
           className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border bg-background/50 text-xs sm:text-sm font-bold text-foreground hover:bg-accent active:scale-98 transition-all"
         >
           <Plus className="h-4 w-4" />
-          <span>+ 조리 순서(Step) 추가하기</span>
+          <span>조리 순서(Step) 추가하기</span>
         </button>
       </section>
 

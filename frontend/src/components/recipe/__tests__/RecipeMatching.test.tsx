@@ -103,7 +103,7 @@ describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터�
     expect(screen.getByText('차감 없이 요리 완료 기록만 하기')).toBeInTheDocument();
   });
 
-  it('재료 자동으로 차감하고 요리하기 선택 후 다음 단계로 이동하면 FIFO 검수 화면이 나와야 한다', () => {
+  it('재료 자동으로 차감하고 요리하기 선택 후 다음 단계로 이동하면 차감 검수 화면이 나와야 한다', () => {
     const recipe = mockRecipeDetails[0];
     render(
       <CookConfirmationModal
@@ -118,6 +118,6 @@ describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터�
     fireEvent.click(nextBtn);
 
     expect(screen.getByText('냉장고 재료 차감 검수')).toBeInTheDocument();
-    expect(screen.getByText(/선입선출\(FIFO\)/)).toBeInTheDocument();
+    expect(screen.getByText('임박한 재료부터 자동 차감')).toBeInTheDocument();
   });
 });

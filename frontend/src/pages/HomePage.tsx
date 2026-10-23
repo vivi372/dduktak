@@ -43,7 +43,7 @@ export default function HomePage() {
         <div className="flex items-center justify-between rounded-2xl bg-brand-500 px-4 py-2.5 text-xs font-bold text-brand-foreground shadow-soft">
           <span className="flex items-center gap-1.5">
             <Sparkles className="h-4 w-4" />
-            <span>로그인하고 나만의 냉장고 파먹기를 시작하세요!</span>
+            <span>로그인하고 나만의 스마트한 냉장고 관리를 시작하세요!</span>
           </span>
           <Link
             to={ROUTES.LOGIN}

@@ -31,7 +31,7 @@ export function ReceiptScanningProgress({
 
     const timer2 = setTimeout(() => {
       setProgress(80);
-      setStatusMessage('표준 마스터 식재료 74종 및 카테고리 매핑 중 🔍');
+      setStatusMessage('식재료 목록 및 카테고리 분류 중 🔍');
     }, 900);
 
     const timer3 = setTimeout(() => {

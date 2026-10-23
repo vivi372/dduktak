@@ -1,9 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, SlidersHorizontal } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { RecipeCard } from '@/components/common/RecipeCard';
-import { RecipeMatchingToggle, RecipeCategoryTabs } from '@/components/recipe';
+import {
+  RecipeMatchingToggle,
+  RecipeCategoryTabs,
+  RecipeSortDropdown,
+} from '@/components/recipe';
 import { mockRecipeDetails } from '@/mocks/recipes.mock';
 import { calculateRecipeMatching } from '@/mocks/matching.mock';
 import { mockInventory } from '@/mocks/inventory.mock';
@@ -99,19 +103,19 @@ export default function RecipeFeedPage() {
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* 1. 상단 타이틀 & 레시피 등록 CTA */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground whitespace-nowrap">
             뚝딱 레시피 커뮤니티
           </h1>
-          <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground">
-            1인 가구 자취생들의 리얼 냉장고 파먹기 레시피를 만나보세요.
+          <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground break-keep">
+            1인 가구 자취생들의 알뜰한 냉장고 비우기 맞춤 레시피를 만나보세요.
           </p>
         </div>
 
         <Link
           to={ROUTES.RECIPE_NEW}
-          className="flex min-h-[44px] items-center gap-1.5 rounded-full bg-brand-500 px-4 py-2 text-xs sm:text-sm font-extrabold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
+          className="flex min-h-[44px] shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-brand-500 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
         >
           <Plus className="h-4 w-4 stroke-[2.5]" />
           <span>레시피 등록</span>
@@ -141,21 +145,7 @@ export default function RecipeFeedPage() {
           />
         </div>
 
-        <div className="relative shrink-0">
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value as SortOption)}
-            aria-label="레시피 정렬 순서"
-            className="min-h-[44px] appearance-none rounded-2xl border border-border/80 bg-card pl-8 pr-7 text-xs sm:text-sm font-bold text-foreground hover:bg-accent focus:outline-none"
-          >
-            <option value="latest">최신순</option>
-            <option value="matching">매칭률순</option>
-            <option value="popular">인기순 (좋아요)</option>
-            <option value="cooked">요리완료순</option>
-            <option value="time">조리시간 단축순</option>
-          </select>
-          <SlidersHorizontal className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-        </div>
+        <RecipeSortDropdown value={sortBy} onChange={setSortBy} />
       </div>
 
       {/* 4. 8대 고정 카테고리 수평 탭 */}

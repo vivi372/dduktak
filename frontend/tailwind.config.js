@@ -29,9 +29,13 @@ export default {
           50: '#EDFBFA',
           100: '#D3F5F3',
           300: '#8FE3DD',
+          400: '#6EE0D7',
           500: '#4ECDC4',
           600: '#2FA9A0',
           700: '#25857E',
+          800: '#1C645F',
+          900: '#144643',
+          950: '#0B2927',
           foreground: '#0B3D39',
         },
         // 크림 아이보리 (Background Neutral)

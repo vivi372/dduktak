@@ -32,7 +32,7 @@ export function RecipeMatchingToggle({
       className={cn(
         'group flex min-h-[58px] w-full items-center justify-between rounded-2xl border p-3.5 text-left transition-all active:scale-[0.99]',
         enabled
-          ? 'border-mint-500/80 bg-mint-50/90 shadow-soft dark:bg-mint-950/25 dark:border-mint-600/60'
+          ? 'border-mint-500/80 bg-mint-50/90 shadow-soft dark:border-mint-500/50 dark:bg-card dark:ring-1 dark:ring-mint-500/30'
           : 'border-border/80 bg-card hover:border-mint-300 dark:border-white/10 dark:hover:border-mint-700/60',
         className,
       )}
@@ -43,7 +43,7 @@ export function RecipeMatchingToggle({
           className={cn(
             'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors',
             enabled
-              ? 'bg-mint-500 text-white shadow-sm'
+              ? 'bg-mint-500 text-slate-950 font-black shadow-sm dark:bg-mint-400 dark:text-slate-950'
               : 'bg-muted text-muted-foreground group-hover:bg-mint-100 group-hover:text-mint-700 dark:group-hover:bg-mint-900/40',
           )}
         >
@@ -56,7 +56,7 @@ export function RecipeMatchingToggle({
               🟢 내 냉장고 뚝딱 매칭
             </span>
             {enabled && matchedCount !== undefined && (
-              <span className="inline-flex items-center rounded-full bg-mint-500/15 px-2 py-0.5 text-[11px] font-black text-mint-700 dark:text-mint-300">
+              <span className="inline-flex items-center rounded-full bg-mint-500/15 px-2 py-0.5 text-[11px] font-black text-mint-700 dark:bg-mint-400/20 dark:text-mint-300 dark:border dark:border-mint-500/30">
                 {matchedCount}개 요리 가능
               </span>
             )}
@@ -73,7 +73,7 @@ export function RecipeMatchingToggle({
       <div
         className={cn(
           'flex h-7 w-12 shrink-0 items-center rounded-full p-0.5 transition-colors duration-200 ease-in-out',
-          enabled ? 'bg-mint-500' : 'bg-muted border border-border/80 dark:bg-muted/80',
+          enabled ? 'bg-mint-500 dark:bg-mint-400' : 'bg-muted border border-border/80 dark:bg-muted/80',
         )}
         aria-hidden="true"
       >
@@ -83,7 +83,7 @@ export function RecipeMatchingToggle({
             enabled ? 'translate-x-5' : 'translate-x-0',
           )}
         >
-          {enabled && <span className="h-2 w-2 rounded-full bg-mint-500" />}
+          {enabled && <span className="h-2 w-2 rounded-full bg-mint-600 dark:bg-mint-700" />}
         </span>
       </div>
     </button>

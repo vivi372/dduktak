@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.RECIPE_DETAIL,
         element: <RecipeDetailPage />,
-        handle: h({ title: '레시피 상세', showBack: true }),
+        handle: h({ title: '레시피 상세', showBack: true, hideBottomNav: true }),
       },
       { path: ROUTES.MYPAGE, element: <MyPage />, handle: h({ title: '마이페이지', brand: true }) },
       { path: ROUTES.NOTIFICATIONS, element: <NotificationPage />, handle: h({ title: '알림함', showBack: true }) },
