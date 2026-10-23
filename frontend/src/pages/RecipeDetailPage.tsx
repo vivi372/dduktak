@@ -109,7 +109,7 @@ export default function RecipeDetailPage() {
   }
 
   return (
-    <div className="space-y-6 pb-28">
+    <div className="space-y-6 pb-6">
       {/* 1. 레시피 대표 히어로 썸네일 & 오버레이 */}
       <div className="relative -mx-4 -mt-4 overflow-hidden aspect-[16/10] sm:aspect-[2/1] sm:rounded-3xl sm:mx-0 sm:mt-0 bg-muted">
         <img
@@ -249,12 +249,22 @@ export default function RecipeDetailPage() {
         )}
       </div>
 
-      {/* 4. 인분 변환 계산기 */}
-      <ServingsCalculator
-        servings={servings}
-        baseServings={recipe.servings}
-        onChange={setServings}
-      />
+      {/* 4. 인분 변환 계산기 및 퀵 요리하기 */}
+      <div className="space-y-3">
+        <ServingsCalculator
+          servings={servings}
+          baseServings={recipe.servings}
+          onChange={setServings}
+        />
+        <button
+          type="button"
+          onClick={() => setCookModalOpen(true)}
+          className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 font-black text-sm text-white shadow-soft transition-all hover:bg-brand-600 active:scale-[0.98]"
+        >
+          <ChefHat className="h-5 w-5" />
+          <span>이 레시피로 요리하기 ({servings}인분)</span>
+        </button>
+      </div>
 
       {/* 5. 식재료 보유 현황 배지 리스트 */}
       <IngredientBadgeList ingredientStatuses={matchingScore.ingredientStatuses} />
@@ -262,29 +272,27 @@ export default function RecipeDetailPage() {
       {/* 6. 조리 순서 Step 리스트 */}
       <RecipeStepList steps={recipe.steps} />
 
-      {/* 7. 하단 고정 액션 바 [이 레시피로 요리하기] CTA */}
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border/80 bg-background/95 p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md dark:border-white/10 dark:bg-background/95 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="mx-auto max-w-[480px] lg:max-w-5xl flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleToggleLike}
-            className={cn(
-              'flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border transition-all active:scale-95',
-              isLiked ? 'border-rose-400 bg-rose-50 text-rose-500 dark:bg-rose-950/40' : 'bg-card text-muted-foreground',
-            )}
-          >
-            <Heart className={cn('h-5 w-5', isLiked && 'fill-current text-rose-500')} />
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setCookModalOpen(true)}
-            className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-2xl bg-brand-500 font-black text-sm text-white shadow-soft hover:bg-brand-600 active:scale-[0.98] transition-all"
-          >
-            <ChefHat className="h-5 w-5" />
-            <span>이 레시피로 요리하기 ({servings}인분)</span>
-          </button>
+      {/* 7. 조리 완료 & 재료 차감 유도 카드 (ThumbZone 위에 자연스럽게 배치) */}
+      <div className="space-y-3 rounded-3xl border border-brand-500/25 bg-gradient-to-br from-brand-50/70 via-background to-mint-50/50 p-5 text-center shadow-card dark:border-brand-500/20 dark:from-card dark:via-card dark:to-card/80">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300">
+          <ChefHat className="h-6 w-6 stroke-[2.2]" />
         </div>
+        <div>
+          <h4 className="text-base font-black text-foreground">
+            레시피 확인 완료! 이제 요리해볼까요?
+          </h4>
+          <p className="mt-1 text-xs text-muted-foreground">
+            선택하신 <strong>{servings}인분</strong> 기준으로 냉장고 재료를 차감 검수하고 요리를 시작합니다.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => setCookModalOpen(true)}
+          className="flex min-h-[50px] w-full items-center justify-center gap-2 rounded-2xl bg-brand-500 font-black text-sm text-white shadow-soft transition-all hover:bg-brand-600 active:scale-[0.98]"
+        >
+          <ChefHat className="h-5 w-5" />
+          <span>이 레시피로 요리하기 ({servings}인분)</span>
+        </button>
       </div>
 
       {/* 2차 확인 차감 모달 */}

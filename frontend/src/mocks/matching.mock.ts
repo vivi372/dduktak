@@ -74,8 +74,8 @@ export function evaluateIngredientStatus(
       deficitQuantity: 0,
       unit: ingredient.unit,
       status: 'OWNED',
-      hasAlternative: false,
-      altIngredientName: null,
+      hasAlternative: !!ingredient.altIngredientName,
+      altIngredientName: ingredient.altIngredientName ?? null,
       isOptional: ingredient.isOptional,
       minDDay,
     };
@@ -92,8 +92,8 @@ export function evaluateIngredientStatus(
       deficitQuantity: Number((requiredQuantity - totalQuantity).toFixed(2)),
       unit: ingredient.unit,
       status: 'DEFICIENT',
-      hasAlternative: false,
-      altIngredientName: null,
+      hasAlternative: !!ingredient.altIngredientName,
+      altIngredientName: ingredient.altIngredientName ?? null,
       isOptional: ingredient.isOptional,
       minDDay,
     };
@@ -130,8 +130,8 @@ export function evaluateIngredientStatus(
     deficitQuantity: requiredQuantity,
     unit: ingredient.unit,
     status: 'DEFICIENT',
-    hasAlternative: false,
-    altIngredientName: ingredient.altIngredientName,
+    hasAlternative: !!ingredient.altIngredientName,
+    altIngredientName: ingredient.altIngredientName ?? null,
     isOptional: ingredient.isOptional,
     minDDay: null,
   };

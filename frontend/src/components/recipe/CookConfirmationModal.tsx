@@ -349,28 +349,72 @@ export function CookConfirmationModal({
                         {!item.isSauceExcluded && (
                           <div className="flex items-center gap-1.5">
                             {isEditing ? (
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-1 rounded-xl border border-mint-500/50 bg-mint-500/5 p-0.5">
+                                <button
+                                  type="button"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    const step = item.unit === 'g' || item.unit === 'ml' ? 10 : 0.5;
+                                    const next = Math.max(0, Number((item.toDeductQuantity - step).toFixed(2)));
+                                    setCustomQuantities((prev) => ({
+                                      ...prev,
+                                      [item.masterIngredientId]: next,
+                                    }));
+                                  }}
+                                  disabled={item.toDeductQuantity <= 0}
+                                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-border/80 bg-background text-foreground transition-all hover:bg-accent active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                                  aria-label="차감 수량 감소"
+                                >
+                                  <Minus className="h-3 w-3 stroke-[2.5]" />
+                                </button>
                                 <input
                                   type="number"
+                                  inputMode="decimal"
                                   min="0"
                                   max={item.currentStock}
                                   step="0.5"
                                   autoFocus
                                   value={item.toDeductQuantity}
                                   onChange={(e) => {
-                                    const val = parseFloat(e.target.value) || 0;
-                                    setCustomQuantities((prev) => ({
-                                      ...prev,
-                                      [item.masterIngredientId]: val,
-                                    }));
+                                    const raw = e.target.value;
+                                    if (raw === '') {
+                                      setCustomQuantities((prev) => ({
+                                        ...prev,
+                                        [item.masterIngredientId]: 0,
+                                      }));
+                                      return;
+                                    }
+                                    const val = parseFloat(raw);
+                                    if (!isNaN(val)) {
+                                      setCustomQuantities((prev) => ({
+                                        ...prev,
+                                        [item.masterIngredientId]: Math.min(item.currentStock, Math.max(0, val)),
+                                      }));
+                                    }
                                   }}
-                                  onBlur={() => setEditingId(null)}
-                                  className="w-16 h-8 rounded-lg border border-mint-500 bg-background px-2 text-center text-xs font-bold focus:outline-none"
+                                  className="h-7 w-14 rounded-lg border border-border/80 bg-background px-1 text-center text-xs font-black text-foreground focus:border-mint-500 focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                 />
                                 <button
                                   type="button"
+                                  onMouseDown={(e) => e.preventDefault()}
+                                  onClick={() => {
+                                    const step = item.unit === 'g' || item.unit === 'ml' ? 10 : 0.5;
+                                    const next = Math.min(item.currentStock, Number((item.toDeductQuantity + step).toFixed(2)));
+                                    setCustomQuantities((prev) => ({
+                                      ...prev,
+                                      [item.masterIngredientId]: next,
+                                    }));
+                                  }}
+                                  disabled={item.toDeductQuantity >= item.currentStock}
+                                  className="flex h-7 w-7 items-center justify-center rounded-lg border border-border/80 bg-background text-foreground transition-all hover:bg-accent active:scale-95 disabled:pointer-events-none disabled:opacity-30"
+                                  aria-label="차감 수량 증가"
+                                >
+                                  <Plus className="h-3 w-3 stroke-[2.5]" />
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => setEditingId(null)}
-                                  className="h-8 px-2 rounded-lg bg-mint-500 text-white font-bold text-[11px]"
+                                  className="h-7 px-2 rounded-lg bg-mint-500 text-white font-extrabold text-[11px] hover:bg-mint-600 active:scale-95 shadow-sm"
                                 >
                                   완료
                                 </button>
