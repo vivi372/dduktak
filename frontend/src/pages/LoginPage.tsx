@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
 import { useMockAuthStore } from '@/store/mockAuthStore';
 import { Button } from '@/components/ui/button';
+import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import logo from '@/assets/logo.png';
 
 /**
@@ -62,6 +63,17 @@ export default function LoginPage() {
   const [nickname, setNickname] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
+  // 약관 동의 및 모달 제어 상태
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsTab, setTermsTab] = useState<TermsTab>('terms');
+  const [agreeTerms, setAgreeTerms] = useState(false);
+  const [agreeRecipeAnonymize, setAgreeRecipeAnonymize] = useState(false);
+
+  const handleOpenTerms = (tab: TermsTab) => {
+    setTermsTab(tab);
+    setTermsModalOpen(true);
+  };
+
   /** 소셜 로그인 버튼 클릭 시 목업 세션 생성 및 온보딩 웰컴 모달 호출 */
   const handleSocialLogin = (provider: 'kakao' | 'google') => {
     login(provider);
@@ -90,6 +102,10 @@ export default function LoginPage() {
     }
     if (password.length < 8) {
       toast.error('비밀번호는 최소 8자 이상이어야 합니다.');
+      return;
+    }
+    if (!agreeTerms || !agreeRecipeAnonymize) {
+      toast.error('서비스 이용 및 탈퇴 시 레시피 보존 정책 약관에 모두 동의해 주세요.');
       return;
     }
     signupWithEmail(email, nickname);
@@ -212,6 +228,32 @@ export default function LoginPage() {
               <Mail className="h-4 w-4" />
               <span>이메일로 로그인 / 회원가입</span>
             </Button>
+
+            {/* 소셜 로그인 시 약관 고지 및 필수 정책 안내 */}
+            <div className="pt-2 text-center text-[11px] text-muted-foreground leading-relaxed">
+              <p>
+                시작 시 오늘의 뚝딱의{' '}
+                <button
+                  type="button"
+                  onClick={() => handleOpenTerms('terms')}
+                  className="font-bold text-foreground underline underline-offset-2 hover:text-brand-600"
+                >
+                  서비스 이용약관
+                </button>
+                과{' '}
+                <button
+                  type="button"
+                  onClick={() => handleOpenTerms('privacy')}
+                  className="font-bold text-foreground underline underline-offset-2 hover:text-brand-600"
+                >
+                  개인정보 처리방침
+                </button>
+                에 동의하게 됩니다.
+              </p>
+              <p className="mt-1 text-[10px] text-muted-foreground/80">
+                💬 회원 탈퇴 시 작성하신 레시피는 커뮤니티 생태계 보존을 위해 익명으로 전환되어 보존됩니다.
+              </p>
+            </div>
           </div>
         ) : (
           /* ============================================================ */
@@ -404,7 +446,54 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <Button type="submit" variant="primary" size="lg" className="w-full font-bold shadow-soft mt-2">
+                {/* 필수 약관 동의 체크박스 영역 */}
+                <div className="space-y-2.5 pt-2 border-t border-border/80">
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={agreeTerms}
+                        onChange={(e) => setAgreeTerms(e.target.checked)}
+                        className="h-4 w-4 rounded accent-brand-500"
+                        required
+                      />
+                      <span className="font-semibold text-foreground">
+                        [필수] 서비스 이용약관 및 개인정보 동의
+                      </span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenTerms('terms')}
+                      className="text-[11px] font-bold text-brand-600 hover:underline shrink-0 pl-1"
+                    >
+                      전문보기
+                    </button>
+                  </div>
+
+                  <div className="flex items-start justify-between text-xs">
+                    <label className="flex items-start gap-2 cursor-pointer select-none">
+                      <input
+                        type="checkbox"
+                        checked={agreeRecipeAnonymize}
+                        onChange={(e) => setAgreeRecipeAnonymize(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded accent-brand-500"
+                        required
+                      />
+                      <span className="font-semibold text-foreground leading-snug">
+                        [필수] 회원 탈퇴 시 레시피 익명 전환 보존 동의
+                      </span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleOpenTerms('terms')}
+                      className="text-[11px] font-bold text-brand-600 hover:underline shrink-0 pl-1"
+                    >
+                      안내보기
+                    </button>
+                  </div>
+                </div>
+
+                <Button type="submit" variant="primary" size="lg" className="w-full font-bold shadow-soft mt-3">
                   회원가입 완료
                 </Button>
               </form>
@@ -423,6 +512,13 @@ export default function LoginPage() {
           로그인 없이 먼저 둘러볼래요 →
         </button>
       </div>
+
+      {/* 이용약관 및 개인정보 처리방침 조회 모달 */}
+      <TermsModal
+        open={termsModalOpen}
+        initialTab={termsTab}
+        onClose={() => setTermsModalOpen(false)}
+      />
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import MyPage from '@/pages/MyPage';
@@ -159,5 +159,31 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
     await user.click(changeEmailRow);
 
     expect(screen.getByText(/소셜 로그인은 해당 플랫폼/)).toBeInTheDocument();
+  });
+
+  it('마이페이지에서 서비스 이용약관 및 개인정보 처리방침을 클릭하면 모달이 열려야 한다', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <MyPage />
+      </MemoryRouter>,
+    );
+
+    // 서비스 이용약관 클릭
+    const termsRow = screen.getByRole('button', { name: /서비스 이용약관/ });
+    await user.click(termsRow);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '서비스 이용약관' })).toBeInTheDocument();
+    expect(screen.getAllByText(/회원 탈퇴 시 작성하신 레시피는/).length).toBeGreaterThanOrEqual(1);
+
+    // 닫기
+    const closeBtn = screen.getByRole('button', { name: '확인 완료' });
+    await user.click(closeBtn);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
   });
 });

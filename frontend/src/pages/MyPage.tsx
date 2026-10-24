@@ -1,6 +1,17 @@
 import { useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { BellRing, ChevronRight, LogIn, LogOut, Moon, MoonStar, UserX, Mail } from 'lucide-react';
+import {
+  BellRing,
+  ChevronRight,
+  LogIn,
+  LogOut,
+  Moon,
+  MoonStar,
+  UserX,
+  Mail,
+  FileText,
+  ShieldCheck,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { useThemeStore } from '@/store/themeStore';
@@ -13,6 +24,7 @@ import {
   MyRecipeShortcutCard,
   ChangeEmailModal,
 } from '@/components/mypage';
+import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/utils/cn';
 
@@ -104,6 +116,13 @@ export default function MyPage() {
   const [quietTimeModalOpen, setQuietTimeModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [changeEmailModalOpen, setChangeEmailModalOpen] = useState(false);
+  const [termsModalOpen, setTermsModalOpen] = useState(false);
+  const [termsTab, setTermsTab] = useState<TermsTab>('terms');
+
+  const handleOpenTerms = (tab: TermsTab) => {
+    setTermsTab(tab);
+    setTermsModalOpen(true);
+  };
 
   const handleLogout = () => {
     logout();
@@ -277,7 +296,33 @@ export default function MyPage() {
         </Card>
       </section>
 
-      {/* 모달 4종 */}
+      {/* 6. 이용 안내 및 약관 섹션 (USER-PAGE-05 & USER-02) */}
+      <section aria-label="이용 안내 및 약관">
+        <h2 className="mb-2 px-1 text-sm font-bold font-sans text-muted-foreground">이용 안내 및 약관</h2>
+        <Card className="divide-y divide-border overflow-hidden p-0 shadow-card">
+          <Row
+            icon={<FileText className="h-5 w-5" />}
+            label="서비스 이용약관"
+            onClick={() => handleOpenTerms('terms')}
+            right={<ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />}
+          />
+          <Row
+            icon={<ShieldCheck className="h-5 w-5" />}
+            label="개인정보 처리방침"
+            onClick={() => handleOpenTerms('privacy')}
+            right={<ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />}
+          />
+        </Card>
+      </section>
+
+      {/* 약관 조회 모달 (로그인/비로그인 공통 상시 열람 가능) */}
+      <TermsModal
+        open={termsModalOpen}
+        initialTab={termsTab}
+        onClose={() => setTermsModalOpen(false)}
+      />
+
+      {/* 모달 4종 (로그인 전용) */}
       {isLoggedIn && (
         <>
           <ProfileEditModal

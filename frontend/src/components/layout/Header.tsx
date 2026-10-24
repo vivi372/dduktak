@@ -21,7 +21,7 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-header items-center justify-between border-b border-border/80 bg-background/85 px-3 backdrop-blur-md dark:border-white/10 dark:bg-background/90">
+    <header className="sticky top-0 z-30 flex h-header items-center justify-between border-b border-border/80 bg-background/85 px-3 backdrop-blur-md dark:border-white/10 dark:bg-background/90 lg:rounded-t-3xl">
       {handle?.showBack ? (
         <div className="flex items-center gap-1">
           <button
@@ -35,25 +35,36 @@ export function Header() {
           <h1 className="text-lg font-extrabold tracking-tight">{handle.title}</h1>
         </div>
       ) : (
-        <Link to={ROUTES.HOME} aria-label="오늘의 뚝딱 홈" className="flex items-center gap-2 pl-1">
-          {/* 로고의 핵심 모티브(냄비)만 원형 크롭 */}
-          <img
-            src={logoIcon}
-            alt=""
-            width={36}
-            height={36}
-            className="h-9 w-9 rounded-full object-cover ring-2 ring-brand-200 dark:ring-brand-700/60"
-          />
-          <span className="text-2xl font-yanolja font-black tracking-tight text-brand-600 dark:text-brand-300">오늘의 뚝딱</span>
-        </Link>
+        <>
+          {/* 모바일 화면 (lg 미만): 로고 아이콘 + "오늘의 뚝딱" 워드마크 */}
+          <Link to={ROUTES.HOME} aria-label="오늘의 뚝딱 홈" className="flex lg:hidden items-center gap-2 pl-1">
+            {/* 로고의 핵심 모티브(냄비)만 원형 크롭 */}
+            <img
+              src={logoIcon}
+              alt=""
+              width={36}
+              height={36}
+              className="h-9 w-9 rounded-full object-cover ring-2 ring-brand-200 dark:ring-brand-700/60"
+            />
+            <span className="text-2xl font-yanolja font-black tracking-tight text-brand-600 dark:text-brand-300">오늘의 뚝딱</span>
+          </Link>
+
+          {/* 데스크톱 화면 (lg 이상): 사이드바 및 서브페이지와의 일관성을 위해 현재 메뉴명(handle.title)으로 통일 */}
+          <div className="hidden lg:flex items-center pl-2">
+            <h1 className="text-lg font-extrabold tracking-tight text-foreground">
+              {handle?.title || '홈'}
+            </h1>
+          </div>
+        </>
       )}
 
       <div className="flex items-center">
+        {/* 데스크톱(lg 이상)에서는 좌측 사이드바에 테마 스위처가 이미 배치되어 있으므로 모바일에서만 노출하여 겹침 방지 */}
         <button
           type="button"
           onClick={toggle}
           aria-label={theme === 'dark' ? '라이트 모드로 전환' : '다크 모드로 전환'}
-          className="flex h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+          className="flex lg:hidden h-11 w-11 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
         >
           {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
         </button>
