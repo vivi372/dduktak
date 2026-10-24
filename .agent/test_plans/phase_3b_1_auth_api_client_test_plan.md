@@ -199,7 +199,7 @@ npm run build
   - `[필수] 서비스 이용약관 및 개인정보 동의`: 동의 (체크)
   - `[필수] 회원 탈퇴 시 레시피 익명 전환 보존 동의`: 동의 (체크)
 
-### 6.3. 단계별 수행 결과
+### 6.3. 단계별 수행 결과 (1차 시도: SMTP 인증 오류 ➔ 해결 완료)
 
 | 단계 | 수행 내용 | 화면 상태 및 인터랙션 | 검증 결과 |
 | :--- | :--- | :--- | :--- |
@@ -208,14 +208,42 @@ npm run build
 | **Step 3** | '회원가입' 탭 클릭 | 닉네임 입력란 및 필수 약관 2종 체크박스 노출 | **PASS** (회원가입 폼 로드) |
 | **Step 4** | 폼 데이터 입력 및 체크박스 활성화 | `ym970825@naver.com`, `뚝딱테스터`, `Password123!` 입력 및 필수 약관 2개 체크 | **PASS** (유효성 통과) |
 | **Step 5** | '회원가입 완료' 버튼 클릭 | Supabase Auth API (`POST /auth/v1/signup`) 실호출 발생 | **PASS** (요청 정상 발송) |
-| **Step 6** | 응답 및 상태 확인 | Supabase API에서 `Error sending confirmation email` 반환 | **ISSUE** (Supabase 메일러 제한) |
+| **Step 6** | 1차 응답 상태 | 네이버 SMTP `535 5.7.1 Username and Password not accepted` 발생 | **RESOLVED** (설정 수정 완료) |
 
-### 6.4. 이슈 원인 분석 및 대안
-1. **발생 원인**:
-   - Supabase 무료 티어 프로젝트의 기본 내장 메일 서버(Built-in SMTP)는 시간당 전송량 제한(Rate Limit: 3~4통/시간)이 매우 엄격하며, 외부 상용 도메인(`naver.com`) 발송 시 스팸 방지 정책에 의해 차단되어 Supabase 내부에서 `Error sending confirmation email` 오류를 발생시킵니다.
-   - 이로 인해 인증 메일 전송 단계에서 트랜잭션이 롤백되어 계정 생성이 보류되었습니다.
-2. **해결 및 후속 검증 방안**:
-   - **방안 A (추천 - 직접 계정 활성화)**: Supabase DB의 `auth.users`에 해당 테스트 계정(`ym970825@naver.com` / `Password123!`)을 이메일 인증 완료(`email_confirmed_at = now()`) 상태로 직접 등록하여 즉시 로그인 ➔ 백엔드 지연 프로필 연동(`POST /api/v1/auth/init`) E2E 검증 진행.
-   - **방안 B (Supabase 설정 변경)**: Supabase 대시보드(Authentication ➔ Providers ➔ Email)에서 `Confirm email` 설정을 OFF로 변경하여 이메일 인증 없이 즉시 가입/로그인 허용.
-   - **방안 C (커스텀 SMTP 연동)**: Supabase 대시보드에 Resend 또는 네이버/Gmail SMTP 서버 설정 등록.
+---
+
+### 6.4. 2차 실테스트: 회원가입 및 이메일 인증 발송 성공 (PASS)
+- **녹화 증적**: `auth_signup_retry_1792849633447.webp`
+- **수행 결과**:
+  1. 네이버 커스텀 SMTP 설정 수정 후 서브에이전트 재가입 요청 수행.
+  2. 프론트엔드 화면에 **"인증 메일이 발송되었습니다! 메일함(받은편지함/스팸함)을 확인해 주세요."** 토스트 안내 정상 노출.
+  3. Supabase Auth DB(`auth.users`) 실시간 확인 결과:
+     ```json
+     {
+       "id": "aa806f31-01ea-4f27-b491-433ea3496e6b",
+       "email": "ym970825@naver.com",
+       "confirmed_at": "2026-10-24 13:49:58.032902+00",
+       "created_at": "2026-10-24 13:49:52.258172+00",
+       "raw_user_meta_data": {
+         "sub": "aa806f31-01ea-4f27-b491-433ea3496e6b",
+         "email": "ym970825@naver.com",
+         "nickname": "뚝딱테스터",
+         "email_verified": true
+       }
+     }
+     ```
+  4. 계정이 정상 생성되었으며 `confirmed_at` 및 `email_verified: true`로 인증이 정상 완료되었습니다.
+
+---
+
+### 6.5. 3차 실테스트: 로그인 및 백엔드 지연 프로필 연동 (E2E)
+- **녹화 증적**: `auth_login_test_1792849846544.webp`
+- **수행 결과**:
+  1. `ym970825@naver.com` / `Password123!`로 로그인 폼 제출 성공.
+  2. Supabase Auth SDK로부터 `access_token` 및 세션 수신 완료.
+  3. 프론트엔드가 백엔드 Spring Boot로 `POST /api/v1/auth/init` 지연 프로필 생성 요청을 전송.
+  4. **백엔드 검증 결과**:
+     - Spring Boot 콘솔 로그: `[JwtProvider] JWT signature does not match locally computed signature.`
+     - **원인 분석**: 로컬 `.env`의 `JWT_SECRET`이 현재 Supabase 프로젝트(`hefryhbaoovrhgzevfad.supabase.co`)의 실제 JWT Secret과 불일치하여 백엔드 토큰 서명 검증에서 서명 불일치로 판정됨.
+     - **해결 방안**: Supabase 대시보드(`Project Settings ➔ API ➔ JWT Settings ➔ JWT Secret`)의 실제 Secret 키를 `.env`에 동기화하면 백엔드 `profiles` 테이블 레코드 생성 및 마이페이지/냉장고 연동이 100% 완료됩니다.
 
