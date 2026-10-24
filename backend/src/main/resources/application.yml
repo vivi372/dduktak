@@ -45,6 +45,8 @@ jwt:
   secret: ${JWT_SECRET}
   expiration: 86400000 # 24 hours (ms)
   refresh-expiration: 604800000 # 7 days (ms)
+  supabase-url: ${VITE_SUPABASE_URL:https://hefryhbaoovrhgzevfad.supabase.co}
+  supabase-key: ${VITE_SUPABASE_PUBLISHABLE_KEY:}
 
 # Google AI Studio Gemini API 설정 (영수증 OCR 스캔 연동)
 gemini:

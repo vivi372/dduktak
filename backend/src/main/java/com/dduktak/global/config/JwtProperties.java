@@ -29,4 +29,14 @@ public class JwtProperties {
      * Refresh Token 유효 시간 (밀리초 단위, 기본 7일)
      */
     private long refreshExpiration = 604800000L;
+
+    /**
+     * Supabase 프로젝트 Base URL (원격 위임 검증용)
+     */
+    private String supabaseUrl = "https://hefryhbaoovrhgzevfad.supabase.co";
+
+    /**
+     * Supabase Publishable / Anon API Key (원격 위임 검증 헤더용)
+     */
+    private String supabaseKey;
 }

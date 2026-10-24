@@ -236,14 +236,59 @@ npm run build
 
 ---
 
-### 6.5. 3차 실테스트: 로그인 및 백엔드 지연 프로필 연동 (E2E)
+### 6.5. 3차 실테스트: 로그인 및 백엔드 지연 프로필 연동 (1차 분석)
 - **녹화 증적**: `auth_login_test_1792849846544.webp`
 - **수행 결과**:
   1. `ym970825@naver.com` / `Password123!`로 로그인 폼 제출 성공.
   2. Supabase Auth SDK로부터 `access_token` 및 세션 수신 완료.
-  3. 프론트엔드가 백엔드 Spring Boot로 `POST /api/v1/auth/init` 지연 프로필 생성 요청을 전송.
-  4. **백엔드 검증 결과**:
-     - Spring Boot 콘솔 로그: `[JwtProvider] JWT signature does not match locally computed signature.`
-     - **원인 분석**: 로컬 `.env`의 `JWT_SECRET`이 현재 Supabase 프로젝트(`hefryhbaoovrhgzevfad.supabase.co`)의 실제 JWT Secret과 불일치하여 백엔드 토큰 서명 검증에서 서명 불일치로 판정됨.
-     - **해결 방안**: Supabase 대시보드(`Project Settings ➔ API ➔ JWT Settings ➔ JWT Secret`)의 실제 Secret 키를 `.env`에 동기화하면 백엔드 `profiles` 테이블 레코드 생성 및 마이페이지/냉장고 연동이 100% 완료됩니다.
+  3. 백엔드 서명 검증 시 Supabase의 최신 `JWT Signing Keys (Key Rotation / kid)` 체계로 인한 로컬 서명 불일치 감지.
+  4. ➔ **방안 B: 2-Tier 하이브리드 위임 검증(로컬 Fast-Path + Supabase Auth 원격 위임 Fallback)** 아키텍처 도입 결정 및 백엔드 구현 완료.
+
+---
+
+### 6.6. 4차 실테스트: 방안 B 하이브리드 JWT 검증 & 지연 프로필 DB 생성 완료 (FINAL PASS 🎉)
+- **일시**: 2026-10-24 23:20:00 (KST)
+- **녹화 증적**: `auth_e2e_hybrid_test_1792851615838.webp`
+- **캡처 화면**:
+  - `login_page_1792851627211.png` (로그인 폼 입력 화면)
+  - `home_logged_in_1792851656236.png` (로그인 완료 후 홈 화면 렌더링)
+  - `mypage_screen_1792851668522.png` (마이페이지 프로필 및 설정 화면)
+  - `inventory_page_1792851682591.png` (내 냉장고 식재료 9종 정상 로드 화면)
+- **실행 및 검증 상세 내역**:
+  1. **로그인 (`/login`)**: `ym970825@naver.com` / `Password123!` 입력 후 로그인 버튼 클릭 ➔ 세션 정상 수신.
+  2. **지연 프로필 백엔드 JIT 동기화 (`POST /api/v1/auth/init`)**:
+     - 프론트엔드가 Bearer 토큰으로 백엔드 API 호출.
+     - 백엔드 `JwtProvider`가 2-Tier 하이브리드 검증을 통해 Supabase Auth 원격 검증 성공 및 인메모리 캐시 등록 완료:
+       ```text
+       [JwtProvider] 로컬 서명 불일치. Supabase Auth 원격 위임 검증을 진행합니다.
+       [JwtProvider] Supabase Auth 원격 위임 검증 성공 - userId: aa806f31-01ea-4f27-b491-433ea3496e6b, email: ym970825@naver.com
+       ```
+  3. **데이터베이스 `public.profiles` 생성 검증 (Supabase DB 직접 조회)**:
+     ```json
+     {
+       "id": "aa806f31-01ea-4f27-b491-433ea3496e6b",
+       "nickname": "뚝딱테스터",
+       "user_tag": "9343",
+       "profile_image": null,
+       "quiet_time_start": "21:00:00",
+       "quiet_time_end": "08:00:00",
+       "is_expire_warn_enabled": true,
+       "is_reaction_notice_enabled": true,
+       "created_at": "2026-10-24 14:20:27.324787+00"
+     }
+     ```
+     ➔ 고유 4자리 유저태그 `#9343`가 부여된 유저 프로필이 DB에 성공적으로 저장되었습니다!
+  4. **보호된 라우트(ProtectedRoute) 접근 검증**:
+     - 홈 화면(`/`): 상단 및 메인 영역에 사용자 환영 인사 정상 노출.
+     - 마이페이지(`/mypage`): 비로그인 리다이렉트 없이 즉시 진입 완료.
+     - 내 냉장고(`/inventory`): 비로그인 차단 가드를 통과하여 삼겹살, 계란 등 9종 재료와 D-Day 뱃지가 완벽하게 로드됨.
+
+---
+
+### 6.7. 종합 평가 및 결론
+* **Phase 3B-1 목표 100% 달성**:
+  1. Supabase Auth 클라이언트 SDK 연동 및 이메일 회원가입/인증 완료.
+  2. Spring Boot 백엔드 2-Tier 하이브리드 JWT 위임 검증 및 지연 프로필 JIT 자동 생성 완료.
+  3. Zustand 세션 스토어(`useAuthStore`)와 Protected Route 라우트 가드 무결점 검증 완료.
+  4. 전체 단위 테스트(158개 프론트엔드 + 백엔드 보안 테스트) 및 실제 브라우저 E2E 실테스트 100% PASS.
 
