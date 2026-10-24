@@ -69,7 +69,7 @@
             #{id},
             #{nickname},
             #{userTag},
-            #{profileImage},
+            COALESCE(#{profileImage}, 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png'),
             COALESCE(#{quietTimeStart}, CAST('21:00:00' AS time)),
             COALESCE(#{quietTimeEnd}, CAST('08:00:00' AS time)),
             COALESCE(#{isExpireWarnEnabled}, true),

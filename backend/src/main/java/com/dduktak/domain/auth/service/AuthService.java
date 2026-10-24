@@ -27,6 +27,8 @@ import java.util.concurrent.ThreadLocalRandom;
 @Transactional(readOnly = true)
 public class AuthService {
 
+    public static final String DEFAULT_PROFILE_IMAGE = "https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png";
+
     private final ProfileRepository profileRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -223,7 +225,7 @@ public class AuthService {
                 return String.valueOf(metadata.get("avatar_url")).trim();
             }
         }
-        return null;
+        return DEFAULT_PROFILE_IMAGE;
     }
 
     /**

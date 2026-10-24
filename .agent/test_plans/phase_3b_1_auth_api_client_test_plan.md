@@ -269,7 +269,7 @@ npm run build
        "id": "aa806f31-01ea-4f27-b491-433ea3496e6b",
        "nickname": "뚝딱테스터",
        "user_tag": "9343",
-       "profile_image": null,
+       "profile_image": "https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png",
        "quiet_time_start": "21:00:00",
        "quiet_time_end": "08:00:00",
        "is_expire_warn_enabled": true,
@@ -277,7 +277,7 @@ npm run build
        "created_at": "2026-10-24 14:20:27.324787+00"
      }
      ```
-     ➔ 고유 4자리 유저태그 `#9343`가 부여된 유저 프로필이 DB에 성공적으로 저장되었습니다!
+     ➔ 고유 4자리 유저태그 `#9343`와 공식 기본 프로필 이미지 URL(`Default Profile.png`)이 정상 적용되어 DB에 저장되었습니다!
   4. **보호된 라우트(ProtectedRoute) 접근 검증**:
      - 홈 화면(`/`): 상단 및 메인 영역에 사용자 환영 인사 정상 노출.
      - 마이페이지(`/mypage`): 비로그인 리다이렉트 없이 즉시 진입 완료.
