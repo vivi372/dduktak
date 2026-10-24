@@ -127,12 +127,12 @@
 * [x] **Step 3B-1: API Client, 세션/상태 관리 & Auth 연동 (모듈 1)** (완료일시: 2026-10-24 22:20 / 담당자: AI 에이전트)
     * [x] Axios API Client (Interceptor, `X-Trace-Id` 처리, Sonner Toast / Alert Modal 전역 예외 분기).
     * [x] Zustand 세션 스토어 & Supabase OAuth 세션 동기화 (`POST /api/v1/auth/init`) & Protected Route.
-* [ ] **Step 3B-2: 사용자 세션 완전 전환 & 마이페이지 API 연동 (모듈 1)** (완료일시: - / 담당자: -)
-    * [ ] 전역 UI(`HomePage`, `MyPage`, `DesktopSidePanel`, `Header`)의 `mockAuthStore` 참조를 `useAuthStore` 실세션으로 전면 교체 (로그인 닉네임, 아바타, 고유태그 즉시 동기화).
-    * [ ] 본인 프로필 조회(`GET /api/v1/auth/me`) 및 수정(`PATCH /api/v1/auth/me`) 연동.
-    * [ ] 프로필 아바타 이미지 압축(`browser-image-compression`) 및 Supabase Storage `profiles` 버킷 클라이언트 직업로드 연동.
-    * [ ] 야간 방해금지 시간 설정(`PATCH /api/v1/auth/me/quiet-time`) 연동.
-    * [ ] 회원 탈퇴(`DELETE /api/v1/auth/withdraw`: 레시피 익명 보존 USER-02) 연동.
+* [x] **Step 3B-2: 사용자 세션 완전 전환 & 마이페이지 API 연동 (모듈 1)** (완료일시: 2026-10-25 01:15 / 담당자: AI 에이전트)
+    * [x] 전역 UI(`HomePage`, `MyPage`, `DesktopSidePanel`, `Header`)의 `mockAuthStore` 참조를 `useAuthStore` 실세션으로 전면 교체 (로그인 닉네임, 아바타, 고유태그 즉시 동기화).
+    * [x] 본인 프로필 조회(`GET /api/v1/auth/me`) 및 수정(`PATCH /api/v1/auth/me`) 연동.
+    * [x] 프로필 아바타 이미지 압축(`browser-image-compression`) 및 Supabase Storage `profiles` 버킷 클라이언트 직업로드 연동.
+    * [x] 야간 방해금지 시간 설정(`PATCH /api/v1/auth/me/quiet-time`) 연동.
+    * [x] 회원 탈퇴(`DELETE /api/v1/auth/withdraw`: 레시피 익명 보존 USER-02) 연동.
 * [ ] **Step 3B-3: 내 냉장고 & 식재료 관리소 API 연동 (모듈 2)** (완료일시: - / 담당자: -)
     * [ ] 74종 표준 식재료 마스터 검색 및 카테고리 Combobox 연동 (`GET /api/v1/inventory/master-ingredients`).
     * [ ] 내 냉장고 식재료 목록 조회(`GET /api/v1/inventory`) 및 실시간 PostgreSQL KST D-Day 정렬/필터 연동.

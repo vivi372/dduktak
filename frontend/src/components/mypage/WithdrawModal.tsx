@@ -10,7 +10,8 @@ import { ROUTES } from '@/constants/routes';
 interface WithdrawModalProps {
   open: boolean;
   onClose: () => void;
-  onWithdraw: () => void;
+  onWithdraw: () => Promise<void> | void;
+  isWithdrawing?: boolean;
 }
 
 /**
@@ -18,17 +19,26 @@ interface WithdrawModalProps {
  * - 레시피 익명 전환 보존 필수 동의
  * - 개인 데이터 즉시 영구 삭제 고지
  */
-export function WithdrawModal({ open, onClose, onWithdraw }: WithdrawModalProps) {
+export function WithdrawModal({
+  open,
+  onClose,
+  onWithdraw,
+  isWithdrawing = false,
+}: WithdrawModalProps) {
   useBodyScrollLock(open);
   const [agree, setAgree] = useState(false);
   const navigate = useNavigate();
 
-  const handleConfirmWithdraw = () => {
-    if (!agree) return;
-    onWithdraw();
-    toast.success('회원 탈퇴가 완료되었습니다. 그동안 이용해 주셔서 감사합니다.');
-    onClose();
-    navigate(ROUTES.LOGIN);
+  const handleConfirmWithdraw = async () => {
+    if (!agree || isWithdrawing) return;
+    try {
+      await onWithdraw();
+      toast.success('회원 탈퇴가 완료되었습니다. 작성하신 레시피는 익명으로 안전하게 보존됩니다.');
+      onClose();
+      navigate(ROUTES.LOGIN);
+    } catch {
+      // 에러는 전역 처리
+    }
   };
 
   return (
@@ -104,16 +114,16 @@ export function WithdrawModal({ open, onClose, onWithdraw }: WithdrawModalProps)
             </div>
 
             <div className="mt-6 flex flex-row justify-end gap-2 border-t border-border/60 pt-4">
-              <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
+              <Button type="button" variant="ghost" onClick={onClose} disabled={isWithdrawing} className="rounded-full">
                 취소
               </Button>
               <Button
                 type="button"
                 onClick={handleConfirmWithdraw}
-                disabled={!agree}
+                disabled={!agree || isWithdrawing}
                 className="rounded-full bg-destructive text-destructive-foreground hover:bg-destructive/90 disabled:opacity-50"
               >
-                탈퇴하기
+                {isWithdrawing ? '탈퇴 처리 중...' : '탈퇴하기'}
               </Button>
             </div>
           </motion.div>

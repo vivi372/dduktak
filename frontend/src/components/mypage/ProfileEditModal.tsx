@@ -1,18 +1,20 @@
 import { useState, useRef, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Camera, Check, X, Info } from 'lucide-react';
+import { Camera, Check, X, Info, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ProfileCropModal } from './ProfileCropModal';
 import { useBodyScrollLock } from '@/hooks';
+import type { UserProfileResponseDto } from '@/types/auth';
 import type { UserProfile } from '@/types/user';
 
 interface ProfileEditModalProps {
   open: boolean;
-  user: UserProfile;
+  user: UserProfileResponseDto | UserProfile;
   onClose: () => void;
-  onSave: (nickname: string, profileImage?: string) => void;
+  onSave: (nickname: string, newAvatarDataUrl?: string) => Promise<void> | void;
   onOpenChangeEmail?: () => void;
+  isSaving?: boolean;
 }
 
 /**
@@ -28,11 +30,13 @@ export function ProfileEditModal({
   onClose,
   onSave,
   onOpenChangeEmail,
+  isSaving = false,
 }: ProfileEditModalProps) {
   useBodyScrollLock(open);
 
   const [nickname, setNickname] = useState(user.nickname);
   const [profileImage, setProfileImage] = useState(user.profileImage);
+  const [hasNewAvatar, setHasNewAvatar] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
   // 크롭 모달 상태
@@ -45,6 +49,7 @@ export function ProfileEditModal({
     if (open) {
       setNickname(user.nickname);
       setProfileImage(user.profileImage);
+      setHasNewAvatar(false);
       setErrorMessage('');
     }
   }, [open, user]);
@@ -73,12 +78,13 @@ export function ProfileEditModal({
   // 크롭 완료 콜백
   const handleCropComplete = (croppedUrl: string) => {
     setProfileImage(croppedUrl);
+    setHasNewAvatar(true);
     setCropModalOpen(false);
     toast.success('프로필 사진이 조절되었습니다.');
   };
 
   // 저장 제출 핸들러
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = nickname.trim();
     if (trimmed.length < 2 || trimmed.length > 10) {
@@ -86,9 +92,13 @@ export function ProfileEditModal({
       return;
     }
 
-    onSave(trimmed, profileImage);
-    toast.success('프로필 정보가 수정되었습니다.');
-    onClose();
+    try {
+      await onSave(trimmed, hasNewAvatar ? profileImage : undefined);
+      toast.success('프로필 정보가 수정되었습니다.');
+      onClose();
+    } catch {
+      // 에러 처리는 부모 컴포넌트 또는 Axios Interceptor에서 토스트 노출
+    }
   };
 
   return (
@@ -216,14 +226,23 @@ export function ProfileEditModal({
                 </div>
 
                 <div className="mt-6 flex flex-row justify-end gap-2 border-t border-border/60 pt-4">
-                  <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
+                  <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving} className="rounded-full">
                     취소
                   </Button>
                   <Button
                     type="submit"
-                    className="rounded-full bg-brand-500 text-white hover:bg-brand-600"
+                    disabled={isSaving}
+                    className="rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                   >
-                    <Check className="mr-1 h-3.5 w-3.5" /> 저장 완료
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-1 h-3.5 w-3.5 animate-spin" /> 저장 중...
+                      </>
+                    ) : (
+                      <>
+                        <Check className="mr-1 h-3.5 w-3.5" /> 저장 완료
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

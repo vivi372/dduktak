@@ -8,6 +8,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import * as authApi from '@/services/authApi';
+import { uploadProfileAvatar } from '@/services/storageService';
 import type {
   UpdateProfileRequestDto,
   QuietTimeRequestDto,
@@ -98,7 +99,35 @@ export function useAuth() {
     },
   });
 
-  // 8. 야간 방해금지 시간 수정 뮤테이션
+  // 8. 프로필 아바타 이미지 압축 & Supabase Storage 직업로드 후 프로필 수정
+  const updateProfileWithAvatarMutation = useMutation({
+    mutationFn: async ({
+      nickname,
+      avatarFileOrDataUrl,
+    }: {
+      nickname: string;
+      avatarFileOrDataUrl?: File | Blob | string;
+    }) => {
+      let profileImageUrl = user?.profileImage;
+
+      // 새 이미지가 전달된 경우 Supabase Storage 직업로드 수행
+      if (avatarFileOrDataUrl && user?.userId) {
+        profileImageUrl = await uploadProfileAvatar(user.userId, avatarFileOrDataUrl);
+      }
+
+      const updated = await authApi.updateMyProfile({
+        nickname,
+        profileImage: profileImageUrl,
+      });
+      await syncProfile();
+      return updated;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
+    },
+  });
+
+  // 9. 야간 방해금지 시간 수정 뮤테이션
   const updateQuietTimeMutation = useMutation({
     mutationFn: async (dto: QuietTimeRequestDto) => {
       const updated = await authApi.updateQuietTime(dto);
@@ -110,7 +139,7 @@ export function useAuth() {
     },
   });
 
-  // 9. 회원 탈퇴 뮤테이션 (USER-02)
+  // 10. 회원 탈퇴 뮤테이션 (USER-02)
   const withdrawMutation = useMutation({
     mutationFn: async (dto?: WithdrawRequestDto) => {
       await authApi.withdraw(dto);
@@ -144,6 +173,9 @@ export function useAuth() {
 
     updateProfile: updateProfileMutation.mutateAsync,
     isUpdatingProfile: updateProfileMutation.isPending,
+
+    updateProfileWithAvatar: updateProfileWithAvatarMutation.mutateAsync,
+    isUpdatingProfileWithAvatar: updateProfileWithAvatarMutation.isPending,
 
     updateQuietTime: updateQuietTimeMutation.mutateAsync,
     isUpdatingQuietTime: updateQuietTimeMutation.isPending,

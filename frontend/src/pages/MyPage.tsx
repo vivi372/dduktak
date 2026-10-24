@@ -15,7 +15,7 @@ import {
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { useThemeStore } from '@/store/themeStore';
-import { useMockAuthStore } from '@/store/mockAuthStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useNotificationStore } from '@/store/notificationStore';
 import {
   ProfileEditModal,
@@ -27,6 +27,8 @@ import {
 import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/utils/cn';
+
+const DEFAULT_AVATAR = 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png';
 
 function Toggle({
   checked,
@@ -101,14 +103,16 @@ export default function MyPage() {
   const navigate = useNavigate();
   const { theme, toggle } = useThemeStore();
   const {
-    isLoggedIn,
     user,
+    isAuthenticated,
     logout,
-    updateProfile,
+    updateProfileWithAvatar,
+    isUpdatingProfileWithAvatar,
     updateQuietTime,
+    isUpdatingQuietTime,
     withdraw,
-    changeEmail,
-  } = useMockAuthStore();
+    isWithdrawing,
+  } = useAuth();
   const { settings, updateSettings } = useNotificationStore();
 
   // 모달 제어 상태
@@ -124,8 +128,8 @@ export default function MyPage() {
     setTermsModalOpen(true);
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     toast.success('로그아웃 되었습니다.');
     navigate(ROUTES.LOGIN);
   };
@@ -140,32 +144,58 @@ export default function MyPage() {
     toast.success(checked ? '소셜 반응 알림을 켰어요' : '소셜 반응 알림을 껐어요');
   };
 
-  const handleSaveQuietTime = (start: string, end: string) => {
-    updateQuietTime(start, end);
+  const handleSaveQuietTime = async (start: string, end: string) => {
+    await updateQuietTime({ quietTimeStart: start, quietTimeEnd: end });
     updateSettings({ quietTimeStart: start, quietTimeEnd: end });
   };
 
-  const formattedQuietStart = (user.quietTimeStart || settings.quietTimeStart).slice(0, 5);
-  const formattedQuietEnd = (user.quietTimeEnd || settings.quietTimeEnd).slice(0, 5);
+  const handleSaveProfile = async (nickname: string, newAvatar?: string) => {
+    await updateProfileWithAvatar({
+      nickname,
+      avatarFileOrDataUrl: newAvatar,
+    });
+  };
+
+  const handleWithdraw = async () => {
+    await withdraw();
+    setWithdrawModalOpen(false);
+    navigate(ROUTES.LOGIN);
+  };
+
+  // 실제 로그인 유저 데이터 또는 기본 폴백
+  const displayUser = {
+    userId: user?.userId || '',
+    email: user?.email || '',
+    nickname: user?.nickname || '뚝딱이',
+    userTag: user?.userTag || '0000',
+    profileImage: user?.profileImage || DEFAULT_AVATAR,
+    status: (user?.status || 'ACTIVE') as 'ACTIVE' | 'WITHDRAWN',
+    quietTimeStart: user?.quietTimeStart || settings.quietTimeStart || '21:00:00',
+    quietTimeEnd: user?.quietTimeEnd || settings.quietTimeEnd || '08:00:00',
+    loginProvider: (user?.loginProvider || 'email') as 'email' | 'kakao' | 'google',
+  };
+
+  const formattedQuietStart = displayUser.quietTimeStart.slice(0, 5);
+  const formattedQuietEnd = displayUser.quietTimeEnd.slice(0, 5);
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-black tracking-tight">마이페이지</h1>
 
       {/* 1. 프로필 카드 */}
-      {isLoggedIn ? (
+      {isAuthenticated ? (
         <Card className="flex items-center gap-4 p-4 shadow-card">
           <img
-            src={user.profileImage}
+            src={displayUser.profileImage}
             alt="프로필 이미지"
             className="h-16 w-16 rounded-full bg-brand-100 object-cover ring-2 ring-brand-300 dark:ring-brand-700/60 shadow-sm"
           />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1.5">
-              <p className="truncate text-lg font-extrabold text-foreground">{user.nickname}</p>
-              <span className="text-xs font-bold text-muted-foreground/80">#{user.userTag}</span>
+              <p className="truncate text-lg font-extrabold text-foreground">{displayUser.nickname}</p>
+              <span className="text-xs font-bold text-muted-foreground/80">#{displayUser.userTag}</span>
             </div>
-            <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+            <p className="truncate text-sm text-muted-foreground">{displayUser.email}</p>
           </div>
           <button
             type="button"
@@ -193,7 +223,7 @@ export default function MyPage() {
       )}
 
       {/* 2. 내 활동 숏컷 (로그인 시) */}
-      {isLoggedIn && (
+      {isAuthenticated && (
         <section aria-label="내 활동 바로가기">
           <MyRecipeShortcutCard myRecipeCount={3} scrapCount={5} />
         </section>
@@ -258,7 +288,7 @@ export default function MyPage() {
       <section aria-label="계정">
         <h2 className="mb-2 px-1 text-sm font-bold font-sans text-muted-foreground">계정</h2>
         <Card className="divide-y divide-border overflow-hidden p-0 shadow-card">
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <Row
                 icon={<Mail className="h-5 w-5" />}
@@ -266,11 +296,7 @@ export default function MyPage() {
                 onClick={() => setChangeEmailModalOpen(true)}
                 right={
                   <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    {user.loginProvider === 'kakao'
-                      ? '카카오 연동'
-                      : user.loginProvider === 'google'
-                        ? '구글 연동'
-                        : user.email}
+                    {displayUser.email}
                     <ChevronRight className="h-4 w-4" aria-hidden />
                   </span>
                 }
@@ -323,13 +349,14 @@ export default function MyPage() {
       />
 
       {/* 모달 4종 (로그인 전용) */}
-      {isLoggedIn && (
+      {isAuthenticated && (
         <>
           <ProfileEditModal
             open={profileModalOpen}
-            user={user}
+            user={displayUser}
             onClose={() => setProfileModalOpen(false)}
-            onSave={(nickname, img) => updateProfile(nickname, img)}
+            onSave={handleSaveProfile}
+            isSaving={isUpdatingProfileWithAvatar}
             onOpenChangeEmail={() => {
               setProfileModalOpen(false);
               setChangeEmailModalOpen(true);
@@ -338,23 +365,27 @@ export default function MyPage() {
 
           <ChangeEmailModal
             open={changeEmailModalOpen}
-            user={user}
+            user={displayUser}
             onClose={() => setChangeEmailModalOpen(false)}
-            onEmailChanged={(newEmail) => changeEmail(newEmail)}
+            onEmailChanged={() => {
+              toast.success('이메일 변경 인증 메일이 발송되었습니다.');
+            }}
           />
 
           <QuietTimeModal
             open={quietTimeModalOpen}
-            quietTimeStart={user.quietTimeStart || settings.quietTimeStart}
-            quietTimeEnd={user.quietTimeEnd || settings.quietTimeEnd}
+            quietTimeStart={displayUser.quietTimeStart}
+            quietTimeEnd={displayUser.quietTimeEnd}
             onClose={() => setQuietTimeModalOpen(false)}
             onSave={handleSaveQuietTime}
+            isSaving={isUpdatingQuietTime}
           />
 
           <WithdrawModal
             open={withdrawModalOpen}
             onClose={() => setWithdrawModalOpen(false)}
-            onWithdraw={withdraw}
+            onWithdraw={handleWithdraw}
+            isWithdrawing={isWithdrawing}
           />
         </>
       )}

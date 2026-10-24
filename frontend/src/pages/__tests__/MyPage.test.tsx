@@ -2,34 +2,51 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MyPage from '@/pages/MyPage';
-import { useMockAuthStore } from '@/store/mockAuthStore';
+import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/notificationStore';
+import type { UserProfileResponseDto } from '@/types/auth';
+
+const mockUser: UserProfileResponseDto = {
+  userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
+  email: 'user@dduktak.com',
+  nickname: '뚝딱이',
+  userTag: '1024',
+  profileImage: 'https://example.com/profile.png',
+  status: 'ACTIVE',
+  quietTimeStart: '21:00:00',
+  quietTimeEnd: '08:00:00',
+  loginProvider: 'email',
+};
+
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
 
 describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   beforeEach(() => {
-    useMockAuthStore.setState({
-      isLoggedIn: true,
-      user: {
-        userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
-        email: 'user@dduktak.com',
-        nickname: '뚝딱이',
-        userTag: '1024',
-        profileImage: 'https://example.com/profile.png',
-        status: 'ACTIVE',
-        quietTimeStart: '21:00:00',
-        quietTimeEnd: '08:00:00',
-      },
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: { ...mockUser },
     });
     useNotificationStore.getState().resetNotifications();
   });
 
   it('로그인 상태일 때 프로필(닉네임, #1024 유저태그)과 내 활동 숏컷을 렌더링해야 한다', () => {
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     expect(screen.getByText('뚝딱이')).toBeInTheDocument();
     expect(screen.getByText('#1024')).toBeInTheDocument();
@@ -41,11 +58,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   it('프로필 수정 버튼 클릭 시 ProfileEditModal이 열려야 한다', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     const editButton = screen.getByRole('button', { name: '수정' });
     await user.click(editButton);
@@ -57,11 +70,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   it('방해금지 시간 행 클릭 시 QuietTimeModal이 열려야 한다', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     const quietTimeRow = screen.getByRole('button', { name: /방해금지 시간/ });
     await user.click(quietTimeRow);
@@ -74,11 +83,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   it('알림 토글 스위치 클릭 시 설정 상태가 전환되어야 한다', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     const expireToggle = screen.getByRole('switch', { name: '소비기한 임박 알림' });
     expect(expireToggle).toHaveAttribute('aria-checked', 'true');
@@ -90,11 +95,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   it('회원 탈퇴 클릭 시 WithdrawModal이 열리고 필수 약관 체크 후 탈퇴 버튼이 활성화되어야 한다', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     const withdrawRow = screen.getByRole('button', { name: /회원 탈퇴/ });
     await user.click(withdrawRow);
@@ -116,11 +117,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   it('이메일 로그인 유저는 이메일 변경 모달에서 새 이메일을 입력하고 인증 링크를 발송할 수 있어야 한다', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     const changeEmailRow = screen.getByRole('button', { name: /이메일 변경/ });
     await user.click(changeEmailRow);
@@ -138,10 +135,10 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   });
 
   it('소셜 로그인 유저는 이메일 변경 클릭 시 소셜 플랫폼 변경 안내가 노출되어야 한다', async () => {
-    useMockAuthStore.setState((prev) => ({
+    useAuthStore.setState((prev) => ({
       ...prev,
       user: {
-        ...prev.user,
+        ...prev.user!,
         loginProvider: 'kakao',
         email: 'kakao_user@kakao.com',
       },
@@ -149,11 +146,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
 
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     const changeEmailRow = screen.getByRole('button', { name: /이메일 변경/ });
     await user.click(changeEmailRow);
@@ -164,11 +157,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
   it('마이페이지에서 서비스 이용약관 및 개인정보 처리방침을 클릭하면 모달이 열려야 한다', async () => {
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <MyPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<MyPage />);
 
     // 서비스 이용약관 클릭
     const termsRow = screen.getByRole('button', { name: /서비스 이용약관/ });

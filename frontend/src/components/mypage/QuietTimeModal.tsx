@@ -11,7 +11,8 @@ interface QuietTimeModalProps {
   quietTimeStart: string; // "21:00:00"
   quietTimeEnd: string; // "08:00:00"
   onClose: () => void;
-  onSave: (start: string, end: string) => void;
+  onSave: (start: string, end: string) => Promise<void> | void;
+  isSaving?: boolean;
 }
 
 // 00시부터 23시까지 1시간 단위 옵션
@@ -155,6 +156,7 @@ export function QuietTimeModal({
   quietTimeEnd,
   onClose,
   onSave,
+  isSaving = false,
 }: QuietTimeModalProps) {
   useBodyScrollLock(open);
 
@@ -168,11 +170,15 @@ export function QuietTimeModal({
     }
   }, [open, quietTimeStart, quietTimeEnd]);
 
-  const handleSave = (e: React.FormEvent) => {
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(`${start}:00`, `${end}:00`);
-    toast.success(`방해금지 시간이 ${start} ~ ${end}로 설정되었습니다.`);
-    onClose();
+    try {
+      await onSave(`${start}:00`, `${end}:00`);
+      toast.success(`방해금지 시간이 ${start} ~ ${end}로 설정되었습니다.`);
+      onClose();
+    } catch {
+      // 에러는 전역 처리
+    }
   };
 
   return (
@@ -245,14 +251,15 @@ export function QuietTimeModal({
               </div>
 
               <div className="mt-6 flex flex-row justify-end gap-2 border-t border-border/60 pt-4">
-                <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
+                <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving} className="rounded-full">
                   취소
                 </Button>
                 <Button
                   type="submit"
-                  className="rounded-full bg-brand-500 text-white hover:bg-brand-600"
+                  disabled={isSaving}
+                  className="rounded-full bg-brand-500 text-white hover:bg-brand-600 disabled:opacity-50"
                 >
-                  <Check className="mr-1 h-3.5 w-3.5" /> 설정 완료
+                  <Check className="mr-1 h-3.5 w-3.5" /> {isSaving ? '설정 중...' : '설정 완료'}
                 </Button>
               </div>
             </form>

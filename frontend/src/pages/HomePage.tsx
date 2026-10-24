@@ -9,6 +9,7 @@ import { SectionHeader } from '@/components/common/SectionHeader';
 import { HorizontalCarousel } from '@/components/common/HorizontalCarousel';
 import { ROUTES } from '@/constants/routes';
 import { mockEmptyHomeBriefing, mockHomeBriefing, mockPopularRecipes, mockRecipes } from '@/mocks';
+import { useAuth } from '@/hooks/useAuth';
 import { useMockAuthStore } from '@/store/mockAuthStore';
 import logo from '@/assets/logo.png';
 
@@ -21,7 +22,8 @@ import logo from '@/assets/logo.png';
  */
 export default function HomePage() {
   const navigate = useNavigate();
-  const { hasIngredients, isLoggedIn, user } = useMockAuthStore();
+  const { user, isAuthenticated } = useAuth();
+  const { hasIngredients } = useMockAuthStore();
 
   // 목 데이터 스토어의 hasIngredients 상태에 따라 정상 브리핑 또는 0개 폴백 선택
   const briefing = hasIngredients ? mockHomeBriefing : mockEmptyHomeBriefing;
@@ -39,7 +41,7 @@ export default function HomePage() {
   return (
     <div className="space-y-6">
       {/* 1. 비로그인 상태 안내 배너 (비로그인 상태일 때만 노출) */}
-      {!isLoggedIn && (
+      {!isAuthenticated && (
         <div className="flex items-center justify-between rounded-2xl bg-brand-500 px-4 py-2.5 text-xs font-bold text-brand-foreground shadow-soft">
           <span className="flex items-center gap-1.5">
             <Sparkles className="h-4 w-4" />
@@ -68,7 +70,7 @@ export default function HomePage() {
           />
           <div className="min-w-0 flex-1">
             <p className="text-[11px] sm:text-xs font-bold font-heading text-brand-700 dark:text-brand-300 truncate">
-              {isLoggedIn ? `안녕하세요, ${user.nickname}님 👋` : '반가워요, 자취 요리사님 👋'}
+              {isAuthenticated ? `안녕하세요, ${user?.nickname || '회원'}님 👋` : '반가워요, 자취 요리사님 👋'}
             </p>
             <h1 className="mt-1 text-base sm:text-xl font-black leading-tight sm:leading-snug tracking-tight text-foreground break-keep">
               오늘도 냉장고를

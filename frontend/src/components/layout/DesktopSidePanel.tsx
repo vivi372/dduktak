@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
+import { useAuth } from '@/hooks/useAuth';
 import { useMockAuthStore } from '@/store/mockAuthStore';
 import { useThemeStore } from '@/store/themeStore';
 import { mockEmptyHomeBriefing, mockHomeBriefing, mockNotifications } from '@/mocks';
@@ -20,6 +21,9 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/utils/cn';
 import logoIcon from '@/assets/logo-icon.png';
+
+const DEFAULT_PROFILE_IMAGE =
+  'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png';
 
 interface DesktopSidePanelProps {
   /** 재료 추가 바텀시트/트레이 열기 콜백 */
@@ -43,7 +47,8 @@ interface NavMenuItem {
  */
 export function DesktopSidePanel({ onOpenAddTray }: DesktopSidePanelProps) {
   const { theme, toggle } = useThemeStore();
-  const { isLoggedIn, user, hasIngredients } = useMockAuthStore();
+  const { user, isAuthenticated } = useAuth();
+  const { hasIngredients } = useMockAuthStore();
 
   // 재료 보유 상태에 따라 브리핑 데이터 선택
   const briefing = hasIngredients ? mockHomeBriefing : mockEmptyHomeBriefing;
@@ -115,20 +120,20 @@ export function DesktopSidePanel({ onOpenAddTray }: DesktopSidePanelProps) {
         <div className="mt-4 flex items-center justify-between rounded-xl bg-muted/60 px-3.5 py-2.5 dark:bg-muted/30">
           <div className="flex items-center gap-2.5 min-w-0">
             <img
-              src={user.profileImage}
+              src={user?.profileImage || DEFAULT_PROFILE_IMAGE}
               alt=""
               className="h-8 w-8 rounded-full object-cover ring-2 ring-brand-200 dark:ring-brand-800"
             />
             <div className="min-w-0">
               <p className="truncate text-xs font-bold text-foreground">
-                {isLoggedIn ? `${user.nickname}님` : '게스트 자취요리사'}
+                {isAuthenticated ? `${user?.nickname || '회원'}님` : '게스트 자취요리사'}
               </p>
               <p className="text-[11px] text-muted-foreground">
-                {isLoggedIn ? '냉장고 비울 준비 완료!' : '로그인하고 맞춤 요리 추천'}
+                {isAuthenticated ? '냉장고 비울 준비 완료!' : '로그인하고 맞춤 요리 추천'}
               </p>
             </div>
           </div>
-          {!isLoggedIn ? (
+          {!isAuthenticated ? (
             <Link
               to={ROUTES.LOGIN}
               className="shrink-0 rounded-lg bg-brand-500 px-2.5 py-1 text-xs font-bold text-brand-foreground shadow-sm transition-transform active:scale-95"
