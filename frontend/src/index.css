@@ -1,13 +1,8 @@
+@import url('https://cdn.jsdelivr.net/gh/fonts-archive/YanoljaYache/YanoljaYache.css');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@font-face {
-  font-family: 'Yanolja';
-  src: url('https://gcore.jsdelivr.net/gh/projectnoonnu/noonfonts_two@1.0/YanoljaYacheR.woff') format('woff');
-  font-weight: normal;
-  font-display: swap;
-}
 
 @layer base {
   /* 라이트 모드: 크림 아이보리 배경 + 코랄 핑크 Primary + 민트 Secondary */
@@ -62,6 +57,19 @@
   html {
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', sans-serif;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 
+   * [폰트 계층 구조 (Font Hierarchy) 최적화]
+   * 1. 타이틀 & 주요 헤딩 (h1, h2, h3, .font-heading): 
+   *    브랜드 로고와 어우러지는 친근하고 경쾌한 '야놀자 야체'를 적용하여
+   *    딱딱한 고딕 느낌을 덜어내고 자취 요리 솔루션 특유의 따뜻하고 캐주얼한 톤앤매너 형성
+   * 2. 본문 & 데이터/수치 (p, span, input, button, 배지, 날짜, 수량 등):
+   *    가독성과 정보 전달의 명확성을 위해 'Pretendard' 고딕 계열 유지
+   */
+  h1, h2, h3, .font-heading {
+    font-family: 'Yanolja Yache', 'Yanolja', 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+    letter-spacing: -0.015em;
   }
 
   body {

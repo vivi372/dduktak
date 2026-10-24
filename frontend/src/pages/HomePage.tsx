@@ -67,7 +67,7 @@ export default function HomePage() {
             className="h-20 w-20 sm:h-28 sm:w-28 shrink-0 rounded-2xl object-cover shadow-card"
           />
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] sm:text-xs font-bold text-brand-700 dark:text-brand-300 truncate">
+            <p className="text-[11px] sm:text-xs font-bold font-heading text-brand-700 dark:text-brand-300 truncate">
               {isLoggedIn ? `안녕하세요, ${user.nickname}님 👋` : '반가워요, 자취 요리사님 👋'}
             </p>
             <h1 className="mt-1 text-base sm:text-xl font-black leading-tight sm:leading-snug tracking-tight text-foreground break-keep">

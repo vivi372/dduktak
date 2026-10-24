@@ -93,7 +93,7 @@ export default function MyPage() {
       )}
 
       <section aria-label="알림 설정">
-        <h2 className="mb-2 px-1 text-sm font-bold text-muted-foreground">알림 설정</h2>
+        <h2 className="mb-2 px-1 text-sm font-bold font-sans text-muted-foreground">알림 설정</h2>
         <Card className="divide-y divide-border overflow-hidden p-0">
           <Row icon={<BellRing className="h-5 w-5" />} label="소비기한 임박 알림" right={<Toggle checked={expireWarn} onChange={setExpireWarn} label="소비기한 임박 알림" />} />
           <Row icon={<BellRing className="h-5 w-5" />} label="좋아요/요리완료 알림" right={<Toggle checked={reaction} onChange={setReaction} label="좋아요 요리완료 알림" />} />
@@ -112,7 +112,7 @@ export default function MyPage() {
       </section>
 
       <section aria-label="화면 설정">
-        <h2 className="mb-2 px-1 text-sm font-bold text-muted-foreground">화면 설정</h2>
+        <h2 className="mb-2 px-1 text-sm font-bold font-sans text-muted-foreground">화면 설정</h2>
         <Card className="overflow-hidden p-0">
           <Row icon={<Moon className="h-5 w-5" />} label="다크 모드" right={<Toggle checked={theme === 'dark'} onChange={toggle} label="다크 모드" />} />
         </Card>

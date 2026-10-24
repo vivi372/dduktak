@@ -116,6 +116,14 @@ export default {
           'sans-serif',
         ],
         yanolja: [
+          '"Yanolja Yache"',
+          'Yanolja',
+          'Pretendard',
+          '-apple-system',
+          'sans-serif',
+        ],
+        heading: [
+          '"Yanolja Yache"',
           'Yanolja',
           'Pretendard',
           '-apple-system',

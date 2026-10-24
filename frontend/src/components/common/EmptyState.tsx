@@ -22,7 +22,7 @@ export function EmptyState({ emoji, title, description, children, className }: E
       <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-white text-3xl shadow-soft dark:bg-card" aria-hidden>
         {emoji}
       </div>
-      <p className="text-base font-bold">{title}</p>
+      <h3 className="text-base sm:text-lg font-bold font-heading">{title}</h3>
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       {children && <div className="mt-5 w-full">{children}</div>}
     </div>
