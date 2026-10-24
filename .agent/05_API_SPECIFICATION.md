@@ -50,7 +50,8 @@ Content-Type: application/json;charset=UTF-8
 | POST | /init | 세션 동기화 및 지연 프로필 생성 | O | Header Authorization | { "userId": "3f7f754c-d561-4b93-b79b-9d73a4f29f2a", "nickname": "뚝딱이", "userTag": "1024", "profileImage": "..." } |
 | GET | /me | 내 정보 조회 (Read-Only 멱등 API) | O | Header Authorization | { "userId": "3f7f754c-d561-4b93-b79b-9d73a4f29f2a", "email": "user@dduktak.com", "nickname": "뚝딱이", "userTag": "1024", "profileImage": "...", "status": "ACTIVE", "quietTimeStart": "21:00:00", "quietTimeEnd": "08:00:00" } |
 | PATCH | /me | 프로필 정보 수정 (닉네임, 프로필 이미지) | O | nickname, profileImage | { "userId": "3f7f754c-d561-4b93-b79b-9d73a4f29f2a", "nickname": "뚝딱이", "profileImage": "..." } |
-| DELETE | /withdraw | 회원 탈퇴 (USER-02 적용) | O | password (이메일 회원일 때) | null |
+| PATCH | /me/quiet-time | 야간 방해금지 시간 단독 설정 | O | quietTimeStart (HH:mm:ss), quietTimeEnd (HH:mm:ss) | { "quietTimeStart": "21:00:00", "quietTimeEnd": "08:00:00" } |
+| DELETE | /withdraw | 회원 탈퇴 (USER-02 적용) | O | password (이메일 회원일 때, 선택) | null |
 
 
 --------------------------------------------------------------------------------
@@ -59,8 +60,12 @@ Content-Type: application/json;charset=UTF-8
 > **비즈니스 & 보안 처리 가이드**:
 > 1. **소유권 검증(Ownership Validation)**: 단일 재료 수정(`PUT`), 소비(`PATCH`), 삭제(`DELETE`) 요청 시 SecurityContext의 `user_id`(UUID)와 `ingredient_id` 복합 조건을 검증하여 타인의 재료 조작 시 `INV_WARN_NOT_FOUND`(404)를 반환합니다.
 > 2. **SQL D-Day 연산**: `GET /` 조회 시 `dDay`는 서버 메모리가 아닌 PostgreSQL SQL 쿼리(`expire_date - CURRENT_DATE`)로 실시간 계산하여 반환합니다.
-> 3. **수동 소비 차감**: 프론트엔드에서 `consumeQuantity <= quantity` 유효성 검증을 수행하며, 백엔드는 `Math.max(0, quantity - consumeQuantity)` 방어적 차감 후 잔여 수량이 0이 되면 `status = 'CONSUMED'`로 변경합니다.
-> 4. **외부 스캔 실패 예외 복구**:
+> 3. **소비기한 만료 재료(D-Day < 0) 3대 관리 액션**:
+>    - **폐기**: `DELETE /{ingredientId}` (status = 'DELETED' 소프트 삭제)
+>    - **먹음(소비)**: `PATCH /{ingredientId}/consume` (잔여 수량 차감 및 status = 'CONSUMED' 전이)
+>    - **소비기한 연장**: `PUT /{ingredientId}` (신규 expireDate 전달로 소비기한 갱신)
+> 4. **수동 소비 차감**: 프론트엔드에서 `consumeQuantity <= quantity` 유효성 검증을 수행하며, 백엔드는 `Math.max(0, quantity - consumeQuantity)` 방어적 차감 후 잔여 수량이 0이 되면 `status = 'CONSUMED'`로 변경합니다.
+> 5. **외부 스캔 실패 예외 복구**:
 >    - 바코드 미등록 시: `404 Not Found` (`code: "INV_WARN_BARCODE_NOT_FOUND"`) 반환 ➔ 프론트엔드 수동 등록 폼 유도.
 >    - OCR 인식 실패 시: `200 OK` 및 빈 배열 `data: []` 반환 ➔ 수동 입력 화면으로 가이드.
 

@@ -4,9 +4,9 @@
 | ------ | ------ | ------ | ------ |
 | **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | [x] 4/4 | **100%** |
 | **Phase 2** | 백엔드 도메인별 핵심 API 개발 | [x] 4/4 | **100%** |
-| **Phase 3** | 프론트엔드 UI/UX 및 하이브리드 앱 구현 | [x] 4/10 | **40%** |
+| **Phase 3** | 프론트엔드 UI/UX 및 하이브리드 앱 구현 | [x] 5/11 | **45%** |
 | **Phase 4** | 인수 테스트 및 최종 검토 | [ ] 0/2 | 0% |
-| **전체** | **전체 시스템 구축 완료** | [x] 12/16 | **75%** |
+| **전체** | **전체 시스템 구축 완료** | [x] 13/17 | **76%** |
 
 
 --------------------------------------------------------------------------------
@@ -122,22 +122,39 @@
 
 ##### ⚡ [2단계] Phase 3B: 프론트엔드 로직, 상태 관리 & 백엔드 API 연동 (Logic & API Integration)
 > **개념:** 확정된 UI 마크업 위에 Zustand client state, React Query server state, Form Validation, Axios API Client, 백엔드 API 및 Capacitor 네이티브 기능을 연동합니다.
+> **테스트 정책 (User Directive):** Step 3B-2부터 Step 3B-5까지는 브라우저를 직접 띄우는 실테스트(WebP 녹화 및 브라우저 서브에이전트)를 패스하고, 단위 테스트(Vitest) 및 TypeScript 빌드 무오류 검증 중심으로 빠르고 견고하게 연동을 완수합니다.
 
 * [x] **Step 3B-1: API Client, 세션/상태 관리 & Auth 연동 (모듈 1)** (완료일시: 2026-10-24 22:20 / 담당자: AI 에이전트)
     * [x] Axios API Client (Interceptor, `X-Trace-Id` 처리, Sonner Toast / Alert Modal 전역 예외 분기).
     * [x] Zustand 세션 스토어 & Supabase OAuth 세션 동기화 (`POST /api/v1/auth/init`) & Protected Route.
-* [ ] **Step 3B-2: 메인 홈 & 내 냉장고 API 연동 (모듈 2, 6)** (완료일시: - / 담당자: -)
-    * [ ] 메인 브리핑 (`GET /home/briefing`) API 연동 & 인기 레시피 폴백 핸들링.
-    * [ ] 내 냉장고 CRUD, KST D-Day 연산, 수동 소비 차감 API 연동.
-    * [ ] 바코드 스캔 (`GET /barcode/{no}`) & Gemini Flash OCR (`POST /scan-ocr`) 연동.
-* [ ] **Step 3B-3: 레시피 커뮤니티, 매칭 & 요리완료 FIFO 연동 (모듈 3, 4)** (완료일시: - / 담당자: -)
-    * [ ] 레시피 목록, 상세, 좋아요/스크랩 토글 API 연동.
-    * [ ] `react-hook-form` + `zod` 검증 기반 레시피 등록/수정 API 연동.
-    * [ ] 요리완료 (`POST /cook/{recipeId}`) 2-Way 및 No-Mixing FIFO 자동 차감 연동.
-* [ ] **Step 3B-4: 알림 센터 & 마이페이지 API 연동 (모듈 5)** (완료일시: - / 담당자: -)
-    * [ ] 알림 목록 조회, 단일/전체 읽음, 단일/전체 삭제, 알림 설정 API 연동.
-    * [ ] 딥링크 (`targetId`) 클릭 시 해당 화면 이동 및 삭제된 콘텐츠 Fallback 토스트 처리.
-* [ ] **Step 3B-5: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 (모바일 전용)** (완료일시: - / 담당자: -)
+* [ ] **Step 3B-2: 사용자 세션 완전 전환 & 마이페이지 API 연동 (모듈 1)** (완료일시: - / 담당자: -)
+    * [ ] 전역 UI(`HomePage`, `MyPage`, `DesktopSidePanel`, `Header`)의 `mockAuthStore` 참조를 `useAuthStore` 실세션으로 전면 교체 (로그인 닉네임, 아바타, 고유태그 즉시 동기화).
+    * [ ] 본인 프로필 조회(`GET /api/v1/auth/me`) 및 수정(`PATCH /api/v1/auth/me`) 연동.
+    * [ ] 프로필 아바타 이미지 압축(`browser-image-compression`) 및 Supabase Storage `profiles` 버킷 클라이언트 직업로드 연동.
+    * [ ] 야간 방해금지 시간 설정(`PATCH /api/v1/auth/me/quiet-time`) 연동.
+    * [ ] 회원 탈퇴(`DELETE /api/v1/auth/withdraw`: 레시피 익명 보존 USER-02) 연동.
+* [ ] **Step 3B-3: 내 냉장고 & 식재료 관리소 API 연동 (모듈 2)** (완료일시: - / 담당자: -)
+    * [ ] 74종 표준 식재료 마스터 검색 및 카테고리 Combobox 연동 (`GET /api/v1/inventory/master-ingredients`).
+    * [ ] 내 냉장고 식재료 목록 조회(`GET /api/v1/inventory`) 및 실시간 PostgreSQL KST D-Day 정렬/필터 연동.
+    * [ ] 식재료 수동 직접 등록(`POST /api/v1/inventory`) - 독립 레코드 원칙(INV-01-2) 적용.
+    * [ ] 식재료 개별 수정(`PUT /api/v1/inventory/{id}`) 및 소프트 삭제(`DELETE /api/v1/inventory/{id}`).
+    * [ ] 수동 소비 차감(`PATCH /api/v1/inventory/{id}/consume`: Math.max 방어 연산 및 잔여 0 시 CONSUMED 전이).
+    * [ ] 소비기한 만료 재료(D-Day < 0) 3대 관리 액션(폐기 DELETE, 먹음 PATCH consume, 연장 PUT) 연동.
+    * [ ] 바코드 스캔 조회(`GET /api/v1/inventory/barcode/{no}`) & 영수증 Gemini Flash OCR(`POST /api/v1/inventory/scan-ocr`) 연동.
+* [ ] **Step 3B-4: 레시피 커뮤니티, 스마트 매칭 & 요리완료 FIFO 연동 (모듈 3, 4)** (완료일시: - / 담당자: -)
+    * [ ] 레시피 8대 카테고리 조회(`GET /api/v1/recipes/categories`), 목록 페이징/검색/필터(`GET /api/v1/recipes`).
+    * [ ] 레시피 상세 조회(`GET /api/v1/recipes/{id}`), 좋아요(`POST /{id}/like`) 및 스크랩(`POST /{id}/scrap`) 토글 연동.
+    * [ ] 스마트 매칭 맞춤 추천(`GET /api/v1/matching/recommendations`): `[내 냉장고 뚝딱 매칭]` 토글 연동.
+    * [ ] `react-hook-form` + `zod` 검증 기반 레시피 등록(`POST /`) 및 수정(`PUT /{id}`).
+    * [ ] 레시피 썸네일 및 조리 Step(1~10) 이미지 압축 후 Supabase Storage `recipes` 버킷 클라이언트 직업로드 연동.
+    * [ ] 뚝딱 요리완료(`POST /api/v1/matching/cook/{recipeId}`): 2-Way 옵션 및 **No-Mixing FIFO 자동 차감** 연동 (3B-3 내 냉장고 재료 차감 반영).
+* [ ] **Step 3B-5: 메인 홈 종합 브리핑 & 알림 센터 API 연동 (모듈 5, 6)** (완료일시: - / 담당자: -)
+    * [ ] 메인 화면 종합 브리핑(`GET /api/v1/home/briefing`): 실제 3B-3 냉장고 임박 재료 3개 집계 및 3B-4 추천 1위 레시피 연동, 신규 유저 Empty State/인기 레시피 0% 폴백 핸들링.
+    * [ ] 알림 센터 목록 조회(`GET /api/v1/notifications`), 상단 헤더 Red Dot 뱃지 실시간 동기화.
+    * [ ] 단일/전체 읽음(`PATCH /{id}/read`, `PATCH /read-all`), 단일/전체 삭제(`DELETE /{id}`, `DELETE /all`).
+    * [ ] 알림 통합 환경설정(`PATCH /api/v1/notifications/settings`) 연동.
+    * [ ] 딥링크(`targetId`) 클릭 시 해당 화면(냉장고/레시피) 이동 및 삭제된 콘텐츠 Fallback 토스트 처리.
+* [ ] **Step 3B-6: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 (모바일 전용)** (완료일시: - / 담당자: -)
     * [ ] Capacitor 6.x / Android Native 세팅 & ML Kit 네이티브 바코드 스캐너 플러그인 연동.
     * [ ] FCM 푸시 알림 수신기 연동 & 하드웨어 뒤로가기 버튼(Back Button) 제어.
 
