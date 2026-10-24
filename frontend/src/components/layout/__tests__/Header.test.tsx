@@ -62,4 +62,17 @@ describe('Header 컴포넌트 단위 테스트', () => {
     await user.click(toggleButton);
     expect(useThemeStore.getState().theme).not.toBe(initialTheme);
   });
+
+  it('읽지 않은 알림이 있을 때 종 아이콘에 Red Dot 뱃지가 노출되어야 한다', () => {
+    mockUseMatches.mockReturnValue([{ handle: {} }]);
+
+    render(
+      <MemoryRouter>
+        <Header />
+      </MemoryRouter>,
+    );
+
+    const redDot = screen.getByTestId('header-red-dot');
+    expect(redDot).toBeInTheDocument();
+  });
 });

@@ -1,7 +1,7 @@
 import { Link, useMatches, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, Moon, Sun } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
-import { mockNotifications } from '@/mocks';
+import { useNotificationStore } from '@/store/notificationStore';
 import { useThemeStore } from '@/store/themeStore';
 import type { RouteHandle } from '@/router/handle';
 import logoIcon from '@/assets/logo-icon.png';
@@ -11,6 +11,7 @@ export function Header() {
   const matches = useMatches();
   const navigate = useNavigate();
   const { theme, toggle } = useThemeStore();
+  const { hasUnread, unreadCount } = useNotificationStore();
   const handle = matches[matches.length - 1]?.handle as RouteHandle | undefined;
 
   // 직접 URL로 진입해 히스토리가 없으면 홈으로 이동
@@ -58,12 +59,15 @@ export function Header() {
         </button>
         <Link
           to={ROUTES.NOTIFICATIONS}
-          aria-label={mockNotifications.hasUnread ? `알림 (읽지 않은 알림 ${mockNotifications.unreadCount}개)` : '알림'}
+          aria-label={hasUnread ? `알림 (읽지 않은 알림 ${unreadCount}개)` : '알림'}
           className="relative flex h-11 w-11 items-center justify-center rounded-full transition-colors hover:bg-accent active:scale-95"
         >
           <Bell className="h-5 w-5" />
-          {mockNotifications.hasUnread && (
-            <span className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-dday-urgent ring-2 ring-background" />
+          {hasUnread && (
+            <span
+              data-testid="header-red-dot"
+              className="absolute right-2.5 top-2.5 h-2.5 w-2.5 rounded-full bg-dday-urgent ring-2 ring-background"
+            />
           )}
         </Link>
       </div>

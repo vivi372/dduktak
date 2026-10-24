@@ -11,4 +11,5 @@ export const mockUser: UserProfile = {
   status: 'ACTIVE',
   quietTimeStart: '21:00:00',
   quietTimeEnd: '08:00:00',
+  loginProvider: 'email',
 };

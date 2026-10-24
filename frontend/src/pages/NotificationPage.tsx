@@ -1,77 +1,69 @@
-import { useState } from 'react';
-import { format, parseISO } from 'date-fns';
-import { ko } from 'date-fns/locale';
-import { CheckCheck, Heart, ChefHat, Hourglass, Trash2, type LucideIcon } from 'lucide-react';
 import { toast } from 'sonner';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/common/EmptyState';
-import { mockNotifications } from '@/mocks';
-import { cn } from '@/utils/cn';
-import type { NotificationType } from '@/types/notification';
+import { NotificationActionBar, NotificationCard } from '@/components/notification';
+import { useNotificationStore } from '@/store/notificationStore';
 
-const TYPE_ICON: Record<NotificationType, { Icon: LucideIcon; style: string }> = {
-  EXPIRE_WARN: { Icon: Hourglass, style: 'bg-dday-urgent/10 text-dday-urgent' },
-  RECIPE_LIKED: { Icon: Heart, style: 'bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200' },
-  RECIPE_COOKED: { Icon: ChefHat, style: 'bg-mint-100 text-mint-700 dark:bg-mint-700/30 dark:text-mint-300' },
-};
-
-/** 알림함 프레임 (읽음/삭제/딥링크 연동은 Step 3B-4) */
+/**
+ * 알림 센터 화면 (/notifications)
+ * - 소비기한 임박 및 소셜(좋아요, 요리완료) 알림 목록 고속 렌더링
+ * - 읽음/미읽음 시각 대비, 단일 삭제, 모두 읽음, 모두 삭제 확인
+ * - 카드 클릭 시 딥링크(/inventory, /recipes/:id) 이동 및 단일 읽음 처리
+ */
 export default function NotificationPage() {
-  const [items, setItems] = useState(mockNotifications.notifications);
-  const unread = items.filter((n) => !n.isRead).length;
+  const {
+    notifications,
+    unreadCount,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    deleteAllNotifications,
+  } = useNotificationStore();
 
-  const markAllRead = () => {
-    setItems((prev) => prev.map((n) => ({ ...n, isRead: true })));
-    toast.success('모든 알림을 읽었어요');
+  const handleMarkAllRead = () => {
+    markAllAsRead();
+    toast.success('모든 알림을 읽음 처리했어요');
+  };
+
+  const handleDeleteAll = () => {
+    deleteAllNotifications();
+    toast.success('모든 알림을 삭제했어요');
+  };
+
+  const handleDeleteSingle = (id: number) => {
+    deleteNotification(id);
+    toast.success('알림을 삭제했어요');
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          읽지 않은 알림 <span className="font-extrabold text-brand-600 dark:text-brand-300">{unread}개</span>
-        </p>
-        <div className="flex gap-1">
-          <Button variant="ghost" size="sm" onClick={markAllRead}>
-            <CheckCheck /> 모두 읽음
-          </Button>
-          <Button variant="ghost" size="sm" onClick={() => setItems([])}>
-            <Trash2 /> 모두 삭제
-          </Button>
-        </div>
-      </div>
+      {/* 상단 알림 액션 바 */}
+      <NotificationActionBar
+        totalCount={notifications.length}
+        unreadCount={unreadCount}
+        onMarkAllRead={handleMarkAllRead}
+        onDeleteAll={handleDeleteAll}
+      />
 
-      {items.length === 0 ? (
-        <EmptyState emoji="🔔" title="새로운 알림이 없어요" description="소비기한 임박 소식이 생기면 알려드릴게요." />
+      {/* 알림 목록 영역 */}
+      {notifications.length === 0 ? (
+        <div className="py-8">
+          <EmptyState
+            emoji="🔔"
+            title="새로운 알림이 없어요"
+            description="소비기한 임박 소식이나 내 레시피에 대한 소식이 생기면 알려드릴게요."
+          />
+        </div>
       ) : (
-        <ul className="space-y-2.5">
-          {items.map((n) => {
-            const { Icon, style } = TYPE_ICON[n.type];
-            return (
-              <li key={n.notificationId}>
-                <article
-                  className={cn(
-                    'flex gap-3 rounded-2xl border p-3.5 shadow-card transition-colors',
-                    n.isRead ? 'bg-card' : 'border-brand-300/70 bg-brand-50/70 dark:border-brand-700/60 dark:bg-brand-900/15',
-                  )}
-                >
-                  <span className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-xl', style)}>
-                    <Icon className="h-5 w-5" aria-hidden />
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <h2 className="text-[15px] font-bold">{n.title}</h2>
-                      {!n.isRead && <span className="h-2 w-2 rounded-full bg-dday-urgent" aria-label="읽지 않음" />}
-                    </div>
-                    <p className="mt-0.5 text-sm text-muted-foreground">{n.content}</p>
-                    <p className="mt-1.5 text-xs text-muted-foreground/80">
-                      {format(parseISO(n.createdAt), 'M월 d일 a h:mm', { locale: ko })}
-                    </p>
-                  </div>
-                </article>
-              </li>
-            );
-          })}
+        <ul className="space-y-2.5" aria-label="알림 목록">
+          {notifications.map((item) => (
+            <li key={item.notificationId}>
+              <NotificationCard
+                notification={item}
+                onRead={markAsRead}
+                onDelete={handleDeleteSingle}
+              />
+            </li>
+          ))}
         </ul>
       )}
     </div>

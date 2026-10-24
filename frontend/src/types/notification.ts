@@ -17,3 +17,11 @@ export interface NotificationList {
   hasUnread: boolean;
   notifications: NotificationItem[];
 }
+
+/** 알림 환경설정 (PATCH /api/v1/notifications/settings) */
+export interface NotificationSettings {
+  isExpireWarnEnabled: boolean;
+  isReactionNoticeEnabled: boolean;
+  quietTimeStart: string; // HH:mm:ss (예: "21:00:00")
+  quietTimeEnd: string; // HH:mm:ss (예: "08:00:00")
+}

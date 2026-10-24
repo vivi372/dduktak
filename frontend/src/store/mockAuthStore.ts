@@ -22,6 +22,16 @@ interface MockAuthState {
   logout: () => void;
   /** 식재료 보유 상태 전환 (개발자 검수용) */
   setHasIngredients: (has: boolean) => void;
+  /** 프로필 정보(닉네임, 프로필 이미지) 수정 */
+  updateProfile: (nickname: string, profileImage?: string) => void;
+  /** 야간 방해금지 시간 설정 */
+  updateQuietTime: (start: string, end: string) => void;
+  /** 회원 탈퇴 (세션 파기 및 탈퇴 처리) */
+  withdraw: () => void;
+  /** 계정 이메일 변경 (이메일 인증 승인 완료 시뮬레이션) */
+  changeEmail: (newEmail: string) => void;
+  /** 로그인 프로바이더 변경 (소셜 vs 이메일 검수 시뮬레이터용) */
+  setLoginProvider: (provider: 'email' | 'kakao' | 'google') => void;
   /** 웰컴 모달 열기 */
   openWelcomeModal: () => void;
   /** 웰컴 모달 닫기 */
@@ -38,17 +48,22 @@ export const useMockAuthStore = create<MockAuthState>((set) => ({
   hasIngredients: true,
   showWelcomeModal: false,
 
-  login: () => {
-    set({
+  login: (provider) => {
+    set((state) => ({
       isLoggedIn: true,
       showWelcomeModal: true,
-    });
+      user: {
+        ...state.user,
+        loginProvider: provider,
+        email: provider === 'kakao' ? 'kakao_user@kakao.com' : 'google_user@gmail.com',
+      },
+    }));
   },
 
   loginWithEmail: (email) => {
     set((state) => ({
       isLoggedIn: true,
-      user: { ...state.user, email: email || state.user.email },
+      user: { ...state.user, email: email || state.user.email, loginProvider: 'email' },
       showWelcomeModal: false,
     }));
   },
@@ -60,6 +75,7 @@ export const useMockAuthStore = create<MockAuthState>((set) => ({
         ...state.user,
         email: email || state.user.email,
         nickname: nickname || state.user.nickname,
+        loginProvider: 'email',
       },
       showWelcomeModal: true,
     }));
@@ -74,6 +90,55 @@ export const useMockAuthStore = create<MockAuthState>((set) => ({
 
   setHasIngredients: (hasIngredients) => {
     set({ hasIngredients });
+  },
+
+  updateProfile: (nickname, profileImage) => {
+    set((state) => ({
+      user: {
+        ...state.user,
+        nickname: nickname.trim() || state.user.nickname,
+        profileImage: profileImage || state.user.profileImage,
+      },
+    }));
+  },
+
+  updateQuietTime: (start, end) => {
+    set((state) => ({
+      user: {
+        ...state.user,
+        quietTimeStart: start,
+        quietTimeEnd: end,
+      },
+    }));
+  },
+
+  withdraw: () => {
+    set((state) => ({
+      isLoggedIn: false,
+      showWelcomeModal: false,
+      user: {
+        ...state.user,
+        status: 'WITHDRAWN',
+      },
+    }));
+  },
+
+  changeEmail: (newEmail) => {
+    set((state) => ({
+      user: {
+        ...state.user,
+        email: newEmail.trim(),
+      },
+    }));
+  },
+
+  setLoginProvider: (provider) => {
+    set((state) => ({
+      user: {
+        ...state.user,
+        loginProvider: provider,
+      },
+    }));
   },
 
   openWelcomeModal: () => {
