@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ChefHat, Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
-import { useMockAuthStore } from '@/store/mockAuthStore';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import logo from '@/assets/logo.png';
@@ -52,7 +52,15 @@ type AuthMode = 'social' | 'login' | 'signup' | 'forgot-password';
  */
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loginWithEmail, signupWithEmail } = useMockAuthStore();
+  const {
+    loginWithEmail,
+    signupWithEmail,
+    loginWithOAuth,
+    sendPasswordReset,
+    isLoggingIn,
+    isSigningUp,
+    isSendingReset,
+  } = useAuth();
 
   // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정)
   const [mode, setMode] = useState<AuthMode>('social');
@@ -74,27 +82,33 @@ export default function LoginPage() {
     setTermsModalOpen(true);
   };
 
-  /** 소셜 로그인 버튼 클릭 시 목업 세션 생성 및 온보딩 웰컴 모달 호출 */
-  const handleSocialLogin = (provider: 'kakao' | 'google') => {
-    login(provider);
-    toast.success(`${provider === 'kakao' ? '카카오' : 'Google'} 계정으로 로그인되었습니다!`);
-    navigate(ROUTES.HOME);
+  /** 소셜 간편 로그인 (AUTH-02-1) */
+  const handleSocialLogin = async (provider: 'kakao' | 'google') => {
+    try {
+      await loginWithOAuth(provider);
+    } catch (err: any) {
+      toast.error(err?.message || `${provider === 'kakao' ? '카카오' : 'Google'} 로그인 중 오류가 발생했습니다.`);
+    }
   };
 
   /** 이메일 로그인 제출 핸들러 (AUTH-01-2) */
-  const handleEmailLogin = (e: FormEvent) => {
+  const handleEmailLogin = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim()) {
       toast.error('이메일과 비밀번호를 모두 입력해 주세요.');
       return;
     }
-    loginWithEmail(email);
-    toast.success('로그인되었습니다. 환영합니다!');
-    navigate(ROUTES.HOME);
+    try {
+      await loginWithEmail({ email: email.trim(), password });
+      toast.success('로그인되었습니다. 환영합니다!');
+      navigate(ROUTES.HOME);
+    } catch (err: any) {
+      toast.error(err?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해 주세요.');
+    }
   };
 
   /** 이메일 회원가입 제출 핸들러 (AUTH-01-1) */
-  const handleEmailSignup = (e: FormEvent) => {
+  const handleEmailSignup = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim() || !password.trim() || !nickname.trim()) {
       toast.error('모든 필수 정보를 입력해 주세요.');
@@ -108,21 +122,40 @@ export default function LoginPage() {
       toast.error('서비스 이용 및 탈퇴 시 레시피 보존 정책 약관에 모두 동의해 주세요.');
       return;
     }
-    signupWithEmail(email, nickname);
-    toast.success('회원가입이 완료되었습니다! 프로필을 설정해 보세요.');
-    navigate(ROUTES.HOME);
+    try {
+      const data = await signupWithEmail({
+        email: email.trim(),
+        password,
+        nickname: nickname.trim(),
+      });
+      if (data?.session) {
+        toast.success('회원가입이 완료되었습니다! 환영합니다.');
+        navigate(ROUTES.HOME);
+      } else {
+        toast.success('인증 메일이 발송되었습니다! 메일함(받은편지함/스팸함)을 확인해 주세요.', {
+          duration: 6000,
+        });
+        setMode('login');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || '회원가입 중 오류가 발생했습니다.');
+    }
   };
 
   /** 비밀번호 찾기 링크 발송 제출 핸들러 */
-  const handleSendResetLink = (e: FormEvent) => {
+  const handleSendResetLink = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
       toast.error('비밀번호를 재설정할 이메일 주소를 입력해 주세요.');
       return;
     }
-    toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
-    // 발송 후 로그인 폼으로 복귀
-    setMode('login');
+    try {
+      await sendPasswordReset(email.trim());
+      toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
+      setMode('login');
+    } catch (err: any) {
+      toast.error(err?.message || '비밀번호 재설정 링크 발송에 실패했습니다.');
+    }
   };
 
   return (
@@ -318,8 +351,14 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <Button type="submit" variant="primary" size="lg" className="w-full font-bold shadow-soft">
-                  재설정 링크 발송하기
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-bold shadow-soft"
+                  disabled={isSendingReset}
+                >
+                  {isSendingReset ? '발송 중...' : '재설정 링크 발송하기'}
                 </Button>
 
                 <div className="pt-1 text-center">
@@ -382,8 +421,14 @@ export default function LoginPage() {
                   </button>
                 </div>
 
-                <Button type="submit" variant="primary" size="lg" className="w-full font-bold shadow-soft">
-                  로그인하기
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-bold shadow-soft"
+                  disabled={isLoggingIn}
+                >
+                  {isLoggingIn ? '로그인 중...' : '로그인하기'}
                 </Button>
               </form>
             ) : (
@@ -493,8 +538,14 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <Button type="submit" variant="primary" size="lg" className="w-full font-bold shadow-soft mt-3">
-                  회원가입 완료
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-bold shadow-soft mt-3"
+                  disabled={isSigningUp}
+                >
+                  {isSigningUp ? '가입 처리 중...' : '회원가입 완료'}
                 </Button>
               </form>
             )}
