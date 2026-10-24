@@ -9,6 +9,7 @@ import { BottomNav } from './BottomNav';
 import { DesktopSidePanel } from './DesktopSidePanel';
 import { QuickAddTray } from './QuickAddTray';
 import { WelcomeModal } from '@/components/auth/WelcomeModal';
+import { GlobalErrorModal } from '@/components/common/GlobalErrorModal';
 import { FloatingDevSwitcher } from '@/components/common/FloatingDevSwitcher';
 
 /**
@@ -113,6 +114,9 @@ export function AppShell() {
 
       {/* 온보딩 웰컴 팝업 모달 */}
       <WelcomeModal />
+
+      {/* 백엔드 UX 태그 전역 에러 모달 (_ALERT_, _CONFIRM_, _FATAL_) */}
+      <GlobalErrorModal />
 
       {/* 개발자 검수용 상태 스위처 */}
       <FloatingDevSwitcher />

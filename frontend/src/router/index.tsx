@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { AppShell } from '@/components/layout/AppShell';
+import { ProtectedRoute } from '@/components/common/ProtectedRoute';
 import HomePage from '@/pages/HomePage';
 import InventoryPage from '@/pages/InventoryPage';
 import RecipeFeedPage from '@/pages/RecipeFeedPage';
@@ -20,16 +21,32 @@ export const router = createBrowserRouter([
     element: <AppShell />,
     children: [
       { path: ROUTES.HOME, element: <HomePage />, handle: h({ title: '홈', brand: true }) },
-      { path: ROUTES.INVENTORY, element: <InventoryPage />, handle: h({ title: '내 냉장고', brand: true }) },
+      {
+        path: ROUTES.INVENTORY,
+        element: (
+          <ProtectedRoute>
+            <InventoryPage />
+          </ProtectedRoute>
+        ),
+        handle: h({ title: '내 냉장고', brand: true }),
+      },
       { path: ROUTES.RECIPES, element: <RecipeFeedPage />, handle: h({ title: '뚝딱 레시피', brand: true }) },
       {
         path: ROUTES.RECIPE_NEW,
-        element: <RecipeFormPage />,
+        element: (
+          <ProtectedRoute>
+            <RecipeFormPage />
+          </ProtectedRoute>
+        ),
         handle: h({ title: '레시피 작성', showBack: true }),
       },
       {
         path: ROUTES.RECIPE_EDIT,
-        element: <RecipeFormPage />,
+        element: (
+          <ProtectedRoute>
+            <RecipeFormPage />
+          </ProtectedRoute>
+        ),
         handle: h({ title: '레시피 수정', showBack: true }),
       },
       {
@@ -37,8 +54,24 @@ export const router = createBrowserRouter([
         element: <RecipeDetailPage />,
         handle: h({ title: '레시피 상세', showBack: true }),
       },
-      { path: ROUTES.MYPAGE, element: <MyPage />, handle: h({ title: '마이페이지', brand: true }) },
-      { path: ROUTES.NOTIFICATIONS, element: <NotificationPage />, handle: h({ title: '알림함', showBack: true }) },
+      {
+        path: ROUTES.MYPAGE,
+        element: (
+          <ProtectedRoute>
+            <MyPage />
+          </ProtectedRoute>
+        ),
+        handle: h({ title: '마이페이지', brand: true }),
+      },
+      {
+        path: ROUTES.NOTIFICATIONS,
+        element: (
+          <ProtectedRoute>
+            <NotificationPage />
+          </ProtectedRoute>
+        ),
+        handle: h({ title: '알림함', showBack: true }),
+      },
       {
         path: ROUTES.LOGIN,
         element: <LoginPage />,

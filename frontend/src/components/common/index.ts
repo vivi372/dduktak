@@ -5,3 +5,5 @@ export * from './RecipeCard';
 export * from './TermsModal';
 export * from './CustomDatePicker';
 export * from './FloatingDevSwitcher';
+export * from './ProtectedRoute';
+export * from './GlobalErrorModal';

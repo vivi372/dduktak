@@ -123,9 +123,9 @@
 ##### ⚡ [2단계] Phase 3B: 프론트엔드 로직, 상태 관리 & 백엔드 API 연동 (Logic & API Integration)
 > **개념:** 확정된 UI 마크업 위에 Zustand client state, React Query server state, Form Validation, Axios API Client, 백엔드 API 및 Capacitor 네이티브 기능을 연동합니다.
 
-* [ ] **Step 3B-1: API Client, 세션/상태 관리 & Auth 연동 (모듈 1)** (완료일시: - / 담당자: -)
-    * [ ] Axios API Client (Interceptor, `X-Trace-Id` 처리, Sonner Toast / Alert Modal 전역 예외 분기).
-    * [ ] Zustand 세션 스토어 & Supabase OAuth 세션 동기화 (`POST /api/v1/auth/init`) & Protected Route.
+* [x] **Step 3B-1: API Client, 세션/상태 관리 & Auth 연동 (모듈 1)** (완료일시: 2026-10-24 22:20 / 담당자: AI 에이전트)
+    * [x] Axios API Client (Interceptor, `X-Trace-Id` 처리, Sonner Toast / Alert Modal 전역 예외 분기).
+    * [x] Zustand 세션 스토어 & Supabase OAuth 세션 동기화 (`POST /api/v1/auth/init`) & Protected Route.
 * [ ] **Step 3B-2: 메인 홈 & 내 냉장고 API 연동 (모듈 2, 6)** (완료일시: - / 담당자: -)
     * [ ] 메인 브리핑 (`GET /home/briefing`) API 연동 & 인기 레시피 폴백 핸들링.
     * [ ] 내 냉장고 CRUD, KST D-Day 연산, 수동 소비 차감 API 연동.
