@@ -1,38 +1,76 @@
 import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { NotificationActionBar, NotificationCard } from '@/components/notification';
-import { useNotificationStore } from '@/store/notificationStore';
+import {
+  useNotifications,
+  useMarkNotificationRead,
+  useMarkAllNotificationsRead,
+  useDeleteNotification,
+  useDeleteAllNotifications,
+} from '@/hooks/useNotification';
 
 /**
  * 알림 센터 화면 (/notifications)
  * - 소비기한 임박 및 소셜(좋아요, 요리완료) 알림 목록 고속 렌더링
  * - 읽음/미읽음 시각 대비, 단일 삭제, 모두 읽음, 모두 삭제 확인
- * - 카드 클릭 시 딥링크(/inventory, /recipes/:id) 이동 및 단일 읽음 처리
+ * - 카드 클릭 시 딥링크(/inventory, /recipes/:id) 이동 및 단일 읽음 처리 (404 Fallback 가드)
  */
 export default function NotificationPage() {
-  const {
-    notifications,
-    unreadCount,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    deleteAllNotifications,
-  } = useNotificationStore();
+  const { data, isLoading } = useNotifications(0, 50);
+  const markReadMutation = useMarkNotificationRead();
+  const markAllReadMutation = useMarkAllNotificationsRead();
+  const deleteMutation = useDeleteNotification();
+  const deleteAllMutation = useDeleteAllNotifications();
+
+  const notifications = data?.notifications ?? [];
+  const unreadCount = data?.unreadCount ?? 0;
 
   const handleMarkAllRead = () => {
-    markAllAsRead();
-    toast.success('모든 알림을 읽음 처리했어요');
+    markAllReadMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('모든 알림을 읽음 처리했어요');
+      },
+      onError: () => {
+        toast.error('읽음 처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      },
+    });
   };
 
   const handleDeleteAll = () => {
-    deleteAllNotifications();
-    toast.success('모든 알림을 삭제했어요');
+    deleteAllMutation.mutate(undefined, {
+      onSuccess: () => {
+        toast.success('모든 알림을 삭제했어요');
+      },
+      onError: () => {
+        toast.error('알림 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      },
+    });
   };
 
   const handleDeleteSingle = (id: number) => {
-    deleteNotification(id);
-    toast.success('알림을 삭제했어요');
+    deleteMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('알림을 삭제했어요');
+      },
+      onError: () => {
+        toast.error('알림 삭제에 실패했습니다. 잠시 후 다시 시도해주세요.');
+      },
+    });
   };
+
+  const handleMarkAsRead = (id: number) => {
+    markReadMutation.mutate(id);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-muted-foreground space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+        <p className="text-sm font-medium">알림을 불러오는 중입니다...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -59,7 +97,7 @@ export default function NotificationPage() {
             <li key={item.notificationId}>
               <NotificationCard
                 notification={item}
-                onRead={markAsRead}
+                onRead={handleMarkAsRead}
                 onDelete={handleDeleteSingle}
               />
             </li>
@@ -69,3 +107,4 @@ export default function NotificationPage() {
     </div>
   );
 }
+

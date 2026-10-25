@@ -1,7 +1,7 @@
 import { Link, useMatches, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, Moon, Sun } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
-import { useNotificationStore } from '@/store/notificationStore';
+import { useNotifications } from '@/hooks/useNotification';
 import { useThemeStore } from '@/store/themeStore';
 import type { RouteHandle } from '@/router/handle';
 import logoIcon from '@/assets/logo-icon.png';
@@ -11,7 +11,9 @@ export function Header() {
   const matches = useMatches();
   const navigate = useNavigate();
   const { theme, toggle } = useThemeStore();
-  const { hasUnread, unreadCount } = useNotificationStore();
+  const { data: notificationData } = useNotifications();
+  const hasUnread = Boolean(notificationData?.hasUnread);
+  const unreadCount = notificationData?.unreadCount ?? 0;
   const handle = matches[matches.length - 1]?.handle as RouteHandle | undefined;
 
   // 직접 URL로 진입해 히스토리가 없으면 홈으로 이동

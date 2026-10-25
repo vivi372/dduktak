@@ -1,8 +1,10 @@
 import { format, parseISO } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Heart, ChefHat, Hourglass, Trash2, ChevronRight, type LucideIcon } from 'lucide-react';
+import { Heart, ChefHat, Hourglass, Trash2, ChevronRight, Bell, type LucideIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
+import { getRecipeDetail } from '@/services/recipeApi';
 import { cn } from '@/utils/cn';
 import type { NotificationItem, NotificationType } from '@/types/notification';
 
@@ -21,6 +23,26 @@ const TYPE_CONFIG: Record<
     style: 'bg-dday-urgent/15 text-dday-urgent ring-1 ring-dday-urgent/30',
     badgeLabel: '소비기한',
   },
+  EXPIRE_D_DAY: {
+    Icon: Hourglass,
+    style: 'bg-dday-urgent/25 text-dday-urgent ring-1 ring-dday-urgent/40',
+    badgeLabel: '오늘만료',
+  },
+  LIKE_NOTICE: {
+    Icon: Heart,
+    style: 'bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300 ring-1 ring-brand-300 dark:ring-brand-700/60',
+    badgeLabel: '좋아요',
+  },
+  COOKED_NOTICE: {
+    Icon: ChefHat,
+    style: 'bg-mint-100 text-mint-700 dark:bg-mint-700/30 dark:text-mint-300 ring-1 ring-mint-300 dark:ring-mint-700/60',
+    badgeLabel: '요리완료',
+  },
+  SYSTEM: {
+    Icon: Bell,
+    style: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 ring-1 ring-slate-300 dark:ring-slate-700',
+    badgeLabel: '공지',
+  },
   RECIPE_LIKED: {
     Icon: Heart,
     style: 'bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300 ring-1 ring-brand-300 dark:ring-brand-700/60',
@@ -35,22 +57,49 @@ const TYPE_CONFIG: Record<
 
 /**
  * 알림 센터 단일 카드 컴포넌트
- * (유형별 아이콘, 읽음/미읽음 시각 차이, 딥링크 이동, 단일 삭제)
+ * (유형별 아이콘, 읽음/미읽음 시각 차이, 딥링크 이동 및 404 Fallback, 단일 삭제)
  */
 export function NotificationCard({ notification, onRead, onDelete }: NotificationCardProps) {
   const navigate = useNavigate();
   const { Icon, style, badgeLabel } = TYPE_CONFIG[notification.type] || TYPE_CONFIG.EXPIRE_WARN;
 
-  const handleClickCard = () => {
+  const handleClickCard = async () => {
     // 1. 단일 읽음 처리
     if (!notification.isRead) {
       onRead(notification.notificationId);
     }
 
-    // 2. 딥링크 타겟으로 이동
-    if (notification.type === 'EXPIRE_WARN') {
+    // 2. 딥링크 타겟으로 이동 및 404 Fallback 처리
+    const type = notification.type;
+    if (type === 'EXPIRE_WARN' || type === 'EXPIRE_D_DAY') {
       navigate(ROUTES.INVENTORY);
-    } else if (notification.type === 'RECIPE_LIKED' || notification.type === 'RECIPE_COOKED') {
+      return;
+    }
+
+    if (
+      type === 'LIKE_NOTICE' ||
+      type === 'COOKED_NOTICE' ||
+      type === 'RECIPE_LIKED' ||
+      type === 'RECIPE_COOKED'
+    ) {
+      if (!notification.targetId) {
+        navigate(ROUTES.RECIPES);
+        return;
+      }
+
+      try {
+        // 타겟 레시피 유효성 사전 검증 (파기/삭제 여부 확인)
+        await getRecipeDetail(notification.targetId);
+        navigate(`/recipes/${notification.targetId}`);
+      } catch {
+        // 레시피가 삭제되었거나 404 Not Found인 경우 안전한 Fallback 알림 토스트 노출 후 화면 유지
+        toast.error('삭제되었거나 더 이상 존재하지 않는 콘텐츠입니다');
+      }
+      return;
+    }
+
+    // 기타 시스템 알림
+    if (notification.targetId) {
       navigate(`/recipes/${notification.targetId}`);
     }
   };

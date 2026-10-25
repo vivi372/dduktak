@@ -9,9 +9,10 @@ describe('CustomDatePicker 컴포넌트 단위 테스트', () => {
 
     // 날짜 텍스트 확인 (2026년 10월 25일)
     expect(screen.getByText(/2026년 10월 25일/)).toBeInTheDocument();
-    // D-Day 배지 확인
-    expect(screen.getByText(/D-/)).toBeInTheDocument();
+    // D-Day 배지 확인 (D-Day, D-N, D+N 등)
+    expect(screen.getByText(/D[-+]?\d+|D-Day/)).toBeInTheDocument();
   });
+
 
   it('트리거 버튼 클릭 시 커스텀 캘린더 팝오버가 열리고 날짜 그리드가 렌더링되어야 한다', () => {
     const handleChange = vi.fn();

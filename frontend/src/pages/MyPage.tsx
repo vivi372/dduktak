@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { useThemeStore } from '@/store/themeStore';
 import { useAuth } from '@/hooks/useAuth';
+import { useUpdateNotificationSettings } from '@/hooks/useNotification';
 import { useNotificationStore } from '@/store/notificationStore';
 import {
   ProfileEditModal,
@@ -114,6 +115,7 @@ export default function MyPage() {
     isWithdrawing,
   } = useAuth();
   const { settings, updateSettings } = useNotificationStore();
+  const updateNotificationSettingsMutation = useUpdateNotificationSettings();
 
   // 모달 제어 상태
   const [profileModalOpen, setProfileModalOpen] = useState(false);
@@ -137,17 +139,38 @@ export default function MyPage() {
   const handleToggleExpireWarn = (checked: boolean) => {
     updateSettings({ isExpireWarnEnabled: checked });
     toast.success(checked ? '소비기한 알림을 켰어요' : '소비기한 알림을 껐어요');
+    updateNotificationSettingsMutation.mutate(
+      { isExpireWarnEnabled: checked },
+      {
+        onError: () => {
+          updateSettings({ isExpireWarnEnabled: !checked });
+          toast.error('알림 설정 저장에 실패했습니다.');
+        },
+      },
+    );
   };
 
   const handleToggleReaction = (checked: boolean) => {
     updateSettings({ isReactionNoticeEnabled: checked });
     toast.success(checked ? '소셜 반응 알림을 켰어요' : '소셜 반응 알림을 껐어요');
+    updateNotificationSettingsMutation.mutate(
+      { isReactionNoticeEnabled: checked },
+      {
+        onError: () => {
+          updateSettings({ isReactionNoticeEnabled: !checked });
+          toast.error('알림 설정 저장에 실패했습니다.');
+        },
+      },
+    );
   };
 
+
   const handleSaveQuietTime = async (start: string, end: string) => {
+    await updateNotificationSettingsMutation.mutateAsync({ quietTimeStart: start, quietTimeEnd: end });
     await updateQuietTime({ quietTimeStart: start, quietTimeEnd: end });
     updateSettings({ quietTimeStart: start, quietTimeEnd: end });
   };
+
 
   const handleSaveProfile = async (nickname: string, newAvatar?: string) => {
     await updateProfileWithAvatar({
