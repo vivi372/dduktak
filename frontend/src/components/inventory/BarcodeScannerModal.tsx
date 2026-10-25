@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Zap, ZapOff, ScanBarcode, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Zap, ZapOff, ScanBarcode, CheckCircle2, AlertCircle, Loader2, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBodyScrollLock } from '@/hooks';
 import { useBarcodeLookup } from '@/hooks/useInventory';
 import { ScanFailSafeModal } from './ScanFailSafeModal';
+import { isNativePlatform, scanBarcodeNative } from '@/services/nativeBarcodeService';
 import type { MasterIngredient } from '@/types/inventory';
 
 interface BarcodeScannerModalProps {
@@ -18,7 +19,8 @@ interface BarcodeScannerModalProps {
 
 /**
  * 모바일 카메라 뷰파인더 오버레이 바코드 스캐너 모달 (INV-01-3)
- * - Google ML Kit 바코드 인식 뷰파인더 오버레이 UI 마크업
+ * - Google ML Kit 네이티브 바코드 스캐너 연동 (모바일 실기기 환경)
+ * - 웹 브라우저 환경에서는 정밀 뷰파인더 레이저 UI 및 모의 인식/수동 입력 Fallback 지원
  * - React Query useBarcodeLookup 훅을 통한 백엔드 API(GET /api/v1/inventory/barcode/{barcodeNo}) 연동
  * - 404 (INV_WARN_BARCODE_NOT_FOUND) 수신 시 ScanFailSafeModal 예외 복구 뷰 연결
  */
@@ -34,31 +36,61 @@ export function BarcodeScannerModal({
   const [manualBarcode, setManualBarcode] = useState('');
   const [isFailSafeOpen, setIsFailSafeOpen] = useState(false);
   const [failedBarcodeNo, setFailedBarcodeNo] = useState<string>('');
+  const [isNativeScanning, setIsNativeScanning] = useState(false);
 
+  const isNative = isNativePlatform();
   const barcodeLookup = useBarcodeLookup();
 
-  if (!open) return null;
-
   /** 바코드 번호로 실제 백엔드 API 조회 수행 */
-  const handleLookupBarcode = async (barcodeNo: string) => {
+  const handleLookupBarcode = useCallback(
+    async (barcodeNo: string) => {
+      try {
+        const result = await barcodeLookup.mutateAsync(barcodeNo);
+        toast.success(`'${result.name}' 바코드를 성공적으로 인식했어요! 🍜`);
+        onScanSuccess({
+          masterIngredientId: result.masterIngredientId,
+          categoryId: result.categoryId,
+          categoryName: '식재료',
+          name: result.name,
+          defaultUnit: result.recommendedUnit,
+          defaultShelfDays: 7,
+        });
+        onClose();
+      } catch (err: unknown) {
+        // 404 미등록 바코드 또는 오류 발생 시 Fail-Safe 모달 오픈
+        setFailedBarcodeNo(barcodeNo);
+        setIsFailSafeOpen(true);
+      }
+    },
+    [barcodeLookup, onScanSuccess, onClose],
+  );
+
+  /** 모바일 네이티브 Google ML Kit 카메라 스캐너 호출 */
+  const handleNativeScan = useCallback(async () => {
+    if (isNativeScanning) return;
+    setIsNativeScanning(true);
+
     try {
-      const result = await barcodeLookup.mutateAsync(barcodeNo);
-      toast.success(`'${result.name}' 바코드를 성공적으로 인식했어요! 🍜`);
-      onScanSuccess({
-        masterIngredientId: result.masterIngredientId,
-        categoryId: result.categoryId,
-        categoryName: '식재료',
-        name: result.name,
-        defaultUnit: result.recommendedUnit,
-        defaultShelfDays: 7,
-      });
-      onClose();
-    } catch (err: unknown) {
-      // 404 미등록 바코드 또는 오류 발생 시 Fail-Safe 모달 오픈
-      setFailedBarcodeNo(barcodeNo);
-      setIsFailSafeOpen(true);
+      const scanResult = await scanBarcodeNative();
+
+      if (scanResult.success && scanResult.barcodeNo) {
+        await handleLookupBarcode(scanResult.barcodeNo);
+      } else if (scanResult.errorMessage) {
+        toast.error(scanResult.errorMessage);
+      }
+    } finally {
+      setIsNativeScanning(false);
     }
-  };
+  }, [isNativeScanning, handleLookupBarcode]);
+
+  // 네이티브 앱 환경에서 모달이 처음 열릴 때 자동으로 네이티브 스캐너 실행
+  useEffect(() => {
+    if (open && isNative) {
+      handleNativeScan();
+    }
+  }, [open, isNative]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!open) return null;
 
   // 1. 성공 시나리오 모의 테스트: 신라면 바코드(8801043014859) 조회
   const handleSimulateSuccess = () => {
@@ -150,6 +182,23 @@ export function BarcodeScannerModal({
                   {barcodeLookup.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : '조회'}
                 </button>
               </div>
+
+              {/* 모바일 네이티브 환경 전용 카메라 스캔 재실행 CTA */}
+              {isNative && (
+                <button
+                  type="button"
+                  onClick={handleNativeScan}
+                  disabled={isNativeScanning || barcodeLookup.isPending}
+                  className="flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-brand-500 font-bold text-sm text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-50"
+                >
+                  {isNativeScanning ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Camera className="h-5 w-5" />
+                  )}
+                  <span>{isNativeScanning ? '카메라 스캐너 구동 중...' : '카메라로 실물 바코드 스캔하기'}</span>
+                </button>
+              )}
 
               <div className="flex flex-col sm:flex-row gap-2">
                 <button

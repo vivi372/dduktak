@@ -4,9 +4,9 @@
 | ------ | ------ | ------ | ------ |
 | **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | [x] 4/4 | **100%** |
 | **Phase 2** | 백엔드 도메인별 핵심 API 개발 | [x] 4/4 | **100%** |
-| **Phase 3** | 프론트엔드 UI/UX 및 하이브리드 앱 구현 | [x] 8/11 | **73%** |
+| **Phase 3** | 프론트엔드 UI/UX 및 하이브리드 앱 구현 | [x] 8/10 (3B-6 1차 완료) | **85%** |
 | **Phase 4** | 인수 테스트 및 최종 검토 | [ ] 0/2 | 0% |
-| **전체** | **전체 시스템 구축 완료** | [x] 16/17 | **94%** |
+| **전체** | **전체 시스템 구축 완료** | [x] 16/20 | **85%** |
 
 
 --------------------------------------------------------------------------------
@@ -149,6 +149,9 @@
     * [x] `react-hook-form` + `zod` 검증 기반 레시피 등록(`POST /`) 및 수정(`PUT /{id}`).
     * [x] 레시피 썸네일 및 조리 Step(1~10) 이미지 압축 후 Supabase Storage `recipes` 버킷 클라이언트 직업로드 연동.
     * [x] 뚝딱 요리완료(`POST /api/v1/matching/cook/{recipeId}`): 2-Way 옵션 및 **No-Mixing FIFO 자동 차감** 연동 (3B-3 내 냉장고 재료 차감 반영 및 캐시 즉시 동기화).
+    * [x] **레시피 조리 난이도 3단계 표준화 ('조금복잡' ➔ '어려움')**: DB `chk_recipe_difficulty` CHECK 제약조건, 백엔드 유효성 검증, 프론트엔드 Zod/TypeScript 타입 전 계층 리팩토링 완료.
+    * [x] **프론트엔드 5대 실전 엣지 케이스 방어 코딩**: State Pollution 방어, 로그아웃 브라우저 히스토리 대체, 다중 연타 클릭 차단, 바텀시트 스크롤 락, 401 다중 토스트 디바운스 및 전용 단위 테스트 통과 (198개 테스트 100% PASS).
+    * [x] **1인 가구 대표 30선 레시피 썸네일 AI 생성 및 Supabase Storage CDN 서빙 최적화**: 로컬 대용량 이미지 정리 및 클라우드 CDN 단일 공급원(SSOT) 구축.
 
 * [ ] **Step 3B-5: 알림 센터 API 연동 & 홈 브리핑-레시피 딥링크 연계 (모듈 5 & 모듈 6)** (완료일시: - / 담당자: -)
     * [ ] 메인 홈 브리핑-레시피 상세 딥링크 연계: Step 3B-3에서 선연동된 홈 브리핑 1위 추천 레시피 클릭 시 Step 3B-4 레시피 상세(`/recipes/:id`) 이동 및 데이터 정합성 검증.
@@ -156,8 +159,13 @@
     * [ ] 단일/전체 읽음(`PATCH /{id}/read`, `PATCH /read-all`), 단일/전체 삭제(`DELETE /{id}`, `DELETE /all`).
     * [ ] 알림 통합 환경설정(`PATCH /api/v1/notifications/settings`) 연동.
     * [ ] 딥링크(`targetId`) 클릭 시 해당 화면(냉장고/레시피) 이동 및 삭제된 콘텐츠 Fallback 토스트 처리.
-* [ ] **Step 3B-6: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 (모바일 전용)** (완료일시: - / 담당자: -)
-    * [ ] Capacitor 6.x / Android Native 세팅 & ML Kit 네이티브 바코드 스캐너 플러그인 연동.
+* [ ] **Step 3B-6: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 (모바일 전용)** (1차 완료: 2026-10-25 23:25 / 담당자: AI 에이전트)
+    * [x] **Capacitor 6.x / Android Native 세팅 & Google ML Kit 네이티브 바코드 스캐너 플러그인 연동 (완료일시: 2026-10-25 23:25 / 담당자: AI 에이전트)**:
+        * Capacitor 6.x 전역 설정(`capacitor.config.ts`), Android 네이티브 Gradle 프로젝트 생성 및 `AndroidManifest.xml` 카메라 권한/ML Kit UI 메타데이터 주입 완료.
+        * `nativeBarcodeService.ts` 추상화 서비스 작성: `Capacitor.isNativePlatform()` 런타임 환경 감지, Google Play 서비스 ML Kit 모듈 자동 다운로드, 카메라 권한 요청 및 바코드 스캔 Activity 연동.
+        * `BarcodeScannerModal.tsx` 하이브리드 분기 연동: 모바일 실기기 카메라 스캔 자동 실행 및 바코드 식재료 조회(`GET /api/v1/inventory/barcode/{barcodeNo}`) 파이프라인 자동 연결 (웹 환경은 뷰파인더 애니메이션 & 모의 바코드 Fallback 100% 정상 유지).
+        * 모바일 웹뷰 API 연동을 위한 `.env.example`의 `VITE_API_BASE_URL` 가이드라인 추가.
+        * 단위 테스트 5건 신규 작성(전체 40개 파일, 206개 단위 테스트 100% PASS), TypeScript 빌드 무오류 및 `npx cap sync android` 동기화 검증 완료.
     * [ ] FCM 푸시 알림 수신기 연동 & 하드웨어 뒤로가기 버튼(Back Button) 제어.
 
 --------------------------------------------------------------------------------
