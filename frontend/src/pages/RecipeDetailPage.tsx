@@ -30,6 +30,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { calculateRecipeMatching } from '@/mocks/matching.mock';
 import { mockRecipeDetails } from '@/mocks/recipes.mock';
 import { ROUTES } from '@/constants/routes';
+import { DEFAULT_RECIPE_THUMBNAIL_URL } from '@/constants/images';
 import { cn } from '@/utils/cn';
 
 /**
@@ -177,7 +178,7 @@ export default function RecipeDetailPage() {
       {/* 1. 레시피 대표 히어로 썸네일 & 오버레이 */}
       <div className="relative -mx-4 -mt-4 overflow-hidden aspect-[16/10] sm:aspect-[2/1] sm:rounded-3xl sm:mx-0 sm:mt-0 bg-muted">
         <img
-          src={recipe.thumbnailUrl || '/images/default-recipe.png'}
+          src={recipe.thumbnailUrl || DEFAULT_RECIPE_THUMBNAIL_URL}
           alt={recipe.title}
           className="h-full w-full object-cover"
         />

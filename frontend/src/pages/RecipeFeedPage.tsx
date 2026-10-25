@@ -12,6 +12,7 @@ import type { RecipeSortOption } from '@/components/recipe';
 import { useRecipes } from '@/hooks/useRecipe';
 import { useMatchingRecommendations } from '@/hooks/useMatching';
 import { ROUTES } from '@/constants/routes';
+import { DEFAULT_RECIPE_THUMBNAIL_URL } from '@/constants/images';
 import type { RecipeSummary, RecipeDifficulty } from '@/types/recipe';
 
 /**
@@ -156,7 +157,7 @@ export default function RecipeFeedPage() {
                 recipeCategoryId: categoryId || 1,
                 categoryName: '맞춤 추천',
                 title: r.title,
-                thumbnailUrl: r.thumbnailUrl || '/images/default-recipe.png',
+                thumbnailUrl: r.thumbnailUrl || DEFAULT_RECIPE_THUMBNAIL_URL,
                 cookingTime: r.cookingTime,
                 difficulty: (r.difficulty as RecipeDifficulty) || '쉬움',
                 likeCount: 0,

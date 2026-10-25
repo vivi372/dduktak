@@ -1,4 +1,4 @@
-# 레시피 시드 데이터 (recipe_seed.md)
+﻿# 레시피 시드 데이터 (recipe_seed.md)
 
 ```sql
 -- ==========================================
@@ -24,7 +24,7 @@ ON CONFLICT (category_name) DO NOTHING;
 -- ==========================================
 -- 1. 버터 간장계란밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('버터 간장계란밥', '5분 컷, 자취생 영원한 기본 소울푸드', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 5, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('버터 간장계란밥', '5분 컷, 자취생 영원한 기본 소울푸드', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 5, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_1.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '버터 간장계란밥'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '밥 (공기밥 / 햇반)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '버터 간장계란밥'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '계란';
@@ -39,7 +39,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 2. 파기름 계란볶음밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('파기름 계란볶음밥', '파기름 + 굴소스 한 스푼으로 중화풍 감칠맛을 살린 볶음밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('파기름 계란볶음밥', '파기름 + 굴소스 한 스푼으로 중화풍 감칠맛을 살린 볶음밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_2.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '파기름 계란볶음밥'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '밥 (공기밥 / 햇반)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '파기름 계란볶음밥'), master_ingredient_id, NULL, category_id, name, 2, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '계란';
@@ -57,7 +57,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 3. 스팸 김치볶음밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('스팸 김치볶음밥', '단짠 스팸과 신김치의 정석 조합', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('스팸 김치볶음밥', '단짠 스팸과 신김치의 정석 조합', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_3.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '스팸 김치볶음밥'), master_ingredient_id, NULL, category_id, name, 0.5, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '스팸';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '스팸 김치볶음밥'), master_ingredient_id, NULL, category_id, name, 100, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '배추김치';
@@ -76,7 +76,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 4. 베이컨 마늘 볶음밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('베이컨 마늘 볶음밥', '베이컨 기름과 마늘 향, 굴소스로 볶아낸 고소한 볶음밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('베이컨 마늘 볶음밥', '베이컨 기름과 마늘 향, 굴소스로 볶아낸 고소한 볶음밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_4.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '베이컨 마늘 볶음밥'), master_ingredient_id, NULL, category_id, name, 0.5, '팩', 'MAIN', FALSE FROM ingredient_master WHERE name = '베이컨';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '베이컨 마늘 볶음밥'), master_ingredient_id, NULL, category_id, name, 5, '쪽', 'MAIN', FALSE FROM ingredient_master WHERE name = '마늘';
@@ -94,7 +94,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 5. 참치마요 덮밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('참치마요 덮밥', '참치캔, 계란 스크램블, 마요네즈의 초간단 조합', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('참치마요 덮밥', '참치캔, 계란 스크램블, 마요네즈의 초간단 조합', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_5.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '참치마요 덮밥'), master_ingredient_id, NULL, category_id, name, 1, '캔', 'MAIN', FALSE FROM ingredient_master WHERE name = '참치캔';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '참치마요 덮밥'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '밥 (공기밥 / 햇반)';
@@ -114,7 +114,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 6. 매콤 제육덮밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('매콤 제육덮밥', '매콤달콤하게 볶은 돼지 앞다리살을 얹은 든든한 덮밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 20, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('매콤 제육덮밥', '매콤달콤하게 볶은 돼지 앞다리살을 얹은 든든한 덮밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 20, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_6.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '매콤 제육덮밥'), master_ingredient_id, NULL, category_id, name, 150, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (앞다리살/찌개용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '매콤 제육덮밥'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '밥 (공기밥 / 햇반)';
@@ -136,7 +136,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 7. 소고기 불고기덮밥
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('소고기 불고기덮밥', '불고기 양념의 소고기와 양파, 팽이버섯을 올린 덮밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 20, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('소고기 불고기덮밥', '불고기 양념의 소고기와 양파, 팽이버섯을 올린 덮밥', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '한그릇/밥'), 1, 20, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_7.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '소고기 불고기덮밥'), master_ingredient_id, NULL, category_id, name, 150, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '소고기 (국거리/불고기용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '소고기 불고기덮밥'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '밥 (공기밥 / 햇반)';
@@ -157,7 +157,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 8. 돼지고기 김치찌개
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('돼지고기 김치찌개', '앞다리살(또는 삼겹살)을 넣고 푹 끓인 진한 김치찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 25, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('돼지고기 김치찌개', '앞다리살(또는 삼겹살)을 넣고 푹 끓인 진한 김치찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 25, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_8.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '돼지고기 김치찌개'), master_ingredient_id, NULL, category_id, name, 150, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '배추김치';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '돼지고기 김치찌개'), master_ingredient_id, NULL, category_id, name, 100, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (앞다리살/찌개용)';
@@ -177,7 +177,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 9. 참치 김치찌개
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('참치 김치찌개', '참치캔 기름과 신김치로 감칠맛을 폭발시키는 찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('참치 김치찌개', '참치캔 기름과 신김치로 감칠맛을 폭발시키는 찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_9.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '참치 김치찌개'), master_ingredient_id, NULL, category_id, name, 150, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '배추김치';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '참치 김치찌개'), master_ingredient_id, NULL, category_id, name, 1, '캔', 'MAIN', FALSE FROM ingredient_master WHERE name = '참치캔';
@@ -197,7 +197,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 10. 애호박 두부 된장찌개
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('애호박 두부 된장찌개', '코인육수, 된장, 애호박, 두부로 끓이는 정석 된장찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('애호박 두부 된장찌개', '코인육수, 된장, 애호박, 두부로 끓이는 정석 된장찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_10.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '애호박 두부 된장찌개'), master_ingredient_id, NULL, category_id, name, 30, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '된장';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '애호박 두부 된장찌개'), master_ingredient_id, NULL, category_id, name, 0.5, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '애호박';
@@ -217,7 +217,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 11. 차돌/우삼겹 된장찌개
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('차돌/우삼겹 된장찌개', '고소한 소고기 기름이 녹아든 진한 고깃집 스타일 된장찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 20, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('차돌/우삼겹 된장찌개', '고소한 소고기 기름이 녹아든 진한 고깃집 스타일 된장찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 20, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_11.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '차돌/우삼겹 된장찌개'), master_ingredient_id, NULL, category_id, name, 100, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '소고기 (차돌박이/우삼겹)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '차돌/우삼겹 된장찌개'), master_ingredient_id, NULL, category_id, name, 30, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '된장';
@@ -237,7 +237,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 12. 맑은 콩나물국
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('맑은 콩나물국', '코인육수와 대파, 청양고추로 시원 칼칼하게 끓인 해장국', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('맑은 콩나물국', '코인육수와 대파, 청양고추로 시원 칼칼하게 끓인 해장국', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_12.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '맑은 콩나물국'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '콩나물';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '맑은 콩나물국'), master_ingredient_id, NULL, category_id, name, 0.3, '뿌리', 'SUB', FALSE FROM ingredient_master WHERE name = '대파';
@@ -254,7 +254,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 13. 소고기 미역국
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('소고기 미역국', '참기름에 달달 볶은 소고기와 미역으로 깊게 우려낸 국', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 30, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('소고기 미역국', '참기름에 달달 볶은 소고기와 미역으로 깊게 우려낸 국', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 30, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_13.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '소고기 미역국'), master_ingredient_id, NULL, category_id, name, 20, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '미역';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '소고기 미역국'), master_ingredient_id, NULL, category_id, name, 100, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '소고기 (국거리/불고기용)';
@@ -271,7 +271,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 14. 사골 떡만둣국
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('사골 떡만둣국', '시판 사골곰탕 파우치, 냉동만두, 떡국떡으로 10분 완성', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('사골 떡만둣국', '시판 사골곰탕 파우치, 냉동만두, 떡국떡으로 10분 완성', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_14.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '사골 떡만둣국'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '사골곰탕 (파우치)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '사골 떡만둣국'), master_ingredient_id, NULL, category_id, name, 150, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '떡국떡';
@@ -291,7 +291,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 15. 칼칼한 감자 고추장찌개
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('칼칼한 감자 고추장찌개', '감자, 양파, 돼지고기를 고추장 국물에 자작하게 끓인 찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 25, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('칼칼한 감자 고추장찌개', '감자, 양파, 돼지고기를 고추장 국물에 자작하게 끓인 찌개', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '국/찌개/탕'), 1, 25, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_15.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '칼칼한 감자 고추장찌개'), master_ingredient_id, NULL, category_id, name, 1, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '감자';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '칼칼한 감자 고추장찌개'), master_ingredient_id, NULL, category_id, name, 100, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (앞다리살/찌개용)';
@@ -312,7 +312,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 16. 대파 콩나물 해장라면
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('대파 콩나물 해장라면', '라면에 콩나물과 송송 썬 대파를 듬뿍 넣은 해장 분식', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('대파 콩나물 해장라면', '라면에 콩나물과 송송 썬 대파를 듬뿍 넣은 해장 분식', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_16.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '대파 콩나물 해장라면'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '라면';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '대파 콩나물 해장라면'), master_ingredient_id, NULL, category_id, name, 0.5, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '콩나물';
@@ -328,7 +328,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 17. 만두 계란라면
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('만두 계란라면', '냉동만두와 계란을 풀어 한 끼 식사로 든든하게 채우는 라면', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 10, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('만두 계란라면', '냉동만두와 계란을 풀어 한 끼 식사로 든든하게 채우는 라면', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 10, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_17.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '만두 계란라면'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '라면';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '만두 계란라면'), master_ingredient_id, NULL, category_id, name, 3, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '만두 (냉동)';
@@ -343,7 +343,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 18. 초간단 비빔라면/비빔면
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('초간단 비빔라면/비빔면', '고추장, 진간장, 설탕, 참기름 베이스 양념의 비빔면', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('초간단 비빔라면/비빔면', '고추장, 진간장, 설탕, 참기름 베이스 양념의 비빔면', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_18.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '초간단 비빔라면/비빔면'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '라면';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '초간단 비빔라면/비빔면'), master_ingredient_id, NULL, category_id, name, 15, 'g', 'SUB', FALSE FROM ingredient_master WHERE name = '고추장';
@@ -361,7 +361,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 19. 국물 떡볶이
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('국물 떡볶이', '떡국떡, 대파, 소시지를 넣고 끓여낸 분식집 스타일 떡볶이', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 15, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('국물 떡볶이', '떡국떡, 대파, 소시지를 넣고 끓여낸 분식집 스타일 떡볶이', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '면/만두'), 1, 15, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_19.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '국물 떡볶이'), master_ingredient_id, NULL, category_id, name, 200, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '떡국떡';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '국물 떡볶이'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', TRUE FROM ingredient_master WHERE name = '소시지 (프랑크/후랑크)';
@@ -380,7 +380,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 20. 앞다리살 제육볶음
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('앞다리살 제육볶음', '양파, 대파, 매콤 양념에 센 불로 볶아낸 메인 밥도둑', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 20, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('앞다리살 제육볶음', '양파, 대파, 매콤 양념에 센 불로 볶아낸 메인 밥도둑', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 20, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_20.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '앞다리살 제육볶음'), master_ingredient_id, NULL, category_id, name, 200, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (앞다리살/찌개용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '앞다리살 제육볶음'), master_ingredient_id, NULL, category_id, name, 0.5, '개', 'SUB', FALSE FROM ingredient_master WHERE name = '양파';
@@ -402,7 +402,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 21. 삼겹살 두부김치
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('삼겹살 두부김치', '노릇하게 구운 삼겹살과 볶은 김치, 따뜻한 두부의 삼합', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '안주/야식'), 1, 20, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('삼겹살 두부김치', '노릇하게 구운 삼겹살과 볶은 김치, 따뜻한 두부의 삼합', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '안주/야식'), 1, 20, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_21.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '삼겹살 두부김치'), master_ingredient_id, NULL, category_id, name, 150, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (삼겹살/목살)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '삼겹살 두부김치'), master_ingredient_id, NULL, category_id, name, 200, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '배추김치';
@@ -421,7 +421,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 22. 소시지 야채볶음 (쏘야)
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('소시지 야채볶음 (쏘야)', '소시지, 양파, 당근에 케첩과 굴소스를 넣고 볶은 반찬', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('소시지 야채볶음 (쏘야)', '소시지, 양파, 당근에 케첩과 굴소스를 넣고 볶은 반찬', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_22.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '소시지 야채볶음 (쏘야)'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '소시지 (프랑크/후랑크)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '소시지 야채볶음 (쏘야)'), master_ingredient_id, NULL, category_id, name, 0.5, '개', 'SUB', FALSE FROM ingredient_master WHERE name = '양파';
@@ -441,7 +441,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 23. 굴소스 닭다리살 대파 볶음
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('굴소스 닭다리살 대파 볶음', '뼈 없는 닭다리살 정육과 통대파를 굴소스 양념에 볶은 요리', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 20, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('굴소스 닭다리살 대파 볶음', '뼈 없는 닭다리살 정육과 통대파를 굴소스 양념에 볶은 요리', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 20, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_23.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '굴소스 닭다리살 대파 볶음'), master_ingredient_id, NULL, category_id, name, 200, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '닭다리살 정육';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '굴소스 닭다리살 대파 볶음'), master_ingredient_id, NULL, category_id, name, 1, '뿌리', 'MAIN', FALSE FROM ingredient_master WHERE name = '대파';
@@ -461,7 +461,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 24. 베이컨 팽이버섯 말이 구이
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('베이컨 팽이버섯 말이 구이', '팽이버섯을 베이컨으로 돌돌 말아 노릇하게 구운 구이', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('베이컨 팽이버섯 말이 구이', '팽이버섯을 베이컨으로 돌돌 말아 노릇하게 구운 구이', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_24.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '베이컨 팽이버섯 말이 구이'), master_ingredient_id, NULL, category_id, name, 1, '팩', 'MAIN', FALSE FROM ingredient_master WHERE name = '베이컨';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '베이컨 팽이버섯 말이 구이'), master_ingredient_id, NULL, category_id, name, 1, '봉지', 'MAIN', FALSE FROM ingredient_master WHERE name = '팽이버섯';
@@ -475,7 +475,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 25. 바삭 감자채전
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('바삭 감자채전', '감자를 가늘게 채 썰어 바삭하게 부쳐낸 전', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('바삭 감자채전', '감자를 가늘게 채 썰어 바삭하게 부쳐낸 전', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_25.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '바삭 감자채전'), master_ingredient_id, NULL, category_id, name, 2, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '감자';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '바삭 감자채전'), master_ingredient_id, NULL, category_id, name, 3, 'g', 'SUB', FALSE FROM ingredient_master WHERE name = '소금';
@@ -489,7 +489,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 26. 노릇한 순살 고등어 구이
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('노릇한 순살 고등어 구이', '순살 고등어 토막을 프라이팬에 겉바속촉으로 구워낸 생선구이', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 15, '쉬움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('노릇한 순살 고등어 구이', '순살 고등어 토막을 프라이팬에 겉바속촉으로 구워낸 생선구이', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 15, '쉬움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_26.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '노릇한 순살 고등어 구이'), master_ingredient_id, NULL, category_id, name, 1, '토막', 'MAIN', FALSE FROM ingredient_master WHERE name = '고등어 (순살/토막)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '노릇한 순살 고등어 구이'), master_ingredient_id, NULL, category_id, name, 15, 'ml', 'SUB', FALSE FROM ingredient_master WHERE name = '식용유';
@@ -502,7 +502,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 27. 단짠 돼지갈비찜
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('단짠 돼지갈비찜', '갈비찜용 돼지고기와 감자, 당근을 간장 양념에 푹 졸인 요리', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '어려움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('단짠 돼지갈비찜', '갈비찜용 돼지고기와 감자, 당근을 간장 양념에 푹 졸인 요리', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '어려움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_27.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '단짠 돼지갈비찜'), master_ingredient_id, NULL, category_id, name, 300, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (갈비찜/등갈비용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '단짠 돼지갈비찜'), master_ingredient_id, NULL, category_id, name, 1, '개', 'SUB', FALSE FROM ingredient_master WHERE name = '감자';
@@ -523,7 +523,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 28. 부드러운 통삼겹 수육
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('부드러운 통삼겹 수육', '된장, 대파, 통마늘을 넣고 촉촉하게 삶아낸 보쌈', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '어려움', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('부드러운 통삼겹 수육', '된장, 대파, 통마늘을 넣고 촉촉하게 삶아낸 보쌈', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '어려움', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_28.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '부드러운 통삼겹 수육'), master_ingredient_id, NULL, category_id, name, 300, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (보쌈용/수육용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '부드러운 통삼겹 수육'), master_ingredient_id, NULL, category_id, name, 30, 'g', 'SUB', FALSE FROM ingredient_master WHERE name = '된장';
@@ -539,7 +539,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 29. 고등어 무 조림
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('고등어 무 조림', '말랑한 무와 순살 고등어를 칼칼한 양념 국물에 자작하게 졸인 밥도둑 조림', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 30, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('고등어 무 조림', '말랑한 무와 순살 고등어를 칼칼한 양념 국물에 자작하게 졸인 밥도둑 조림', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 30, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_29.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '고등어 무 조림'), master_ingredient_id, NULL, category_id, name, 2, '토막', 'MAIN', FALSE FROM ingredient_master WHERE name = '고등어 (순살/토막)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '고등어 무 조림'), master_ingredient_id, NULL, category_id, name, 0.3, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '무';
@@ -560,7 +560,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 30. 촉촉한 뚝배기 달걀찜
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('촉촉한 뚝배기 달걀찜', '계란과 송송 썬 대파, 소금/액젓으로 부드럽게 쪄낸 계란찜', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '보통', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('촉촉한 뚝배기 달걀찜', '계란과 송송 썬 대파, 소금/액젓으로 부드럽게 쪄낸 계란찜', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '밑반찬'), 1, 15, '보통', 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/recipes/thumbnails/recipe_30.png');
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '촉촉한 뚝배기 달걀찜'), master_ingredient_id, NULL, category_id, name, 3, '개', 'MAIN', FALSE FROM ingredient_master WHERE name = '계란';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '촉촉한 뚝배기 달걀찜'), master_ingredient_id, NULL, category_id, name, 0.3, '뿌리', 'SUB', FALSE FROM ingredient_master WHERE name = '대파';
