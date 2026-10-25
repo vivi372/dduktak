@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, LogIn, Plus, Sparkles, ChefHat } from 'lucide-react';
+import { ArrowRight, LogIn, Plus, Sparkles, ChefHat, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DDayBadge } from '@/components/common/DDayBadge';
@@ -8,25 +8,56 @@ import { RecipeCard } from '@/components/common/RecipeCard';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { HorizontalCarousel } from '@/components/common/HorizontalCarousel';
 import { ROUTES } from '@/constants/routes';
-import { mockEmptyHomeBriefing, mockHomeBriefing, mockPopularRecipes, mockRecipes } from '@/mocks';
+import { mockPopularRecipes, mockRecipes } from '@/mocks';
 import { useAuth } from '@/hooks/useAuth';
-import { useMockAuthStore } from '@/store/mockAuthStore';
+import { useHomeBriefing } from '@/hooks/useHome';
+import type { RecipeSummary, RecipeDifficulty } from '@/types/recipe';
 import logo from '@/assets/logo.png';
+
+/** 난이도 문자열을 RecipeDifficulty 유니온으로 안전 변환 */
+function normalizeDifficulty(diff?: string): RecipeDifficulty {
+  if (diff === '보통') return '보통';
+  if (diff === '어려움') return '어려움';
+  return '쉬움';
+}
 
 /**
  * 모듈 6: 메인 홈 화면 (HomePage)
  * - 유저 닉네임 환영 Hero 섹션
- * - 냉장고 브리핑 위젯 (정상 임박 집계 vs 재료 0개 Empty State)
- * - 오늘 뭐 먹지? 스마트 매칭 가로 캐러셀 (정상 매칭 vs 재료 0개 인기 레시피 폴백)
+ * - 냉장고 브리핑 위젯 (GET /api/v1/home/briefing 연동, 정상 임박 집계 vs 재료 0개 Empty State)
+ * - 오늘 뭐 먹지? 스마트 매칭 캐러셀 (정상 매칭 vs 재료 0개 인기 레시피 0% 폴백)
  * - 지금 인기있는 뚝딱 요리 세로 리스트
  */
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
-  const { hasIngredients } = useMockAuthStore();
 
-  // 목 데이터 스토어의 hasIngredients 상태에 따라 정상 브리핑 또는 0개 폴백 선택
-  const briefing = hasIngredients ? mockHomeBriefing : mockEmptyHomeBriefing;
+  // 실제 메인 홈 브리핑 API 쿼리 훅 연동
+  const { data: briefing, isLoading: isBriefingLoading } = useHomeBriefing();
+
+  // 임박 재료 보유 여부 (0 <= D-Day <= 3 범위 집계)
+  const hasExpiringIngredients =
+    Boolean(briefing && briefing.expiringIngredientsCount > 0 && briefing.imminentIngredients.length > 0);
+
+  // topRecipe 데이터가 있고 실제 매칭률이 0보다 큰지 여부
+  const hasSmartMatch = Boolean(briefing?.topRecipe && briefing.topRecipe.matchingRate > 0);
+
+  // topRecipe를 RecipeSummary 모델 형태로 정규화
+  const topRecipeSummary: RecipeSummary | null = briefing?.topRecipe
+    ? {
+        recipeId: briefing.topRecipe.recipeId,
+        recipeCategoryId: 1,
+        categoryName: '뚝딱 추천',
+        title: briefing.topRecipe.title,
+        thumbnailUrl: briefing.topRecipe.thumbnailUrl || mockRecipes[0]?.thumbnailUrl,
+        cookingTime: briefing.topRecipe.cookingTime ?? 15,
+        difficulty: normalizeDifficulty(briefing.topRecipe.difficulty),
+        likeCount: 12,
+        cookedCount: 8,
+        authorNickname: '뚝딱 셰프',
+        authorTag: '1024',
+      }
+    : null;
 
   /** 하단 FAB 재료 추가 바텀시트 호출 */
   const handleOpenAddTray = () => {
@@ -70,7 +101,7 @@ export default function HomePage() {
           />
           <div className="min-w-0 flex-1">
             <p className="text-[11px] sm:text-xs font-bold font-heading text-brand-700 dark:text-brand-300 truncate">
-              {isAuthenticated ? `안녕하세요, ${user?.nickname || '회원'}님 👋` : '반가워요, 자취 요리사님 👋'}
+              {isAuthenticated ? `안녕하세요, ${briefing?.nickname || user?.nickname || '회원'}님 👋` : '반가워요, 자취 요리사님 👋'}
             </p>
             <h1 className="mt-1 text-base sm:text-xl font-black leading-tight sm:leading-snug tracking-tight text-foreground break-keep">
               오늘도 냉장고를
@@ -78,7 +109,9 @@ export default function HomePage() {
               뚝딱 비워볼까요?
             </h1>
             <p className="mt-1 text-[11px] sm:text-xs text-muted-foreground break-keep leading-tight">
-              {hasIngredients ? '남은 재료로 맛있는 요리를 추천해요' : '재료를 등록하고 맞춤 요리를 찾아보세요'}
+              {hasExpiringIngredients
+                ? '남은 재료로 맛있는 요리를 추천해요'
+                : '재료를 등록하고 맞춤 요리를 찾아보세요'}
             </p>
           </div>
         </div>
@@ -87,7 +120,12 @@ export default function HomePage() {
 
       {/* 3. 내 냉장고 브리핑 위젯 (06_UI_UX_GUIDELINES.md & module_06_main.md 2.1절) */}
       <section aria-label="내 냉장고 브리핑">
-        {hasIngredients && briefing.imminentIngredients.length > 0 ? (
+        {isBriefingLoading ? (
+          <Card className="flex items-center justify-center p-8 gap-2">
+            <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+            <span className="text-xs text-muted-foreground">냉장고 상태를 확인하는 중...</span>
+          </Card>
+        ) : hasExpiringIngredients && briefing ? (
           /* [정상 브리핑 상태]: D-0 ~ D-3 범위 임박 집계 및 상위 3개 재료 노출 */
           <Link to={ROUTES.INVENTORY} className="block group">
             <Card className="p-4 transition-all group-hover:border-brand-300 group-hover:shadow-soft active:scale-[0.99]">
@@ -138,14 +176,20 @@ export default function HomePage() {
       <section aria-label="스마트 매칭 레시피">
         <SectionHeader
           title="오늘 뭐 먹지? 🍳"
-          description={hasIngredients ? '내 냉장고 재료 매칭 순서예요' : '재료 등록 전 둘러보는 추천 요리'}
+          description={hasSmartMatch ? '내 냉장고 재료 매칭 순서예요' : '재료 등록 전 둘러보는 추천 요리'}
           moreTo={ROUTES.RECIPES}
         />
 
-        {hasIngredients ? (
-          /* [정상 매칭 캐러셀]: 높은 매칭률(%) 순 좌우 스크롤 탐색 (PC 휠/드래그/버튼 지원) */
+        {hasSmartMatch && topRecipeSummary ? (
+          /* [정상 매칭 캐러셀]: 백엔드 브리핑 topRecipe 및 높은 매칭률 순 탐색 */
           <HorizontalCarousel>
-            {mockRecipes.map((recipe) => (
+            <RecipeCard
+              key={topRecipeSummary.recipeId}
+              recipe={topRecipeSummary}
+              matchingRate={briefing?.topRecipe?.matchingRate}
+              variant="carousel"
+            />
+            {mockRecipes.slice(0, 3).map((recipe) => (
               <RecipeCard
                 key={recipe.recipeId}
                 recipe={recipe}
@@ -155,7 +199,7 @@ export default function HomePage() {
             ))}
           </HorizontalCarousel>
         ) : (
-          /* [재료 0개 폴백]: module_06_main.md 2.2절 명세 - 인기 레시피 1건(매칭 0%) 폴백 & 안내 카드 */
+          /* [재료 0개 또는 매칭 불가 폴백]: 백엔드 반환 인기 레시피(0% 매칭률) 폴백 바인딩 */
           <div className="space-y-3">
             {/* 0개 유저용 폴백 가이드 카드 */}
             <Card className="flex items-center gap-3.5 bg-brand-50/60 p-4 border-dashed border-brand-300 dark:bg-brand-900/10 dark:border-brand-800">
@@ -171,14 +215,23 @@ export default function HomePage() {
             </Card>
 
             {/* 인기 레시피 1건 폴백 (매칭률 0% 표기) */}
-            {mockPopularRecipes.slice(0, 1).map((fallbackRecipe) => (
+            {topRecipeSummary ? (
               <RecipeCard
-                key={fallbackRecipe.recipeId}
-                recipe={fallbackRecipe}
+                key={topRecipeSummary.recipeId}
+                recipe={topRecipeSummary}
                 matchingRate={0}
                 variant="list"
               />
-            ))}
+            ) : (
+              mockPopularRecipes.slice(0, 1).map((fallbackRecipe) => (
+                <RecipeCard
+                  key={fallbackRecipe.recipeId}
+                  recipe={fallbackRecipe}
+                  matchingRate={0}
+                  variant="list"
+                />
+              ))
+            )}
           </div>
         )}
       </section>

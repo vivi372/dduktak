@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Receipt, Bot, Sparkles, AlertCircle } from 'lucide-react';
+import { X, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   ReceiptImagePicker,
@@ -15,10 +15,11 @@ import {
 } from '@/mocks/ocr_scan.mock';
 import type { InventoryItem } from '@/types/inventory';
 import { useBodyScrollLock } from '@/hooks';
+import { useScanReceiptOcr } from '@/hooks/useInventory';
 
 export type ReceiptOcrStep = 'UPLOAD' | 'SCANNING' | 'REVIEW' | 'FAIL_SAFE';
 
-interface ReceiptOcrModalProps {
+export interface ReceiptOcrModalProps {
   open: boolean;
   onClose: () => void;
   /** 선택된 검수 품목 일괄 등록 콜백 */
@@ -32,9 +33,9 @@ interface ReceiptOcrModalProps {
 /**
  * 영수증 OCR 스캔 및 수동 검수 통합 모달 (INV-01-3)
  * - Step 1: UPLOAD (모바일 카메라/갤러리 액션시트 vs PC 드래그앤드롭 + 실시간 미리보기)
- * - Step 2: SCANNING (프로그레스 바 0~100% + 식재료 4행 Skeleton UI)
- * - Step 3: REVIEW (수동 검수 모달: 체크박스, 표준 매핑 배지, 44px+ 수량, CustomDatePicker)
- * - Step 4: FAIL_SAFE (인식 실패 안내 & 수동 등록 Combobox 화면 리다이렉트 스캐폴딩)
+ * - Step 2: SCANNING (프로그레스 바 0~100% + Gemini Flash OCR API POST /api/v1/inventory/scan-ocr 연동)
+ * - Step 3: REVIEW (수동 검수 모달: 체크박스, 표준 매핑 배지, 수량, CustomDatePicker)
+ * - Step 4: FAIL_SAFE (인식 실패 또는 빈 배열 수신 시 수동 등록 Combobox 화면 리다이렉트)
  */
 export function ReceiptOcrModal({
   open,
@@ -49,6 +50,9 @@ export function ReceiptOcrModal({
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [ocrItems, setOcrItems] = useState<OcrParsedItemWithRaw[]>(mockOcrParsedItems);
 
+  // 실제 Gemini Flash OCR API 뮤테이션 훅
+  const scanOcrMutation = useScanReceiptOcr();
+
   // 모달이 다시 열릴 때 초기 상태로 리셋
   useEffect(() => {
     if (open) {
@@ -60,22 +64,65 @@ export function ReceiptOcrModal({
 
   if (!open) return null;
 
-  // 1. 이미지 선택 완료 -> 스캔 로딩 단계로 전이
-  const handleSelectImage = (_file: File | null, url: string) => {
+  /** 날짜 기준 D-Day 간이 연산 */
+  const calculateDDay = (expireDateStr: string): number => {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const target = new Date(expireDateStr);
+      target.setHours(0, 0, 0, 0);
+      return Math.round((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    } catch {
+      return 7;
+    }
+  };
+
+  // 1. 이미지 파일 선택 완료 -> 실제 API 호출 및 스캔 로딩 단계로 전이
+  const handleSelectImage = async (file: File | null, url: string) => {
     setPreviewUrl(url);
     setStep('SCANNING');
+
+    if (file) {
+      try {
+        const responseItems = await scanOcrMutation.mutateAsync(file);
+        if (responseItems && responseItems.length > 0) {
+          const mappedItems: OcrParsedItemWithRaw[] = responseItems.map((item, idx) => ({
+            id: `ocr-${Date.now()}-${idx}`,
+            masterIngredientId: item.masterIngredientId,
+            name: item.name,
+            rawName: item.name,
+            rawText: item.name,
+            confidence: 0.95,
+            categoryId: 1,
+            categoryName: '식재료',
+            quantity: item.quantity || 1,
+            unit: item.unit || '개',
+            recommendedExpireDate: item.recommendedExpireDate,
+            dDay: calculateDDay(item.recommendedExpireDate),
+            selected: true,
+          }));
+          setOcrItems(mappedItems);
+        } else {
+          // 백엔드가 빈 배열(data: [])을 반환한 경우 (인식 실패)
+          setOcrItems([]);
+        }
+      } catch {
+        // 네트워크 장애 또는 API 오류 시 빈 배열로 안전하게 초기화
+        setOcrItems([]);
+      }
+    }
   };
 
   // 1-1. 샘플 영수증으로 빠른 체험
   const handleSelectSample = () => {
     setPreviewUrl(SAMPLE_RECEIPT_PREVIEW_URL);
     setStep('SCANNING');
+    setOcrItems(mockOcrParsedItems);
   };
 
-  // 2. 스캔 로딩 완료 핸들러
+  // 2. 스캔 로딩 애니메이션 완료 핸들러
   const handleScanComplete = (isSuccess: boolean) => {
-    if (isSuccess) {
-      setOcrItems(mockOcrParsedItems);
+    if (isSuccess && ocrItems.length > 0) {
       setStep('REVIEW');
     } else {
       setStep('FAIL_SAFE');
@@ -100,123 +147,120 @@ export function ReceiptOcrModal({
     switch (step) {
       case 'UPLOAD':
         return {
-          title: '영수증 사진 등록',
-          desc: '모바일 카메라 촬영 또는 PC 이미지를 업로드해 주세요.',
-          Icon: Receipt,
+          title: '영수증 스캔',
+          badge: 'Gemini AI',
+          description: '장보고 받은 종이 영수증 사진을 올려주세요.',
         };
       case 'SCANNING':
         return {
-          title: '영수증 AI 분석',
-          desc: '영수증 속 식재료와 소비기한을 추출하고 있습니다.',
-          Icon: Bot,
+          title: '영수증 분석 중',
+          badge: 'AI 파싱',
+          description: 'Gemini Flash AI가 영수증 품목과 소비기한을 자동 인식하고 있어요.',
         };
       case 'REVIEW':
         return {
           title: '영수증 OCR 결과 검수',
-          desc: '인식된 재료의 수량과 소비기한을 확인해 주세요.',
-          Icon: Sparkles,
+          badge: `${ocrItems.filter((i) => i.selected).length}개 선택`,
+          description: '인식된 품목을 확인하고 필요 시 수량 및 날짜를 수정해 주세요.',
         };
       case 'FAIL_SAFE':
         return {
-          title: '영수증 인식 결과 안내',
-          desc: '선명한 판독을 위해 다시 시도하거나 직접 등록해 보세요.',
-          Icon: AlertCircle,
+          title: '인식 결과 안내',
+          badge: '예외 복구',
+          description: '영수증 글자가 흐릿하여 품목을 자동으로 읽어오지 못했습니다.',
         };
     }
   };
 
   const headerInfo = getHeaderInfo();
-  const HeaderIcon = headerInfo.Icon;
 
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="receipt-ocr-title"
+        aria-labelledby="ocr-modal-title"
       >
-        {/* 배경 딤 */}
+        {/* 배경 백드롭 */}
         <motion.div
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
         />
 
-        {/* 모달 본체 */}
+        {/* 모달 창 */}
         <motion.div
-          className="relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border bg-card shadow-2xl"
+          className="relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
           initial={{ opacity: 0, scale: 0.95, y: 15 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 15 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         >
-          {/* 헤더 */}
-          <div className="flex items-center justify-between border-b px-6 py-4">
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-900/40 dark:text-brand-300">
-                <HeaderIcon className="h-5 w-5" />
+          {/* 모달 상단 헤더 바 */}
+          <div className="flex items-center justify-between border-b border-border/80 px-5 py-3.5 bg-muted/20 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
+                <Receipt className="h-5 w-5" />
               </span>
               <div>
-                <h2 id="receipt-ocr-title" className="text-lg font-extrabold tracking-tight">
-                  {headerInfo.title}
-                </h2>
-                <p className="text-xs text-muted-foreground">{headerInfo.desc}</p>
+                <div className="flex items-center gap-2">
+                  <h2 id="ocr-modal-title" className="text-base font-bold text-foreground">
+                    {headerInfo.title}
+                  </h2>
+                  <span className="rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-extrabold text-brand-600 dark:bg-brand-950 dark:text-brand-300">
+                    {headerInfo.badge}
+                  </span>
+                </div>
+                <p className="text-[11px] text-muted-foreground">{headerInfo.description}</p>
               </div>
             </div>
+
             <button
               type="button"
               onClick={onClose}
-              className="flex h-9 w-9 items-center justify-center rounded-full hover:bg-accent text-muted-foreground transition-colors"
               aria-label="닫기"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-muted-foreground hover:bg-accent hover:text-foreground active:scale-95 transition-all"
             >
-              <X className="h-5 w-5" />
+              <X className="h-4 w-4" />
             </button>
           </div>
 
-          {/* 스텝별 동적 본문 */}
-          <div className="flex-1 overflow-y-auto p-6">
+          {/* 모달 콘텐츠 본문 (스텝 분기) */}
+          <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
             {step === 'UPLOAD' && (
-              <div key="upload" className="animate-in fade-in duration-200">
-                <ReceiptImagePicker
-                  onSelectImage={handleSelectImage}
-                  onSelectSample={handleSelectSample}
-                />
-              </div>
+              <ReceiptImagePicker
+                onSelectImage={handleSelectImage}
+                onSelectSample={handleSelectSample}
+              />
             )}
 
             {step === 'SCANNING' && (
-              <div key="scanning" className="animate-in fade-in duration-200">
-                <ReceiptScanningProgress
-                  onComplete={handleScanComplete}
-                  previewUrl={previewUrl}
-                />
-              </div>
+              <ReceiptScanningProgress
+                onComplete={handleScanComplete}
+                previewUrl={previewUrl}
+              />
             )}
 
             {step === 'REVIEW' && (
-              <div key="review" className="animate-in fade-in duration-200">
-                <ReceiptItemReview
-                  initialItems={ocrItems}
-                  onConfirm={handleConfirmReview}
-                  onReupload={handleRetryUpload}
-                  onClose={onClose}
-                />
-              </div>
+              <ReceiptItemReview
+                initialItems={ocrItems}
+                onConfirm={handleConfirmReview}
+                onReupload={handleRetryUpload}
+                onClose={onClose}
+              />
             )}
 
             {step === 'FAIL_SAFE' && (
-              <div key="fail-safe" className="animate-in fade-in duration-200">
-                <ReceiptFailSafeView
-                  onRetry={handleRetryUpload}
-                  onManualSwitch={() => {
-                    onClose();
-                    onManualSwitch();
-                  }}
-                  onClose={onClose}
-                />
-              </div>
+              <ReceiptFailSafeView
+                onRetry={handleRetryUpload}
+                onManualSwitch={() => {
+                  onClose();
+                  onManualSwitch();
+                }}
+              />
             )}
           </div>
         </motion.div>
@@ -224,3 +268,6 @@ export function ReceiptOcrModal({
     </AnimatePresence>
   );
 }
+
+// OcrReviewModal 이름으로도 호환 export
+export { ReceiptOcrModal as OcrReviewModal };

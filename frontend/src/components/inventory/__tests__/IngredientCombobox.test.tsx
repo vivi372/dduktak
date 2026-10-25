@@ -1,12 +1,24 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IngredientCombobox } from '../IngredientCombobox';
+
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+}
 
 describe('IngredientCombobox 표준 식재료 검색 컴포넌트 단위 테스트', () => {
   it('기본 상태에서는 플레이스홀더 텍스트를 렌더링해야 한다', () => {
     const handleChange = vi.fn();
-    render(<IngredientCombobox onChange={handleChange} />);
+    renderWithProviders(<IngredientCombobox onChange={handleChange} />);
 
     expect(screen.getByText('식재료를 검색하여 선택하세요')).toBeInTheDocument();
   });
@@ -14,7 +26,7 @@ describe('IngredientCombobox 표준 식재료 검색 컴포넌트 단위 테스�
   it('트리거 버튼 클릭 시 검색창과 카테고리 탭, 식재료 목록이 열려야 한다', async () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
-    render(<IngredientCombobox onChange={handleChange} />);
+    renderWithProviders(<IngredientCombobox onChange={handleChange} />);
 
     const trigger = screen.getByRole('combobox');
     await user.click(trigger);
@@ -27,7 +39,7 @@ describe('IngredientCombobox 표준 식재료 검색 컴포넌트 단위 테스�
   it('검색어 입력 시 일치하는 마스터 재료만 필터링되어야 한다', async () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
-    render(<IngredientCombobox onChange={handleChange} />);
+    renderWithProviders(<IngredientCombobox onChange={handleChange} />);
 
     await user.click(screen.getByRole('combobox'));
     const searchInput = screen.getByPlaceholderText(/재료명 검색/);
@@ -42,7 +54,7 @@ describe('IngredientCombobox 표준 식재료 검색 컴포넌트 단위 테스�
   it('식재료 항목 클릭 시 onChange 콜백으로 해당 마스터 객체를 전달해야 한다', async () => {
     const user = userEvent.setup();
     const handleChange = vi.fn();
-    render(<IngredientCombobox onChange={handleChange} />);
+    renderWithProviders(<IngredientCombobox onChange={handleChange} />);
 
     await user.click(screen.getByRole('combobox'));
     const itemBtn = screen.getByText('양파');

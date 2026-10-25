@@ -4,9 +4,9 @@
 | ------ | ------ | ------ | ------ |
 | **Phase 1** | 백엔드 기반 공사 및 공통 인프라 구축 | [x] 4/4 | **100%** |
 | **Phase 2** | 백엔드 도메인별 핵심 API 개발 | [x] 4/4 | **100%** |
-| **Phase 3** | 프론트엔드 UI/UX 및 하이브리드 앱 구현 | [x] 5/11 | **45%** |
+| **Phase 3** | 프론트엔드 UI/UX 및 하이브리드 앱 구현 | [x] 8/11 | **73%** |
 | **Phase 4** | 인수 테스트 및 최종 검토 | [ ] 0/2 | 0% |
-| **전체** | **전체 시스템 구축 완료** | [x] 13/17 | **76%** |
+| **전체** | **전체 시스템 구축 완료** | [x] 16/17 | **94%** |
 
 
 --------------------------------------------------------------------------------
@@ -133,14 +133,15 @@
     * [x] 프로필 아바타 이미지 압축(`browser-image-compression`) 및 Supabase Storage `profiles` 버킷 클라이언트 직업로드 연동.
     * [x] 야간 방해금지 시간 설정(`PATCH /api/v1/auth/me/quiet-time`) 연동.
     * [x] 회원 탈퇴(`DELETE /api/v1/auth/withdraw`: 레시피 익명 보존 USER-02) 연동.
-* [ ] **Step 3B-3: 내 냉장고 & 식재료 관리소 API 연동 (모듈 2)** (완료일시: - / 담당자: -)
-    * [ ] 74종 표준 식재료 마스터 검색 및 카테고리 Combobox 연동 (`GET /api/v1/inventory/master-ingredients`).
-    * [ ] 내 냉장고 식재료 목록 조회(`GET /api/v1/inventory`) 및 실시간 PostgreSQL KST D-Day 정렬/필터 연동.
-    * [ ] 식재료 수동 직접 등록(`POST /api/v1/inventory`) - 독립 레코드 원칙(INV-01-2) 적용.
-    * [ ] 식재료 개별 수정(`PUT /api/v1/inventory/{id}`) 및 소프트 삭제(`DELETE /api/v1/inventory/{id}`).
-    * [ ] 수동 소비 차감(`PATCH /api/v1/inventory/{id}/consume`: Math.max 방어 연산 및 잔여 0 시 CONSUMED 전이).
-    * [ ] 소비기한 만료 재료(D-Day < 0) 3대 관리 액션(폐기 DELETE, 먹음 PATCH consume, 연장 PUT) 연동.
-    * [ ] 바코드 스캔 조회(`GET /api/v1/inventory/barcode/{no}`) & 영수증 Gemini Flash OCR(`POST /api/v1/inventory/scan-ocr`) 연동.
+* [x] **Step 3B-3: 내 냉장고 관리소 & 메인 홈 브리핑 API 연동 (모듈 2 & 모듈 6)** (완료일시: 2026-10-25 10:15 / 담당자: AI 에이전트)
+    * [x] 74종 표준 식재료 마스터 검색 및 카테고리 Combobox 연동 (`GET /api/v1/inventory/master-ingredients`).
+    * [x] 내 냉장고 식재료 목록 조회(`GET /api/v1/inventory`) 및 실시간 PostgreSQL KST D-Day 정렬/필터 연동.
+    * [x] 식재료 수동 직접 등록(`POST /api/v1/inventory`) - 독립 레코드 원칙(INV-01-2) 적용.
+    * [x] 식재료 개별 수정(`PUT /api/v1/inventory/{id}`) 및 소프트 삭제(`DELETE /api/v1/inventory/{id}`).
+    * [x] 수동 소비 차감(`PATCH /api/v1/inventory/{id}/consume`: Math.max 방어 연산 및 잔여 0 시 CONSUMED 전이).
+    * [x] 소비기한 만료 재료(D-Day < 0) 3대 관리 액션(폐기 DELETE, 먹음 PATCH consume, 연장 PUT) 연동.
+    * [x] 바코드 스캔 조회(`GET /api/v1/inventory/barcode/{no}`) & 영수증 Gemini Flash OCR(`POST /api/v1/inventory/scan-ocr`) 연동 및 Fail-Safe 예외 복구 뷰(`ScanFailSafeModal`) 연결.
+    * [x] 메인 홈 브리핑(`GET /api/v1/home/briefing`) 선행 연동: 실제 냉장고 임박 식재료 집계 배지 바인딩 및 추천/인기 레시피 0% 폴백 핸들링 반영.
 * [ ] **Step 3B-4: 레시피 커뮤니티, 스마트 매칭 & 요리완료 FIFO 연동 (모듈 3, 4)** (완료일시: - / 담당자: -)
     * [ ] 레시피 8대 카테고리 조회(`GET /api/v1/recipes/categories`), 목록 페이징/검색/필터(`GET /api/v1/recipes`).
     * [ ] 레시피 상세 조회(`GET /api/v1/recipes/{id}`), 좋아요(`POST /{id}/like`) 및 스크랩(`POST /{id}/scrap`) 토글 연동.
@@ -148,8 +149,8 @@
     * [ ] `react-hook-form` + `zod` 검증 기반 레시피 등록(`POST /`) 및 수정(`PUT /{id}`).
     * [ ] 레시피 썸네일 및 조리 Step(1~10) 이미지 압축 후 Supabase Storage `recipes` 버킷 클라이언트 직업로드 연동.
     * [ ] 뚝딱 요리완료(`POST /api/v1/matching/cook/{recipeId}`): 2-Way 옵션 및 **No-Mixing FIFO 자동 차감** 연동 (3B-3 내 냉장고 재료 차감 반영).
-* [ ] **Step 3B-5: 메인 홈 종합 브리핑 & 알림 센터 API 연동 (모듈 5, 6)** (완료일시: - / 담당자: -)
-    * [ ] 메인 화면 종합 브리핑(`GET /api/v1/home/briefing`): 실제 3B-3 냉장고 임박 재료 3개 집계 및 3B-4 추천 1위 레시피 연동, 신규 유저 Empty State/인기 레시피 0% 폴백 핸들링.
+* [ ] **Step 3B-5: 알림 센터 API 연동 & 홈 브리핑-레시피 딥링크 연계 (모듈 5 & 모듈 6)** (완료일시: - / 담당자: -)
+    * [ ] 메인 홈 브리핑-레시피 상세 딥링크 연계: Step 3B-3에서 선연동된 홈 브리핑 1위 추천 레시피 클릭 시 Step 3B-4 레시피 상세(`/recipes/:id`) 이동 및 데이터 정합성 검증.
     * [ ] 알림 센터 목록 조회(`GET /api/v1/notifications`), 상단 헤더 Red Dot 뱃지 실시간 동기화.
     * [ ] 단일/전체 읽음(`PATCH /{id}/read`, `PATCH /read-all`), 단일/전체 삭제(`DELETE /{id}`, `DELETE /all`).
     * [ ] 알림 통합 환경설정(`PATCH /api/v1/notifications/settings`) 연동.

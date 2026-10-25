@@ -41,7 +41,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
   // 마스터 식재료 선택 시 스마트 기본값 자동 세팅
   const handleSelectMaster = (master: MasterIngredient) => {
     setSelectedMaster(master);
-    setStorageType(master.defaultStorageType);
+    setStorageType(master.defaultStorageType ?? 'REFRIGERATED');
     setExpireDate(format(addDays(new Date(), master.defaultShelfDays), 'yyyy-MM-dd'));
   };
 

@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import InventoryPage from '../InventoryPage';
 
 // sonner toast 모킹
@@ -13,27 +14,33 @@ vi.mock('sonner', () => ({
   },
 }));
 
+function renderWithProviders(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <MemoryRouter>{ui}</MemoryRouter>
+    </QueryClientProvider>,
+  );
+}
+
 describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
   it('타이틀 및 상단 3대 추가 CTA(재료 추가, 바코드, 영수증)를 렌더링해야 한다', () => {
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: '내 냉장고' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '재료 추가' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '바코드 스캔으로 재료 추가' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '영수증 스캔으로 재료 추가' })).toBeInTheDocument();
-
   });
 
   it('2-Tier 아코디언 메인 리스트에 대표 식재료 카드들이 렌더링되어야 한다', () => {
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     expect(screen.getByRole('heading', { level: 2, name: '계란' })).toBeInTheDocument();
     expect(screen.getByRole('heading', { level: 2, name: '양파' })).toBeInTheDocument();
@@ -42,11 +49,7 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
 
   it('보관 장소 필터 탭(냉동) 클릭 시 냉동 재료만 필터링되어야 한다', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     const frozenTab = screen.getByRole('tab', { name: '냉동' });
     await user.click(frozenTab);
@@ -58,11 +61,7 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
 
   it('검색창에 키워드 입력 시 재료명 또는 메모와 일치하는 카드만 노출되어야 한다', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     const searchInput = screen.getByPlaceholderText(/재료명 또는 메모로 검색/);
     await user.type(searchInput, '편의점'); // 계란 메모에 '편의점 1+1 행사' 포함
@@ -72,22 +71,14 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
   });
 
   it('소비기한이 도과한 재료(두부, 떡국떡)는 하단 만료 영역 아코디언으로 분리되어야 한다', () => {
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     expect(screen.getByText(/소비기한이 지난 재료 2개/)).toBeInTheDocument();
   });
 
   it('바코드 버튼 클릭 시 바코드 스캔 모달이 열려야 한다', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     const barcodeBtn = screen.getByRole('button', { name: /바코드 스캔으로 재료 추가/ });
     await user.click(barcodeBtn);
@@ -98,16 +89,12 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
 
   it('영수증 버튼 클릭 시 영수증 OCR 등록 모달이 열려야 한다', async () => {
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <InventoryPage />
-      </MemoryRouter>,
-    );
+    renderWithProviders(<InventoryPage />);
 
     const receiptBtn = screen.getByRole('button', { name: /영수증 스캔으로 재료 추가/ });
     await user.click(receiptBtn);
 
-    expect(screen.getByRole('heading', { name: '영수증 사진 등록' })).toBeInTheDocument();
-    expect(screen.getByText(/샘플 영수증으로 바로 체험하기/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '영수증 스캔' })).toBeInTheDocument();
+    expect(screen.getByText('장보고 받은 종이 영수증 사진을 올려주세요.')).toBeInTheDocument();
   });
 });
