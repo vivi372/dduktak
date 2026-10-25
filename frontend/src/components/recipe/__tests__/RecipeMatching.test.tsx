@@ -86,10 +86,25 @@ describe('인분 변환 계산기 (ServingsCalculator) 단위 테스트', () => 
   });
 });
 
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+const renderWithClient = (ui: React.ReactElement) => {
+  const queryClient = createTestQueryClient();
+  return render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+};
+
 describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터랙션 테스트', () => {
   it('모달 오픈 시 1단계 2-Way 옵션이 렌더링되어야 한다', () => {
     const recipe = mockRecipeDetails[0];
-    render(
+    renderWithClient(
       <CookConfirmationModal
         open={true}
         onClose={vi.fn()}
@@ -105,7 +120,7 @@ describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터�
 
   it('재료 자동으로 차감하고 요리하기 선택 후 다음 단계로 이동하면 차감 검수 화면이 나와야 한다', () => {
     const recipe = mockRecipeDetails[0];
-    render(
+    renderWithClient(
       <CookConfirmationModal
         open={true}
         onClose={vi.fn()}
@@ -121,3 +136,4 @@ describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터�
     expect(screen.getByText('임박한 재료부터 자동 차감')).toBeInTheDocument();
   });
 });
+

@@ -9,6 +9,8 @@ import {
   Sparkles,
   Pencil,
   AlertCircle,
+  Loader2,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import {
@@ -17,59 +19,109 @@ import {
   RecipeStepList,
   CookConfirmationModal,
 } from '@/components/recipe';
-import { mockRecipeDetails } from '@/mocks/recipes.mock';
+import {
+  useRecipeDetail,
+  useToggleRecipeLike,
+  useToggleRecipeScrap,
+  useDeleteRecipe,
+} from '@/hooks/useRecipe';
+import { useMyIngredients } from '@/hooks/useInventory';
+import { useAuth } from '@/hooks/useAuth';
 import { calculateRecipeMatching } from '@/mocks/matching.mock';
-import { mockInventory } from '@/mocks/inventory.mock';
+import { mockRecipeDetails } from '@/mocks/recipes.mock';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/utils/cn';
 
 /**
  * 모듈 3 & 모듈 4: 레시피 상세 화면 (RecipeDetailPage)
+ * - GET /api/v1/recipes/:id 실데이터 조회
+ * - useMyIngredients 연동 4색 식재료 상태 배지 ([보유 🟢], [부족 🔴], [대체가능 🟡], [양념류 ⚪])
  * - 인분 변환 계산기 (1~10인분 비례 자동 연산)
- * - 4색 식재료 상태 배지 ([보유], [부족], [대체가능], [양념류])
- * - 조리 순서 Step 리스트 (완료 체크 지원)
+ * - 좋아요 & 스크랩 토글 API 원자적 갱신
  * - [이 레시피로 요리하기] 2-Step 확인 차감 모달 연동
  */
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const recipeId = Number(id);
 
-  // 레시피 데이터 조회
+  // 1. 레시피 상세 API 조회
+  const {
+    data: fetchedRecipe,
+    isLoading: isRecipeLoading,
+    isError: isRecipeError,
+  } = useRecipeDetail(recipeId);
+
+  // 2. 내 냉장고 보유 식재료 API 조회 (매칭률 및 4색 배지 실시간 계산용)
+  const { data: myIngredients = [] } = useMyIngredients();
+
+  // 3. 좋아요 / 스크랩 / 삭제 뮤테이션
+  const toggleLikeMutation = useToggleRecipeLike();
+  const toggleScrapMutation = useToggleRecipeScrap();
+  const deleteRecipeMutation = useDeleteRecipe();
+
+  // 폴백 레시피 데이터 (네트워크 지연/에러 시 방어)
   const recipe = useMemo(() => {
-    const numId = Number(id);
-    return mockRecipeDetails.find((r) => r.recipeId === numId) ?? mockRecipeDetails[0];
-  }, [id]);
+    if (fetchedRecipe) return fetchedRecipe;
+    return mockRecipeDetails.find((r) => r.recipeId === recipeId) ?? mockRecipeDetails[0];
+  }, [fetchedRecipe, recipeId]);
 
   // 로컬 상호작용 상태
-  const [servings, setServings] = useState<number>(recipe.servings || 1);
-  const [isLiked, setIsLiked] = useState<boolean>(recipe.isLiked ?? false);
-  const [likeCount, setLikeCount] = useState<number>(recipe.likeCount);
-  const [isScrapped, setIsScrapped] = useState<boolean>(recipe.isScrapped ?? false);
-  const [cookedCount, setCookedCount] = useState<number>(recipe.cookedCount);
+  const [servings, setServings] = useState<number>(recipe?.servings || 1);
   const [cookModalOpen, setCookModalOpen] = useState<boolean>(false);
 
-  // 현재 인분 기준 스마트 매칭 스코어 및 재료 상태 재연산
+  // 현재 인분 기준 스마트 매칭 스코어 및 재료 상태 실시간 연산 (실제 myIngredients 연동)
   const matchingScore = useMemo(() => {
-    return calculateRecipeMatching(recipe, mockInventory, servings);
-  }, [recipe, servings]);
+    if (!recipe) {
+      return {
+        recipeId,
+        baseScore: 0,
+        bonusScore: 0,
+        finalScore: 0,
+        isHardGatePassed: false,
+        matchedMainCount: 0,
+        urgentIngredients: [],
+        ingredientStatuses: [],
+      };
+    }
+    return calculateRecipeMatching(recipe, myIngredients, servings);
+  }, [recipe, myIngredients, servings, recipeId]);
+
+  // 본인 작성 레시피 여부
+  const isAuthor = Boolean(user?.userId && recipe?.authorId && user.userId === recipe.authorId);
 
   // 좋아요 토글 핸들러
   const handleToggleLike = () => {
-    setIsLiked((prev) => {
-      const next = !prev;
-      setLikeCount((c) => (next ? c + 1 : c - 1));
-      toast.success(next ? '이 레시피를 좋아해요! ❤️' : '좋아요를 취소했어요.');
-      return next;
+    if (!recipe) return;
+    toggleLikeMutation.mutate(recipe.recipeId, {
+      onSuccess: (res) => {
+        toast.success(res.liked ? '이 레시피를 좋아해요! ❤️' : '좋아요를 취소했어요.');
+      },
     });
   };
 
   // 스크랩 토글 핸들러
   const handleToggleScrap = () => {
-    setIsScrapped((prev) => {
-      const next = !prev;
-      toast.success(next ? '레시피를 보관함에 담았어요! 📌' : '보관함에서 제외했어요.');
-      return next;
+    if (!recipe) return;
+    toggleScrapMutation.mutate(recipe.recipeId, {
+      onSuccess: (res) => {
+        toast.success(res.scrapped ? '레시피를 보관함에 담았어요! 📌' : '보관함에서 제외했어요.');
+      },
     });
+  };
+
+  // 레시피 삭제 핸들러
+  const handleDeleteRecipe = () => {
+    if (!recipe) return;
+    if (window.confirm('정말 이 레시피를 삭제하시겠습니까?')) {
+      deleteRecipeMutation.mutate(recipe.recipeId, {
+        onSuccess: () => {
+          toast.success('레시피가 삭제되었습니다.');
+          navigate(ROUTES.RECIPES);
+        },
+      });
+    }
   };
 
   // 공유 핸들러
@@ -80,12 +132,11 @@ export default function RecipeDetailPage() {
     }
   };
 
-  // 요리 완료 확정 핸들러
+  // 요리 완료 확정 콜백
   const handleConfirmCook = (deductInventory: boolean, cookedServings: number) => {
-    setCookedCount((prev) => prev + 1);
     if (deductInventory) {
       toast.success(
-        `맛있는 요리가 완성되었어요! ${cookedServings}인분 재료를 냉장고에서 차감했어요. 🍳`,
+        `맛있는 요리가 완성되었어요! ${cookedServings}인분 재료가 냉장고에서 차감되었습니다. 🍳`,
         { duration: 4000 },
       );
     } else {
@@ -93,7 +144,17 @@ export default function RecipeDetailPage() {
     }
   };
 
-  if (!recipe) {
+  // 로딩 상태 표시
+  if (isRecipeLoading) {
+    return (
+      <div className="py-24 flex flex-col items-center justify-center text-muted-foreground space-y-3">
+        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+        <p className="text-sm font-medium">레시피 상세 정보를 불러오는 중입니다...</p>
+      </div>
+    );
+  }
+
+  if (isRecipeError && !recipe) {
     return (
       <div className="py-20 text-center">
         <p className="text-muted-foreground">레시피를 찾을 수 없습니다.</p>
@@ -108,26 +169,41 @@ export default function RecipeDetailPage() {
     );
   }
 
+  const isLiked = recipe.isLiked ?? false;
+  const isScrapped = recipe.isScrapped ?? false;
+
   return (
     <div className="space-y-6 pb-6">
       {/* 1. 레시피 대표 히어로 썸네일 & 오버레이 */}
       <div className="relative -mx-4 -mt-4 overflow-hidden aspect-[16/10] sm:aspect-[2/1] sm:rounded-3xl sm:mx-0 sm:mt-0 bg-muted">
         <img
-          src={recipe.thumbnailUrl}
+          src={recipe.thumbnailUrl || '/images/default-recipe.png'}
           alt={recipe.title}
           className="h-full w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
 
-        {/* 상단 액션 아이콘들 (공유, 수정) */}
+        {/* 상단 액션 아이콘들 (공유, 수정, 삭제) */}
         <div className="absolute right-3.5 top-3.5 flex items-center gap-2">
-          <Link
-            to={`/recipes/${recipe.recipeId}/edit`}
-            aria-label="레시피 수정"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/60 active:scale-95"
-          >
-            <Pencil className="h-4 w-4" />
-          </Link>
+          {isAuthor && (
+            <>
+              <Link
+                to={`/recipes/${recipe.recipeId}/edit`}
+                aria-label="레시피 수정"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md transition-colors hover:bg-black/60 active:scale-95"
+              >
+                <Pencil className="h-4 w-4" />
+              </Link>
+              <button
+                type="button"
+                onClick={handleDeleteRecipe}
+                aria-label="레시피 삭제"
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-black/40 text-rose-400 backdrop-blur-md transition-colors hover:bg-black/60 active:scale-95"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </>
+          )}
           <button
             type="button"
             onClick={handleShare}
@@ -167,7 +243,7 @@ export default function RecipeDetailPage() {
           <div className="h-3 w-px bg-border" />
           <div className="flex items-center gap-1.5">
             <ChefHat className="h-4 w-4 text-amber-500" />
-            <span className="text-foreground">{cookedCount}회 요리됨</span>
+            <span className="text-foreground">{recipe.cookedCount}회 요리됨</span>
           </div>
         </div>
 
@@ -176,6 +252,7 @@ export default function RecipeDetailPage() {
           <button
             type="button"
             onClick={handleToggleLike}
+            disabled={toggleLikeMutation.isPending}
             aria-label={isLiked ? '좋아요 취소' : '좋아요'}
             className={cn(
               'flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-bold transition-all active:scale-95',
@@ -185,12 +262,13 @@ export default function RecipeDetailPage() {
             )}
           >
             <Heart className={cn('h-4 w-4', isLiked && 'fill-current text-rose-500')} />
-            <span>{likeCount}</span>
+            <span>{recipe.likeCount}</span>
           </button>
 
           <button
             type="button"
             onClick={handleToggleScrap}
+            disabled={toggleScrapMutation.isPending}
             aria-label={isScrapped ? '스크랩 취소' : '스크랩'}
             className={cn(
               'flex h-8 w-8 items-center justify-center rounded-full transition-all active:scale-95',
@@ -272,7 +350,7 @@ export default function RecipeDetailPage() {
       {/* 6. 조리 순서 Step 리스트 */}
       <RecipeStepList steps={recipe.steps} />
 
-      {/* 7. 조리 완료 & 재료 차감 유도 카드 (ThumbZone 위에 자연스럽게 배치) */}
+      {/* 7. 조리 완료 & 재료 차감 유도 카드 */}
       <div className="space-y-3 rounded-3xl border border-brand-500/25 bg-gradient-to-br from-brand-50/70 via-background to-mint-50/50 p-5 text-center shadow-card dark:border-brand-500/20 dark:from-card dark:via-card dark:to-card/80">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300">
           <ChefHat className="h-6 w-6 stroke-[2.2]" />

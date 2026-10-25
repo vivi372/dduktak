@@ -76,6 +76,10 @@ export function useInventoryList(params?: InventoryQueryParams) {
   });
 }
 
+/** 내 냉장고 식재료 목록 조회 별칭 훅 (useInventoryList와 동일) */
+export const useMyIngredients = useInventoryList;
+
+
 /**
  * 내 냉장고 식재료 수동 직접 등록 뮤테이션 훅 (POST /api/v1/inventory)
  * 독립 레코드 원칙(INV-01-2) 적용

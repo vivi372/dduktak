@@ -17,9 +17,10 @@ import logo from '@/assets/logo.png';
 /** 난이도 문자열을 RecipeDifficulty 유니온으로 안전 변환 */
 function normalizeDifficulty(diff?: string): RecipeDifficulty {
   if (diff === '보통') return '보통';
-  if (diff === '어려움') return '어려움';
+  if (diff === '조금복잡' || diff === '어려움') return '조금복잡';
   return '쉬움';
 }
+
 
 /**
  * 모듈 6: 메인 홈 화면 (HomePage)

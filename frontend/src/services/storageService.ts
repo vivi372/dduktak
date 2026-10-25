@@ -74,3 +74,46 @@ export async function uploadProfileAvatar(
 
   return publicUrlData.publicUrl;
 }
+
+/**
+ * 레시피 대표 썸네일 또는 조리 Step 이미지 압축 및 Supabase Storage 'recipes' 버킷 업로드 (01_TECH_STACK_AND_LIBS.md 5.1절)
+ *
+ * @param fileOrDataUrl 원본 파일 객체 또는 DataURL
+ * @param pathPrefix 'thumbnails' | 'steps' 경로 접두사
+ * @returns Supabase Storage Public URL 문자열
+ */
+export async function uploadRecipeImage(
+  fileOrDataUrl: File | Blob | string,
+  pathPrefix: 'thumbnails' | 'steps' = 'thumbnails',
+): Promise<string> {
+  const timestamp = Date.now();
+  const randomSuffix = Math.random().toString(36).substring(2, 8);
+  const sourceFile: File =
+    typeof fileOrDataUrl === 'string'
+      ? dataUrlToFile(fileOrDataUrl, `${pathPrefix}_${timestamp}.jpg`)
+      : fileOrDataUrl instanceof File
+        ? fileOrDataUrl
+        : new File([fileOrDataUrl], `${pathPrefix}_${timestamp}.webp`, { type: 'image/webp' });
+
+  // browser-image-compression을 통한 1MB 이하 압축 (WebP, 가로 1080px 기준)
+  const compressedFile = await imageCompression(sourceFile, DEFAULT_COMPRESSION_OPTIONS);
+
+  // 고유 파일 경로 생성
+  const filePath = `${pathPrefix}/${timestamp}_${randomSuffix}.webp`;
+
+  // Supabase Storage 'recipes' 버킷 직업로드
+  const { data, error } = await supabase.storage.from('recipes').upload(filePath, compressedFile, {
+    cacheControl: '3600',
+    upsert: true,
+    contentType: 'image/webp',
+  });
+
+  if (error) {
+    throw new Error(`레시피 이미지 업로드 실패: ${error.message}`);
+  }
+
+  // Public URL 추출 및 반환
+  const { data: publicUrlData } = supabase.storage.from('recipes').getPublicUrl(data.path);
+  return publicUrlData.publicUrl;
+}
+

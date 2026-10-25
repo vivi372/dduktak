@@ -11,8 +11,10 @@ import {
   Minus,
   Plus,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { useBodyScrollLock } from '@/hooks';
+import { useCookRecipe } from '@/hooks/useMatching';
 import { calculateFifoDeductionItems } from '@/mocks/matching.mock';
 import type { RecipeDetail } from '@/types/recipe';
 import type { FifoDeductionItem } from '@/types/matching';
@@ -76,25 +78,47 @@ export function CookConfirmationModal({
     });
   }, [baseDeductions, customQuantities]);
 
+  // 스마트 매칭 요리완료 및 FIFO 자동 차감 뮤테이션 연동
+  const cookMutation = useCookRecipe();
+
   if (!open) return null;
 
-  // 1단계 제출 핸들러
+  // 1단계 제출 핸들러 (기록 전용 선택 시 즉시 실행)
   const handleStep1Submit = () => {
     if (deductOption === 'RECORD_ONLY') {
-      onConfirmCook(false, servings);
-      onClose();
-      resetState();
+      cookMutation.mutate(
+        {
+          recipeId: recipe.recipeId,
+          dto: { deductInventory: false, servings },
+        },
+        {
+          onSuccess: () => {
+            onConfirmCook(false, servings);
+            handleClose();
+          },
+        },
+      );
     } else {
       setStep(2);
     }
   };
 
-  // 2단계 최종 확정 핸들러
+  // 2단계 최종 확정 핸들러 (냉장고 선입선출 자동 차감)
   const handleFinalConfirm = () => {
-    onConfirmCook(true, servings);
-    onClose();
-    resetState();
+    cookMutation.mutate(
+      {
+        recipeId: recipe.recipeId,
+        dto: { deductInventory: true, servings },
+      },
+      {
+        onSuccess: () => {
+          onConfirmCook(true, servings);
+          handleClose();
+        },
+      },
+    );
   };
+
 
   const resetState = () => {
     setStep(1);
@@ -247,14 +271,20 @@ export function CookConfirmationModal({
                 <button
                   type="button"
                   onClick={handleStep1Submit}
+                  disabled={cookMutation.isPending}
                   className={cn(
-                    'flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl font-black text-sm shadow-soft active:scale-[0.98] transition-all',
+                    'flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl font-black text-sm shadow-soft active:scale-[0.98] transition-all disabled:opacity-50',
                     deductOption === 'AUTO'
                       ? 'bg-mint-500 text-slate-950 hover:bg-mint-400 dark:bg-mint-400 dark:text-slate-950'
                       : 'bg-brand-500 text-white hover:bg-brand-600',
                   )}
                 >
-                  {deductOption === 'AUTO' ? (
+                  {cookMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>처리 중...</span>
+                    </>
+                  ) : deductOption === 'AUTO' ? (
                     <>
                       <span>차감 내역 확인하기</span>
                       <ArrowRight className="h-4 w-4" />
@@ -474,10 +504,20 @@ export function CookConfirmationModal({
                 <button
                   type="button"
                   onClick={handleFinalConfirm}
-                  className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-mint-500 font-black text-sm text-slate-950 shadow-soft hover:bg-mint-400 active:scale-[0.98] transition-all dark:bg-mint-400 dark:text-slate-950"
+                  disabled={cookMutation.isPending}
+                  className="flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-mint-500 font-black text-sm text-slate-950 shadow-soft hover:bg-mint-400 active:scale-[0.98] transition-all disabled:opacity-50 dark:bg-mint-400 dark:text-slate-950"
                 >
-                  <Sparkles className="h-4 w-4 stroke-[2.5]" />
-                  <span>냉장고 차감하고 요리 완료 🎉</span>
+                  {cookMutation.isPending ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>차감 처리 중...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-4 w-4 stroke-[2.5]" />
+                      <span>냉장고 차감하고 요리 완료 🎉</span>
+                    </>
+                  )}
                 </button>
               </div>
             </div>

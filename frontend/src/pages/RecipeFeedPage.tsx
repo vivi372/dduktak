@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { RecipeCard } from '@/components/common/RecipeCard';
 import {
@@ -8,97 +8,76 @@ import {
   RecipeCategoryTabs,
   RecipeSortDropdown,
 } from '@/components/recipe';
-import { mockRecipeDetails } from '@/mocks/recipes.mock';
-import { calculateRecipeMatching } from '@/mocks/matching.mock';
-import { mockInventory } from '@/mocks/inventory.mock';
+import type { RecipeSortOption } from '@/components/recipe';
+import { useRecipes } from '@/hooks/useRecipe';
+import { useMatchingRecommendations } from '@/hooks/useMatching';
 import { ROUTES } from '@/constants/routes';
-
-type SortOption = 'matching' | 'latest' | 'popular' | 'cooked' | 'time';
+import type { RecipeSummary, RecipeDifficulty } from '@/types/recipe';
 
 /**
  * 모듈 3 & 모듈 4: 뚝딱 레시피 커뮤니티 피드 (RecipeFeedPage)
- * - 8대 고정 카테고리 탭 (국/찌개/탕, 메인반찬, 밑반찬, 한그릇/밥 등)
- * - [🟢 내 냉장고 뚝딱 매칭] 실시간 토글 (Hard Gate 주재료 검증 및 매칭 스코어 정렬)
- * - 키워드 실시간 검색 및 다채로운 정렬 지원
- * - [+ 레시피 작성] 버튼
+ * - 8대 고정 카테고리 탭 (GET /api/v1/recipes/categories)
+ * - [🟢 내 냉장고 뚝딱 매칭] 실시간 토글 (GET /api/v1/matching/recommendations)
+ * - 키워드 실시간 검색 및 다채로운 정렬 지원 (GET /api/v1/recipes)
+ * - [+ 레시피 작성] 버튼 연동
  */
 export default function RecipeFeedPage() {
   const [categoryId, setCategoryId] = useState<number>(0);
   const [matchOn, setMatchOn] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortBy, setSortBy] = useState<SortOption>('latest');
+  const [sortBy, setSortBy] = useState<RecipeSortOption>('latest');
 
-  // 모든 레시피에 대해 내 냉장고 기반 매칭 스코어 사전 연산
-  const recipeScores = useMemo(() => {
-    const map = new Map<number, ReturnType<typeof calculateRecipeMatching>>();
-    mockRecipeDetails.forEach((r) => {
-      map.set(r.recipeId, calculateRecipeMatching(r, mockInventory));
-    });
-    return map;
-  }, []);
+  // 백엔드 sort 파라미터 매핑: 'latest' | 'like' | 'cooked'
+  const backendSort = useMemo<'latest' | 'like' | 'cooked'>(() => {
+    if (sortBy === 'popular') return 'like';
+    if (sortBy === 'cooked') return 'cooked';
+    return 'latest';
+  }, [sortBy]);
 
-  // 주재료를 1개 이상 보유하여 매칭 가능한 레시피 수
-  const matchableCount = useMemo(() => {
-    let count = 0;
-    mockRecipeDetails.forEach((r) => {
-      const score = recipeScores.get(r.recipeId);
-      if (score?.isHardGatePassed && score.finalScore > 0) count++;
-    });
-    return count;
-  }, [recipeScores]);
+  // 1. 일반 레시피 목록 쿼리 (매칭 모드 OFF일 때 활성화)
+  const {
+    data: recipeListData,
+    isLoading: isRecipesLoading,
+  } = useRecipes(
+    {
+      query: searchQuery.trim() || undefined,
+      recipeCategoryId: categoryId === 0 ? undefined : categoryId,
+      sort: backendSort,
+      page: 0,
+      size: 30,
+    },
+    { enabled: !matchOn },
+  );
 
-  // 필터링 및 정렬된 레시피 목록
-  const displayedRecipes = useMemo(() => {
+  // 2. 스마트 매칭 맞춤 추천 쿼리 (매칭 모드 ON일 때 활성화)
+  const {
+    data: recommendations = [],
+    isLoading: isMatchingLoading,
+  } = useMatchingRecommendations(
+    {
+      recipeCategoryId: categoryId === 0 ? undefined : categoryId,
+      page: 0,
+      size: 30,
+    },
+    { enabled: matchOn },
+  );
+
+  // 매칭 가능한 레시피 건수 (주재료 하드게이트 통과된 결과 수)
+  const matchableCount = recommendations.length;
+
+  // 매칭 모드일 때 클라이언트 검색어 필터링 적용
+  const displayedRecommendations = useMemo(() => {
     const trimmed = searchQuery.trim().toLowerCase();
+    if (!trimmed) return recommendations;
+    return recommendations.filter(
+      (r) =>
+        r.title.toLowerCase().includes(trimmed) ||
+        r.matchIngredients.some((i) => i.toLowerCase().includes(trimmed)),
+    );
+  }, [recommendations, searchQuery]);
 
-    return mockRecipeDetails
-      .filter((r) => {
-        // 1. 카테고리 필터
-        if (categoryId !== 0 && r.recipeCategoryId !== categoryId) return false;
-
-        // 2. 검색어 필터 (제목 또는 사용 재료명)
-        if (trimmed) {
-          const matchTitle = r.title.toLowerCase().includes(trimmed);
-          const matchIngredients = r.ingredients.some((i) =>
-            i.name.toLowerCase().includes(trimmed),
-          );
-          if (!matchTitle && !matchIngredients) return false;
-        }
-
-        // 3. 내 냉장고 뚝딱 매칭 토글 ON 시: 주재료 Hard Gate 필터링
-        if (matchOn) {
-          const score = recipeScores.get(r.recipeId);
-          if (!score?.isHardGatePassed || score.finalScore === 0) return false;
-        }
-
-        return true;
-      })
-      .sort((a, b) => {
-        const scoreA = recipeScores.get(a.recipeId)?.finalScore ?? 0;
-        const scoreB = recipeScores.get(b.recipeId)?.finalScore ?? 0;
-
-        // 매칭 모드 ON일 때는 기본적으로 매칭 점수 내림차순 우선
-        if (matchOn) {
-          if (scoreB !== scoreA) return scoreB - scoreA;
-          return b.cookedCount + b.likeCount - (a.cookedCount + a.likeCount);
-        }
-
-        // 일반 정렬
-        switch (sortBy) {
-          case 'matching':
-            return scoreB - scoreA;
-          case 'popular':
-            return b.likeCount - a.likeCount;
-          case 'cooked':
-            return b.cookedCount - a.cookedCount;
-          case 'time':
-            return a.cookingTime - b.cookingTime;
-          case 'latest':
-          default:
-            return b.recipeId - a.recipeId;
-        }
-      });
-  }, [categoryId, matchOn, searchQuery, sortBy, recipeScores]);
+  const isLoading = matchOn ? isMatchingLoading : isRecipesLoading;
+  const regularRecipes = recipeListData?.recipes ?? [];
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -145,41 +124,78 @@ export default function RecipeFeedPage() {
           />
         </div>
 
-        <RecipeSortDropdown value={sortBy} onChange={setSortBy} />
+        {!matchOn && (
+          <RecipeSortDropdown value={sortBy} onChange={setSortBy} />
+        )}
       </div>
 
       {/* 4. 8대 고정 카테고리 수평 탭 */}
       <RecipeCategoryTabs selectedId={categoryId} onSelect={setCategoryId} />
 
-      {/* 5. 레시피 카드 목록 렌더링 */}
-      {displayedRecipes.length === 0 ? (
-        <EmptyState
-          emoji={matchOn ? '🍳' : '🍽'}
-          title={
-            matchOn
-              ? '내 냉장고 재료로 만들 수 있는 요리가 없어요'
-              : '해당 조건의 레시피를 찾지 못했어요'
-          }
-          description={
-            matchOn
-              ? '냉장고에 새로운 주재료를 추가하거나 매칭 토글을 꺼보세요.'
-              : '다른 카테고리나 검색어를 입력해 보세요.'
-          }
-        />
+      {/* 5. 로딩 중 UI */}
+      {isLoading ? (
+        <div className="py-16 flex flex-col items-center justify-center text-muted-foreground space-y-3">
+          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
+          <p className="text-sm font-medium">
+            {matchOn ? '내 냉장고 재료와 레시피를 매칭하고 있어요...' : '맛있는 레시피를 불러오고 있어요...'}
+          </p>
+        </div>
+      ) : matchOn ? (
+        /* 6. 스마트 매칭 추천 레시피 목록 */
+        displayedRecommendations.length === 0 ? (
+          <EmptyState
+            emoji="🍳"
+            title="내 냉장고 재료로 만들 수 있는 요리가 없어요"
+            description="냉장고에 새로운 주재료를 추가하거나 매칭 토글을 꺼보세요."
+          />
+        ) : (
+          <div className="space-y-3 pt-1">
+            {displayedRecommendations.map((r) => {
+              const summary: RecipeSummary = {
+                recipeId: r.recipeId,
+                recipeCategoryId: categoryId || 1,
+                categoryName: '맞춤 추천',
+                title: r.title,
+                thumbnailUrl: r.thumbnailUrl || '/images/default-recipe.png',
+                cookingTime: r.cookingTime,
+                difficulty: (r.difficulty as RecipeDifficulty) || '쉬움',
+                likeCount: 0,
+                cookedCount: 0,
+                authorNickname: '뚝딱',
+                authorTag: '추천',
+                matchingRate: r.matchingRate,
+              };
+              return (
+                <RecipeCard
+                  key={r.recipeId}
+                  recipe={summary}
+                  matchingRate={r.matchingRate}
+                  variant="list"
+                />
+              );
+            })}
+          </div>
+        )
       ) : (
-        <div className="space-y-3 pt-1">
-          {displayedRecipes.map((r) => {
-            const score = recipeScores.get(r.recipeId);
-            return (
+        /* 7. 일반 레시피 목록 */
+        regularRecipes.length === 0 ? (
+          <EmptyState
+            emoji="🍽"
+            title="해당 조건의 레시피를 찾지 못했어요"
+            description="다른 카테고리나 검색어를 입력해 보세요."
+          />
+        ) : (
+          <div className="space-y-3 pt-1">
+            {regularRecipes.map((r) => (
               <RecipeCard
                 key={r.recipeId}
                 recipe={r}
-                matchingRate={score?.finalScore}
+                matchingRate={r.matchingRate}
                 variant="list"
               />
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )
       )}
     </div>
   );

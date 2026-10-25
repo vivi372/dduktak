@@ -1,4 +1,4 @@
-import { mockRecipeCategories } from '@/mocks';
+import { useRecipeCategories } from '@/hooks/useRecipe';
 import { cn } from '@/utils/cn';
 
 interface RecipeCategoryTabsProps {
@@ -11,6 +11,7 @@ interface RecipeCategoryTabsProps {
 
 /**
  * 8대 표준 카테고리 + 전체 탭바 (REC-01-1 / MATCH-01-3)
+ * - useRecipeCategories 훅 연동으로 서버 카테고리 동적 바인딩
  * - 44px 이상 터치 타겟 확보 및 스크롤바 없는 수평 스와이프
  * - 브랜드 코랄 핑크(#FF8A7A) 포인트 테마
  */
@@ -19,13 +20,15 @@ export function RecipeCategoryTabs({
   onSelect,
   className,
 }: RecipeCategoryTabsProps) {
+  const { data: categories = [] } = useRecipeCategories();
+
   return (
     <div
       className={cn('no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 py-1', className)}
       role="tablist"
       aria-label="레시피 8대 카테고리 목록"
     >
-      {mockRecipeCategories.map((category) => {
+      {categories.map((category) => {
         const isSelected = selectedId === category.recipeCategoryId;
         return (
           <button
