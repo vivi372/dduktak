@@ -131,6 +131,34 @@ apiClient.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
+// 401 세션 만료 알림 및 이벤트 중복 난사 방지 타이머 (EDGE-05)
+let unauthorizedNoticeTimer: ReturnType<typeof setTimeout> | null = null;
+
+export function _resetUnauthorizedNoticeTimer(): void {
+  if (unauthorizedNoticeTimer) {
+    clearTimeout(unauthorizedNoticeTimer);
+    unauthorizedNoticeTimer = null;
+  }
+}
+
+function notifyUnauthorizedOnce(traceId?: string) {
+  if (unauthorizedNoticeTimer) return;
+
+  toast.error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', {
+    id: 'dduktak-session-expired',
+    duration: 3000,
+    description: traceId ? `식별 코드: ${traceId}` : undefined,
+  });
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('dduktak:unauthorized'));
+  }
+
+  unauthorizedNoticeTimer = setTimeout(() => {
+    unauthorizedNoticeTimer = null;
+  }, 2000);
+}
+
 /**
  * [Response Interceptor]
  * X-Trace-Id 추출 및 백엔드 ErrorResponseDto UX 태그 전역 분기
@@ -151,18 +179,9 @@ apiClient.interceptors.response.use(
     const status = error.response?.status;
     const errorData = error.response?.data;
 
-    // 401 Unauthorized 처리 (세션 만료 또는 무효 토큰)
+    // 401 Unauthorized 처리 (세션 만료 또는 무효 토큰, EDGE-05)
     if (status === 401) {
-      toast.error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', {
-        duration: 3000,
-        description: traceId ? `식별 코드: ${traceId}` : undefined,
-      });
-
-      // window.dispatchEvent로 전역 세션 만료 알림 이벤트 발행
-      if (typeof window !== 'undefined') {
-        window.dispatchEvent(new CustomEvent('dduktak:unauthorized'));
-      }
-
+      notifyUnauthorizedOnce(traceId);
       return Promise.reject(error);
     }
 

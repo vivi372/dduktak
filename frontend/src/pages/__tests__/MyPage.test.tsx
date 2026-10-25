@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
@@ -7,6 +7,15 @@ import MyPage from '@/pages/MyPage';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useNotificationStore } from '@/store/notificationStore';
 import type { UserProfileResponseDto } from '@/types/auth';
+
+const mockNavigate = vi.fn();
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useNavigate: () => mockNavigate,
+  };
+});
 
 const mockUser: UserProfileResponseDto = {
   userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
@@ -173,6 +182,26 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
 
     await waitFor(() => {
       expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+  });
+
+  it('로그아웃 클릭 시 logout() 호출 및 navigate(/login, { replace: true })로 뒤로가기가 차단되어야 한다 (EDGE-02)', async () => {
+    mockNavigate.mockClear();
+    const mockLogout = vi.fn().mockResolvedValue(undefined);
+    useAuthStore.setState((prev) => ({
+      ...prev,
+      logout: mockLogout,
+    }));
+
+    const user = userEvent.setup();
+    renderWithProviders(<MyPage />);
+
+    const logoutRow = screen.getByRole('button', { name: /로그아웃/ });
+    await user.click(logoutRow);
+
+    await waitFor(() => {
+      expect(mockLogout).toHaveBeenCalledTimes(1);
+      expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
     });
   });
 });

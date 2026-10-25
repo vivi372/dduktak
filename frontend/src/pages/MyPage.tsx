@@ -131,7 +131,7 @@ export default function MyPage() {
   const handleLogout = async () => {
     await logout();
     toast.success('로그아웃 되었습니다.');
-    navigate(ROUTES.LOGIN);
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   const handleToggleExpireWarn = (checked: boolean) => {

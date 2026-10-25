@@ -379,6 +379,7 @@ export default function InventoryPage() {
                 onConsume={(item) => setConsumingItem(item)}
                 onEdit={(item) => setEditingItem(item)}
                 onDelete={handleDelete}
+                isActionPending={deleteMutation.isPending || consumeMutation.isPending || updateMutation.isPending}
               />
             ))}
           </div>

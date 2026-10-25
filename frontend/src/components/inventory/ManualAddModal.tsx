@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Plus, Sparkles } from 'lucide-react';
 import { format, addDays } from 'date-fns';
@@ -37,6 +37,17 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
     format(addDays(new Date(), initialMaster?.defaultShelfDays ?? 7), 'yyyy-MM-dd'),
   );
   const [memo, setMemo] = useState<string>('');
+
+  // 모달이 열릴 때 이전 상태 오염 방지 및 초기화 (EDGE-01)
+  useEffect(() => {
+    if (open) {
+      setSelectedMaster(initialMaster ?? null);
+      setStorageType(initialMaster?.defaultStorageType ?? 'REFRIGERATED');
+      setQuantity(1);
+      setExpireDate(format(addDays(new Date(), initialMaster?.defaultShelfDays ?? 7), 'yyyy-MM-dd'));
+      setMemo('');
+    }
+  }, [open, initialMaster]);
 
   // 마스터 식재료 선택 시 스마트 기본값 자동 세팅
   const handleSelectMaster = (master: MasterIngredient) => {

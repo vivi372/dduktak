@@ -16,6 +16,8 @@ interface InventoryAccordionItemProps {
   onEdit: (item: InventoryItem) => void;
   /** 삭제 클릭 콜백 */
   onDelete: (item: InventoryItem) => void;
+  /** 비동기 액션 진행 중 여부 (EDGE-03 광클릭 방지) */
+  isActionPending?: boolean;
 }
 
 /**
@@ -29,6 +31,7 @@ export function InventoryAccordionItem({
   onConsume,
   onEdit,
   onDelete,
+  isActionPending = false,
 }: InventoryAccordionItemProps) {
   const [isOpen, setIsOpen] = useState(false);
 
@@ -142,8 +145,9 @@ export function InventoryAccordionItem({
                           e.stopPropagation();
                           onConsume(item);
                         }}
+                        disabled={isActionPending}
                         aria-label={`${item.name} 소비`}
-                        className="flex h-8 items-center gap-1 rounded-lg bg-brand-50 px-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-100 active:scale-95 dark:bg-brand-950/60 dark:text-brand-300"
+                        className="flex h-8 items-center gap-1 rounded-lg bg-brand-50 px-2 text-xs font-bold text-brand-700 transition-colors hover:bg-brand-100 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed dark:bg-brand-950/60 dark:text-brand-300"
                       >
                         <Utensils className="h-3 w-3" />
                         <span className="text-[11px] sm:text-xs">소비</span>
@@ -155,8 +159,9 @@ export function InventoryAccordionItem({
                           e.stopPropagation();
                           onEdit(item);
                         }}
+                        disabled={isActionPending}
                         aria-label={`${item.name} 수정`}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:bg-accent hover:text-foreground active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Edit3 className="h-3.5 w-3.5" />
                       </button>
@@ -167,8 +172,9 @@ export function InventoryAccordionItem({
                           e.stopPropagation();
                           onDelete(item);
                         }}
+                        disabled={isActionPending}
                         aria-label={`${item.name} 삭제`}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-destructive/20 bg-background text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95"
+                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-destructive/20 bg-background text-destructive/80 transition-colors hover:bg-destructive/10 hover:text-destructive active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>

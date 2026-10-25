@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { toast } from 'sonner';
-import { apiClient, extractTraceId, handleUxTaggedError } from '@/services/apiClient';
+import { apiClient, extractTraceId, handleUxTaggedError, _resetUnauthorizedNoticeTimer } from '@/services/apiClient';
 import { supabase } from '@/services/supabaseClient';
 import { useErrorModalStore } from '@/store/useErrorModalStore';
 import type { ErrorResponseDto } from '@/types/auth';
@@ -26,6 +26,7 @@ vi.mock('@/services/supabaseClient', () => ({
 describe('apiClient 및 Interceptor 단위 테스트 (02_ARCHITECTURE_AND_CONVENTIONS.md 4.1 & 5.4)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    _resetUnauthorizedNoticeTimer();
     useErrorModalStore.getState().closeModal();
   });
 
@@ -225,6 +226,34 @@ describe('apiClient 및 Interceptor 단위 테스트 (02_ARCHITECTURE_AND_CONVEN
           description: '식별 코드: unauth123',
         }),
       );
+      expect(eventSpy).toHaveBeenCalledTimes(1);
+
+      window.removeEventListener('dduktak:unauthorized', eventSpy);
+    });
+
+    it('연속/동시 다중 401 Unauthorized 수신 시 토스트와 이벤트가 중복 난사되지 않고 1회만 발화되어야 한다 (EDGE-05)', async () => {
+      const responseInterceptor = (apiClient.interceptors.response as any).handlers[0];
+      const eventSpy = vi.fn();
+      window.addEventListener('dduktak:unauthorized', eventSpy);
+      vi.clearAllMocks();
+
+      const error = {
+        response: {
+          status: 401,
+          headers: { 'x-trace-id': 'unauth_multi' },
+          data: { code: 'AUTH_ERROR_UNAUTHORIZED' },
+        },
+      };
+
+      // 동시 3건의 401 응답 발생
+      await Promise.allSettled([
+        responseInterceptor.rejected(error),
+        responseInterceptor.rejected(error),
+        responseInterceptor.rejected(error),
+      ]);
+
+      // 디바운스 및 고유 ID로 1회만 노출/발행 검증 (EDGE-05)
+      expect(toast.error).toHaveBeenCalledTimes(1);
       expect(eventSpy).toHaveBeenCalledTimes(1);
 
       window.removeEventListener('dduktak:unauthorized', eventSpy);

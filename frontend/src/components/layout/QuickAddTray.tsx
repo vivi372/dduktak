@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { PencilLine, Receipt, ScanBarcode, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
+import { useBodyScrollLock } from '@/hooks';
 
 interface QuickAddTrayProps {
   open: boolean;
@@ -19,6 +20,9 @@ const ACTIONS = [
 /** FAB에서 열리는 재료 퀵 등록 바텀시트 (Thumb Zone) */
 export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProps) {
   const navigate = useNavigate();
+
+  // 바텀시트 오픈 시 뒷배경 스크롤 방지
+  useBodyScrollLock(open);
 
   // ESC 키로 닫기
   useEffect(() => {

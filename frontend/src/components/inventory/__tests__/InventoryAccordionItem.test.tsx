@@ -102,5 +102,29 @@ describe('InventoryAccordionItem 2-Tier 아코디언 컴포넌트 단위 테스�
 
     expect(handleConsume).toHaveBeenCalledWith(mockGroup.items[0]);
   });
+
+  it('isActionPending이 true일 때 소비/수정/삭제 버튼이 disabled 처리되어 광클릭이 차단되어야 한다 (EDGE-03)', async () => {
+    const user = userEvent.setup();
+
+    render(
+      <InventoryAccordionItem
+        group={mockGroup}
+        onConsume={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        isActionPending={true}
+      />,
+    );
+
+    await user.click(screen.getByRole('button', { expanded: false }));
+
+    const consumeBtns = screen.getAllByRole('button', { name: '계란 소비' });
+    const editBtns = screen.getAllByRole('button', { name: '계란 수정' });
+    const deleteBtns = screen.getAllByRole('button', { name: '계란 삭제' });
+
+    consumeBtns.forEach((btn) => expect(btn).toBeDisabled());
+    editBtns.forEach((btn) => expect(btn).toBeDisabled());
+    deleteBtns.forEach((btn) => expect(btn).toBeDisabled());
+  });
 });
 
