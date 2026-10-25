@@ -35,7 +35,7 @@ public class RecipeCreateRequestDto {
     private Integer cookingTime;
 
     @NotBlank(message = "난이도는 필수입니다.")
-    @Pattern(regexp = "^(쉬움|보통|조금복잡)$", message = "난이도는 '쉬움', '보통', '조금복잡' 중 하나여야 합니다.")
+    @Pattern(regexp = "^(쉬움|보통|어려움)$", message = "난이도는 '쉬움', '보통', '어려움' 중 하나여야 합니다.")
     private String difficulty;
 
     private String thumbnailUrl;

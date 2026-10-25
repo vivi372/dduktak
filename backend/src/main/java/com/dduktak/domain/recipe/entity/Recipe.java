@@ -51,7 +51,7 @@ public class Recipe {
     private Integer cookingTime;
 
     /**
-     * 조리 난이도 ('쉬움', '보통', '조금복잡')
+     * 조리 난이도 ('쉬움', '보통', '어려움')
      */
     private String difficulty;
 

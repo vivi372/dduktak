@@ -123,7 +123,7 @@ CREATE TABLE recipe (
     description TEXT,
     servings INT NOT NULL DEFAULT 1,
     cooking_time INT NOT NULL DEFAULT 15,
-    difficulty VARCHAR(20) NOT NULL CHECK (difficulty IN ('쉬움', '보통', '조금복잡')),
+    difficulty VARCHAR(20) NOT NULL CHECK (difficulty IN ('쉬움', '보통', '어려움')),
     thumbnail_url TEXT,
     like_count INT NOT NULL DEFAULT 0,
     cooked_count INT NOT NULL DEFAULT 0,

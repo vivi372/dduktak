@@ -502,7 +502,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 27. 단짠 돼지갈비찜
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('단짠 돼지갈비찜', '갈비찜용 돼지고기와 감자, 당근을 간장 양념에 푹 졸인 요리', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '조금복잡', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('단짠 돼지갈비찜', '갈비찜용 돼지고기와 감자, 당근을 간장 양념에 푹 졸인 요리', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '어려움', NULL);
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '단짠 돼지갈비찜'), master_ingredient_id, NULL, category_id, name, 300, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (갈비찜/등갈비용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '단짠 돼지갈비찜'), master_ingredient_id, NULL, category_id, name, 1, '개', 'SUB', FALSE FROM ingredient_master WHERE name = '감자';
@@ -523,7 +523,7 @@ INSERT INTO recipe_step (recipe_id, step_no, description, image_url) SELECT (SEL
 -- ==========================================
 -- 28. 부드러운 통삼겹 수육
 -- ==========================================
-INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('부드러운 통삼겹 수육', '된장, 대파, 통마늘을 넣고 촉촉하게 삶아낸 보쌈', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '조금복잡', NULL);
+INSERT INTO recipe (title, description, recipe_category_id, servings, cooking_time, difficulty, thumbnail_url) VALUES ('부드러운 통삼겹 수육', '된장, 대파, 통마늘을 넣고 촉촉하게 삶아낸 보쌈', (SELECT recipe_category_id FROM recipe_category WHERE category_name = '메인반찬'), 1, 45, '어려움', NULL);
 
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '부드러운 통삼겹 수육'), master_ingredient_id, NULL, category_id, name, 300, 'g', 'MAIN', FALSE FROM ingredient_master WHERE name = '돼지고기 (보쌈용/수육용)';
 INSERT INTO recipe_ingredient (recipe_id, master_ingredient_id, alt_ingredient_id, category_id, name, quantity, unit, type_code, is_optional) SELECT (SELECT recipe_id FROM recipe WHERE title = '부드러운 통삼겹 수육'), master_ingredient_id, NULL, category_id, name, 30, 'g', 'SUB', FALSE FROM ingredient_master WHERE name = '된장';

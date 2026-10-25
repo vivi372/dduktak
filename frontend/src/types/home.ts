@@ -22,7 +22,7 @@ export interface BriefingTopRecipe {
   thumbnailUrl?: string;
   /** 조리 소요 시간 (분) */
   cookingTime?: number;
-  /** 조리 난이도 ('쉬움', '보통', '조금복잡') */
+  /** 조리 난이도 ('쉬움', '보통', '어려움') */
   difficulty?: string;
   /** 매칭 점수 (0 ~ 100%, 0개 폴백 시 0%) */
   matchingRate: number;

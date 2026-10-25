@@ -25,7 +25,7 @@ import { cn } from '@/utils/cn';
 const DIFFICULTY_OPTIONS: { label: RecipeDifficulty; desc: string }[] = [
   { label: '쉬움', desc: '초보자도 뚝딱 가능' },
   { label: '보통', desc: '기본적인 조리 지식 필요' },
-  { label: '조금복잡', desc: '정성과 손길이 필요' },
+  { label: '어려움', desc: '정성과 손길이 필요' },
 ];
 
 const QUICK_TIMES = [5, 10, 15, 20, 30, 45, 60];
@@ -58,7 +58,7 @@ const recipeFormSchema = z
     description: z.string().max(100, '한 줄 소개는 최대 100자까지 가능합니다.').optional().or(z.literal('')),
     servings: z.number().min(1, '기준 인분은 1 이상이어야 합니다.'),
     cookingTime: z.number().min(1, '조리 시간은 1분 이상이어야 합니다.'),
-    difficulty: z.enum(['쉬움', '보통', '조금복잡']),
+    difficulty: z.enum(['쉬움', '보통', '어려움']),
     thumbnailUrl: z.string().optional().or(z.literal('')),
     ingredients: z.array(recipeIngredientSchema).min(1, '최소 1개 이상의 식재료를 등록해야 합니다.'),
     steps: z.array(recipeStepSchema).min(1, '최소 1개 이상의 조리 순서를 작성해야 합니다.'),

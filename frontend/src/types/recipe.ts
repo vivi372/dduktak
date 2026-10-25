@@ -2,8 +2,8 @@
  * 레시피 커뮤니티(모듈 3) 관련 타입 및 DTO 정의 (05_API_SPECIFICATION.md 3.3절)
  */
 
-/** 레시피 조리 난이도 (백엔드 Validation 및 DB Check 제약 준수: '쉬움' | '보통' | '조금복잡') */
-export type RecipeDifficulty = '쉬움' | '보통' | '조금복잡';
+/** 레시피 조리 난이도 (백엔드 Validation 및 DB Check 제약 준수: '쉬움' | '보통' | '어려움') */
+export type RecipeDifficulty = '쉬움' | '보통' | '어려움';
 
 /** 레시피 8대 카테고리 (GET /api/v1/recipes/categories) */
 export interface RecipeCategory {
