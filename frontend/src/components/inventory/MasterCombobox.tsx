@@ -245,6 +245,3 @@ export function MasterCombobox({
     </div>
   );
 }
-
-// 기존 IngredientCombobox 이름으로도 호환 사용 가능하도록 alias export
-export { MasterCombobox as IngredientCombobox };
