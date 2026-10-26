@@ -30,7 +30,7 @@ describe('AppSplashScreen 컴포넌트 단위 테스트', () => {
     render(<AppSplashScreen duration={1000} />);
 
     expect(screen.getByRole('status', { name: '앱 로딩 인트로 화면' })).toBeInTheDocument();
-    expect(screen.getByText('1인 가구 냉장고 파먹기 & 맞춤 요리')).toBeInTheDocument();
+    expect(screen.getByText('1인 가구 냉장고 맞춤 요리 솔루션')).toBeInTheDocument();
     expect(screen.getByText('뚝딱')).toBeInTheDocument();
     expect(screen.getByText('냉장고 재료를 준비하고 있어요...')).toBeInTheDocument();
   });
