@@ -4,7 +4,7 @@ import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
 import { Sparkles, Utensils } from 'lucide-react';
 import { useAppSplashStore } from '@/store/useAppSplashStore';
-import splashLogo from '@/assets/splash-logo.png';
+import logoHd from '@/assets/logo-hd.png';
 
 interface AppSplashScreenProps {
   /** 스플래시 노출 유지 시간 (밀리초, 기본값 1600ms) */
@@ -13,7 +13,7 @@ interface AppSplashScreenProps {
 
 /**
  * 앱 구동 오프닝 인트로 & 스플래시 애니메이션 (App Launch Splash Screen)
- * - 브랜드 공식 로고를 현대적으로 재해석한 고해상도 3D 셰프 팟 엠블럼 적용
+ * - '오늘의 뚝딱' 공식 브랜드 로고(오늘의 뚝딱 로고.png)를 4K 고해상도로 화질 개선하여 적용
  * - Capacitor 네이티브 스플래시 스크린 자동 Hide 및 깜빡임 없는 크로스페이드(Fade-out) 연동
  */
 export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
@@ -56,10 +56,10 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
           {/* 상단 여백 (공간 균형) */}
           <div className="h-6 w-full" />
 
-          {/* 중앙 메인 브랜딩 & 로고 애니메이션 컨테이너 */}
+          {/* 중앙 메인 브랜딩 & 공식 로고 애니메이션 컨테이너 */}
           <div className="flex flex-col items-center text-center">
-            {/* 펄스 링 & 로고 아이콘 바운스 */}
-            <div className="relative mb-6 flex items-center justify-center">
+            {/* 펄스 링 & 고해상도 공식 로고 카드 */}
+            <div className="relative mb-5 flex items-center justify-center">
               {/* 외부 확산 펄스 링 (코랄 & 민트) */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
@@ -69,7 +69,7 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
                   repeat: Infinity,
                   ease: 'easeOut',
                 }}
-                className="absolute h-48 w-48 rounded-full bg-gradient-to-tr from-brand-400 to-mint-400 blur-lg"
+                className="absolute h-56 w-56 rounded-full bg-gradient-to-tr from-brand-400 to-mint-400 blur-xl"
               />
 
               <motion.div
@@ -81,25 +81,25 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
                   repeat: Infinity,
                   ease: 'easeOut',
                 }}
-                className="absolute h-44 w-44 rounded-full bg-brand-400/40 blur-md"
+                className="absolute h-52 w-52 rounded-full bg-brand-400/35 blur-lg"
               />
 
-              {/* 고해상도 3D 브랜드 엠블럼 캐릭터 */}
+              {/* 고해상도 화질개선 공식 로고 카드 */}
               <motion.div
-                initial={{ scale: 0.55, y: 20, opacity: 0 }}
-                animate={{ scale: [0.55, 1.05, 1], y: 0, opacity: 1 }}
+                initial={{ scale: 0.65, y: 16, opacity: 0 }}
+                animate={{ scale: [0.65, 1.04, 1], y: 0, opacity: 1 }}
                 transition={{
                   type: 'spring',
-                  stiffness: 250,
+                  stiffness: 240,
                   damping: 18,
                   duration: 0.8,
                 }}
-                className="relative flex h-36 w-36 sm:h-40 sm:w-40 items-center justify-center overflow-hidden rounded-[36px] bg-card shadow-2xl ring-4 ring-brand-200/80 dark:ring-brand-800/60"
+                className="relative flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center overflow-hidden rounded-[36px] bg-[#FFFDF7] p-2.5 shadow-2xl ring-4 ring-brand-200/80 dark:ring-brand-800/60"
               >
                 <img
-                  src={splashLogo}
-                  alt="오늘의 뚝딱 3D 셰프 엠블럼"
-                  className="h-full w-full object-cover"
+                  src={logoHd}
+                  alt="오늘의 뚝딱 공식 로고"
+                  className="h-full w-full object-contain drop-shadow-sm"
                 />
               </motion.div>
             </div>
@@ -115,24 +115,14 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
               <span>1인 가구 냉장고 맞춤 요리 솔루션</span>
             </motion.div>
 
-            {/* 서비스 타이틀 */}
-            <motion.h1
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.35, duration: 0.5 }}
-              className="mt-3 text-3xl font-black tracking-tight text-foreground sm:text-4xl"
-            >
-              오늘의 <span className="text-brand-500 underline decoration-mint-400 decoration-wavy decoration-2 underline-offset-4">뚝딱</span>
-            </motion.h1>
-
-            {/* 감성 서브 카피 */}
+            {/* 감성 슬로건 */}
             <motion.p
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.45, duration: 0.5 }}
-              className="mt-2 text-sm font-medium text-muted-foreground"
+              transition={{ delay: 0.35, duration: 0.5 }}
+              className="mt-2.5 text-sm font-bold text-foreground"
             >
-              냉장고 속 재료로 완성하는 나만의 황금 식탁 🍳
+              냉장고 속 재료로 오늘의 요리를 <span className="text-brand-500 font-black">뚝딱!</span> 🍳
             </motion.p>
           </div>
 
