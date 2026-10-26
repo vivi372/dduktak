@@ -84,7 +84,7 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
                 className="absolute h-52 w-52 rounded-full bg-brand-400/35 blur-lg"
               />
 
-              {/* 고해상도 화질개선 공식 로고 카드 */}
+              {/* 고해상도 화질개선 공식 로고 카드 (카드와 이미지 모서리 일치) */}
               <motion.div
                 initial={{ scale: 0.65, y: 16, opacity: 0 }}
                 animate={{ scale: [0.65, 1.04, 1], y: 0, opacity: 1 }}
@@ -94,12 +94,12 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
                   damping: 18,
                   duration: 0.8,
                 }}
-                className="relative flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center overflow-hidden rounded-[36px] bg-[#FFFDF7] p-2.5 shadow-2xl ring-4 ring-brand-200/80 dark:ring-brand-800/60"
+                className="relative flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center overflow-hidden rounded-[36px] bg-[#FFFDF7] shadow-2xl ring-4 ring-brand-200/80 dark:ring-brand-800/60"
               >
                 <img
                   src={logoHd}
                   alt="오늘의 뚝딱 공식 로고"
-                  className="h-full w-full object-contain drop-shadow-sm"
+                  className="h-full w-full object-cover rounded-[36px]"
                 />
               </motion.div>
             </div>
