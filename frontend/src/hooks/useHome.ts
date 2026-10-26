@@ -9,13 +9,6 @@ import { getHomeBriefing } from '@/services/homeApi';
 import { useAuth } from '@/hooks/useAuth';
 import type { HomeBriefing } from '@/types/home';
 
-/** 비로그인 유저용 안전 기본값 */
-const GUEST_HOME_BRIEFING: HomeBriefing = {
-  nickname: '자취 요리사',
-  expiringIngredientsCount: 0,
-  imminentIngredients: [],
-  topRecipe: null,
-};
 
 /**
  * 메인 홈 브리핑 데이터 조회 훅
@@ -23,15 +16,14 @@ const GUEST_HOME_BRIEFING: HomeBriefing = {
  * @returns React Query useQuery 결과 객체 (data, isLoading, isError, refetch 등)
  */
 export function useHomeBriefing() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   return useQuery<HomeBriefing>({
-    queryKey: ['home', 'briefing'],
+    queryKey: ['home', 'briefing', user?.userId],
     queryFn: async () => {
       return await getHomeBriefing();
     },
-    enabled: isAuthenticated,
-    initialData: !isAuthenticated ? GUEST_HOME_BRIEFING : undefined,
+    enabled: isAuthenticated && Boolean(user?.userId),
     staleTime: 1000 * 60, // 1분간 신선 상태 유지
   });
 }

@@ -30,9 +30,9 @@ describe('CustomDatePicker 컴포넌트 단위 테스트', () => {
     expect(screen.getByText('오늘')).toBeInTheDocument();
   });
 
-  it('캘린더에서 특정 날짜를 클릭하면 onChange 콜백이 호출되어야 한다', () => {
+  it('캘린더에서 minDate가 null일 때 특정 날짜를 클릭하면 onChange 콜백이 호출되어야 한다', () => {
     const handleChange = vi.fn();
-    render(<CustomDatePicker value="2026-10-25" onChange={handleChange} />);
+    render(<CustomDatePicker value="2026-10-25" onChange={handleChange} minDate={null} />);
 
     const triggerBtn = screen.getByRole('button', { name: /2026년 10월 25일/ });
     fireEvent.click(triggerBtn);
@@ -42,5 +42,19 @@ describe('CustomDatePicker 컴포넌트 단위 테스트', () => {
     fireEvent.click(dayBtn);
 
     expect(handleChange).toHaveBeenCalledWith('2026-10-15');
+  });
+
+  it('기본 설정 시 오늘 이전의 과거 날짜는 비활성화(disabled)되어 클릭되지 않아야 한다', () => {
+    const handleChange = vi.fn();
+    render(<CustomDatePicker value="2026-10-25" onChange={handleChange} />);
+
+    const triggerBtn = screen.getByRole('button', { name: /2026년 10월 25일/ });
+    fireEvent.click(triggerBtn);
+
+    // 과거 날짜(1일)는 disabled여야 함
+    const pastDayBtn = screen.getByRole('button', { name: '1' });
+    expect(pastDayBtn).toBeDisabled();
+    fireEvent.click(pastDayBtn);
+    expect(handleChange).not.toHaveBeenCalled();
   });
 });

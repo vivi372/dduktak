@@ -17,6 +17,11 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+vi.mock('@/services/notificationApi', () => ({
+  updateNotificationSettings: vi.fn().mockResolvedValue({}),
+  getNotifications: vi.fn().mockResolvedValue({ items: [], unreadCount: 0 }),
+}));
+
 const mockUser: UserProfileResponseDto = {
   userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
   email: 'user@dduktak.com',
@@ -52,6 +57,14 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
       user: { ...mockUser },
     });
     useNotificationStore.getState().resetNotifications();
+    useNotificationStore.setState({
+      settings: {
+        isExpireWarnEnabled: true,
+        isReactionNoticeEnabled: true,
+        quietTimeStart: '',
+        quietTimeEnd: ''
+      },
+    });
   });
 
   it('로그인 상태일 때 프로필(닉네임, #1024 유저태그)과 내 활동 숏컷을 렌더링해야 한다', () => {

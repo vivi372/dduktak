@@ -12,7 +12,7 @@ import {
 import { toast } from 'sonner';
 import { CustomDatePicker } from '@/components/common/CustomDatePicker';
 import { DDayBadge } from '@/components/common/DDayBadge';
-import { mockOcrParsedItems, type OcrParsedItemWithRaw } from '@/mocks/ocr_scan.mock';
+import type { OcrParsedItemWithRaw } from '@/mocks/ocr_scan.mock';
 import type { InventoryItem } from '@/types/inventory';
 import { cn } from '@/utils/cn';
 
@@ -23,7 +23,7 @@ interface ReceiptItemReviewProps {
   onReupload: () => void;
   /** 닫기 콜백 */
   onClose: () => void;
-  /** 검수할 품목 초기 데이터 (선택, 기본값은 mockOcrParsedItems) */
+  /** 검수할 품목 초기 데이터 */
   initialItems?: OcrParsedItemWithRaw[];
 }
 
@@ -39,7 +39,7 @@ export function ReceiptItemReview({
   onConfirm,
   onReupload,
   onClose,
-  initialItems = mockOcrParsedItems,
+  initialItems = [],
 }: ReceiptItemReviewProps) {
   const [items, setItems] = useState<OcrParsedItemWithRaw[]>(initialItems);
 

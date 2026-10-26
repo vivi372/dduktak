@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useBodyScrollLock } from '@/hooks';
 import { useCookRecipe } from '@/hooks/useMatching';
+import { useMyIngredients } from '@/hooks/useInventory';
 import { calculateFifoDeductionItems } from '@/mocks/matching.mock';
 import type { RecipeDetail } from '@/types/recipe';
 import type { FifoDeductionItem } from '@/types/matching';
@@ -56,10 +57,13 @@ export function CookConfirmationModal({
   // 현재 수량 편집 중인 식재료 ID
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // 실제 내 냉장고 보유 식재료 조회
+  const { data: myIngredients = [] } = useMyIngredients();
+
   // 인분 또는 레시피 변경 시 기본 FIFO 차감 목록 계산
   const baseDeductions = useMemo(() => {
-    return calculateFifoDeductionItems(recipe, servings);
-  }, [recipe, servings]);
+    return calculateFifoDeductionItems(recipe, servings, myIngredients);
+  }, [recipe, servings, myIngredients]);
 
   // 유저 미세 수정값이 반영된 최종 차감 목록
   const deductionItems = useMemo<FifoDeductionItem[]>(() => {

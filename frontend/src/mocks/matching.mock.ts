@@ -1,4 +1,3 @@
-import { mockInventory } from './inventory.mock';
 import { mockRecipeDetails } from './recipes.mock';
 import type { RecipeDetail, RecipeIngredient } from '@/types/recipe';
 import type {
@@ -15,7 +14,7 @@ import type { InventoryItem } from '@/types/inventory';
  */
 export function getInventoryStatusForIngredient(
   masterIngredientId: number,
-  inventory: InventoryItem[] = mockInventory,
+  inventory: InventoryItem[] = [],
 ) {
   const activeItems = inventory.filter(
     (item) => item.masterIngredientId === masterIngredientId && item.dDay >= 0,
@@ -34,7 +33,7 @@ export function getInventoryStatusForIngredient(
 export function evaluateIngredientStatus(
   ingredient: RecipeIngredient,
   servingsRatio: number,
-  inventory: InventoryItem[] = mockInventory,
+  inventory: InventoryItem[] = [],
 ): IngredientMatchStatus {
   const requiredQuantity = Number((ingredient.quantity * servingsRatio).toFixed(2));
   const isSauce = ingredient.categoryId === 6;
@@ -142,7 +141,7 @@ export function evaluateIngredientStatus(
  */
 export function calculateRecipeMatching(
   recipe: RecipeDetail,
-  inventory: InventoryItem[] = mockInventory,
+  inventory: InventoryItem[] = [],
   servings: number = recipe.servings,
 ): RecipeMatchingScore {
   const servingsRatio = servings / recipe.servings;
@@ -260,7 +259,7 @@ function getStatusRatio(status?: IngredientStatusType, isOptional?: boolean): nu
  */
 export function getAllRecipeMatchingScores(
   recipes: RecipeDetail[] = mockRecipeDetails,
-  inventory: InventoryItem[] = mockInventory,
+  inventory: InventoryItem[] = [],
 ): Map<number, RecipeMatchingScore> {
   const scoreMap = new Map<number, RecipeMatchingScore>();
   recipes.forEach((recipe) => {
@@ -275,7 +274,7 @@ export function getAllRecipeMatchingScores(
 export function calculateFifoDeductionItems(
   recipe: RecipeDetail,
   servings: number,
-  inventory: InventoryItem[] = mockInventory,
+  inventory: InventoryItem[] = [],
 ): FifoDeductionItem[] {
   const servingsRatio = servings / recipe.servings;
 

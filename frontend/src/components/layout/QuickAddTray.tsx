@@ -4,6 +4,7 @@ import { PencilLine, Receipt, ScanBarcode, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { useBodyScrollLock } from '@/hooks';
+import { usePlatformStore } from '@/store/usePlatformStore';
 
 interface QuickAddTrayProps {
   open: boolean;
@@ -11,7 +12,7 @@ interface QuickAddTrayProps {
   onSelectAction?: (key: 'manual' | 'barcode' | 'receipt') => void;
 }
 
-const ACTIONS = [
+const ALL_ACTIONS = [
   { key: 'manual', label: '직접 입력', desc: '재료 이름과 소비기한을 직접 적어요', Icon: PencilLine },
   { key: 'barcode', label: '바코드 스캔', desc: '카메라로 바코드를 찍으면 자동으로 채워요', Icon: ScanBarcode },
   { key: 'receipt', label: '영수증 스캔', desc: '영수증 사진 한 장으로 한 번에 등록해요', Icon: Receipt },
@@ -20,6 +21,12 @@ const ACTIONS = [
 /** FAB에서 열리는 재료 퀵 등록 바텀시트 (Thumb Zone) */
 export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProps) {
   const navigate = useNavigate();
+  const { isApp } = usePlatformStore();
+
+  const actions = ALL_ACTIONS.filter((action) => {
+    if (action.key === 'barcode') return isApp;
+    return true;
+  });
 
   // 바텀시트 오픈 시 뒷배경 스크롤 방지
   useBodyScrollLock(open);
@@ -75,7 +82,7 @@ export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProp
               </button>
             </div>
             <ul className="space-y-2.5 pb-6">
-              {ACTIONS.map(({ key, label, desc, Icon }) => (
+              {actions.map(({ key, label, desc, Icon }) => (
                 <li key={key}>
                   <button
                     type="button"

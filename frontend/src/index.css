@@ -11,6 +11,8 @@
     --foreground: 12 40% 14%; /* 짙은 웜 브라운 */
     --card: 0 0% 100%;
     --card-foreground: 12 40% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 12 40% 14%;
     --primary: 7 100% 74%; /* #FF8A7A */
     --primary-foreground: 9 51% 20%; /* #4A1F18 */
     --secondary: 176 56% 55%; /* #4ECDC4 */
@@ -34,6 +36,8 @@
     --foreground: 38 40% 94%;
     --card: 20 12% 12%; /* 배경과 확실히 분리되는 카드 색상 #221B19 */
     --card-foreground: 38 40% 94%;
+    --popover: 20 12% 12%;
+    --popover-foreground: 38 40% 94%;
     --primary: 7 100% 74%;
     --primary-foreground: 9 51% 14%;
     --secondary: 176 50% 50%;
@@ -132,4 +136,10 @@ body.dark {
 
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.6);
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
+  }
 }

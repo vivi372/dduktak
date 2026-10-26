@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { X, Zap, ZapOff, ScanBarcode, CheckCircle2, AlertCircle, Loader2, Camera } from 'lucide-react';
+import { X, Zap, ZapOff, ScanBarcode, Loader2, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import { useBodyScrollLock } from '@/hooks';
 import { useBarcodeLookup } from '@/hooks/useInventory';
@@ -91,16 +91,6 @@ export function BarcodeScannerModal({
   }, [open, isNative]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!open) return null;
-
-  // 1. 성공 시나리오 모의 테스트: 신라면 바코드(8801043014859) 조회
-  const handleSimulateSuccess = () => {
-    handleLookupBarcode('8801043014859');
-  };
-
-  // 2. 실패 시나리오 모의 테스트: 미등록 바코드(9999999999999) 404 예외 복구 테스트
-  const handleSimulateNotFound = () => {
-    handleLookupBarcode('9999999999999');
-  };
 
   return (
     <>
@@ -200,27 +190,7 @@ export function BarcodeScannerModal({
                 </button>
               )}
 
-              <div className="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
-                  onClick={handleSimulateSuccess}
-                  disabled={barcodeLookup.isPending}
-                  className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl bg-brand-500 font-bold text-sm text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95 disabled:opacity-50"
-                >
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span>모의 인식 성공 (신라면)</span>
-                </button>
 
-                <button
-                  type="button"
-                  onClick={handleSimulateNotFound}
-                  disabled={barcodeLookup.isPending}
-                  className="flex min-h-[46px] flex-1 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 font-bold text-sm text-white transition-all hover:bg-white/10 active:scale-95 disabled:opacity-50"
-                >
-                  <AlertCircle className="h-4 w-4 text-orange-400" />
-                  <span>미등록 바코드 예외 테스트</span>
-                </button>
-              </div>
 
               <button
                 type="button"

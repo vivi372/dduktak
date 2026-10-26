@@ -15,7 +15,7 @@ describe('ProtectedRoute 라우트 가드 컴포넌트 단위 테스트', () => 
     });
   });
 
-  it('isLoading이 true일 경우 로딩 스피너 및 안내 문구를 노출해야 한다', () => {
+  it('isLoading이 true일 경우 스켈레톤 로더를 노출해야 한다', () => {
     useAuthStore.setState({
       isLoading: true,
       isAuthenticated: false,
@@ -36,7 +36,7 @@ describe('ProtectedRoute 라우트 가드 컴포넌트 단위 테스트', () => 
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('로그인 정보를 확인하고 있어요...')).toBeInTheDocument();
+    expect(screen.getByLabelText('인증 확인 중')).toBeInTheDocument();
     expect(screen.queryByText('내 냉장고 페이지')).not.toBeInTheDocument();
   });
 

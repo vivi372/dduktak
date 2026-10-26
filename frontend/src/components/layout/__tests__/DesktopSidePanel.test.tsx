@@ -5,9 +5,28 @@ import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { DesktopSidePanel } from '@/components/layout/DesktopSidePanel';
 import { useAuthStore } from '@/store/useAuthStore';
-import { useMockAuthStore } from '@/store/mockAuthStore';
 import { useThemeStore } from '@/store/themeStore';
+import * as homeApi from '@/services/homeApi';
 import type { UserProfileResponseDto } from '@/types/auth';
+import type { HomeBriefing } from '@/types/home';
+
+vi.mock('@/services/homeApi', () => ({
+  getHomeBriefing: vi.fn(),
+}));
+
+const mockBriefing: HomeBriefing = {
+  nickname: '뚝딱이',
+  totalIngredientsCount: 2,
+  expiringIngredientsCount: 2,
+  imminentIngredients: [
+    {
+      ingredientId: 101,
+      name: '계란',
+      dDay: 1,
+    },
+  ],
+  topRecipe: null,
+};
 
 const mockUser: UserProfileResponseDto = {
   userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
@@ -41,15 +60,12 @@ describe('DesktopSidePanel (데스크톱 좌측 40% Sticky 사이드 패널) 단
   const mockOnOpenAddTray = vi.fn();
 
   beforeEach(() => {
-    vi.clearAllMocks();
     useAuthStore.setState({
       isAuthenticated: true,
+      isLoading: false,
       user: { ...mockUser },
     });
-    useMockAuthStore.setState({
-      isLoggedIn: true,
-      hasIngredients: true,
-    });
+    vi.mocked(homeApi.getHomeBriefing).mockResolvedValue(mockBriefing);
   });
 
   it('브랜드 로고 타이틀과 슬로건을 정상적으로 렌더링해야 한다', () => {
@@ -81,26 +97,31 @@ describe('DesktopSidePanel (데스크톱 좌측 40% Sticky 사이드 패널) 단
     expect(screen.getByRole('link', { name: '로그인' })).toBeInTheDocument();
   });
 
-  it('내 냉장고 브리핑 위젯과 소비기한 임박 정보를 렌더링해야 한다', () => {
+  it('내 냉장고 브리핑 위젯과 소비기한 임박 정보를 렌더링해야 한다', async () => {
     renderWithProviders(<DesktopSidePanel onOpenAddTray={mockOnOpenAddTray} />);
 
     expect(screen.getByRole('heading', { level: 2, name: '내 냉장고 브리핑' })).toBeInTheDocument();
-    expect(screen.getByText(/의 재료가 곧 만료돼요!/)).toBeInTheDocument();
-    expect(screen.getByText('계란')).toBeInTheDocument();
+    expect(await screen.findByText(/의 재료가 곧 만료돼요!/)).toBeInTheDocument();
+    expect(await screen.findByText('계란')).toBeInTheDocument();
   });
 
-  it('재료가 0개일 때는 냉장고가 비어있다는 안내 문구를 렌더링해야 한다', () => {
-    useMockAuthStore.setState({ hasIngredients: false });
+  it('재료가 0개일 때는 냉장고가 비어있다는 안내 문구를 렌더링해야 한다', async () => {
+    vi.mocked(homeApi.getHomeBriefing).mockResolvedValue({
+      ...mockBriefing,
+      totalIngredientsCount: 0,
+      expiringIngredientsCount: 0,
+      imminentIngredients: [],
+    });
 
     renderWithProviders(<DesktopSidePanel onOpenAddTray={mockOnOpenAddTray} />);
 
-    expect(screen.getByText(/아직 등록된 재료가 없어요/)).toBeInTheDocument();
+    expect(await screen.findByText(/아직 등록된 재료가 없어요/)).toBeInTheDocument();
   });
 
   it('빠른 이동 메뉴(홈, 내 냉장고, 레시피, 마이페이지, 알림함) 링크를 모두 렌더링해야 한다', () => {
     renderWithProviders(<DesktopSidePanel onOpenAddTray={mockOnOpenAddTray} />);
 
-    expect(screen.getByRole('link', { name: /홈 피드/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '홈' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /내 냉장고/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /뚝딱 레시피/ })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /마이페이지/ })).toBeInTheDocument();

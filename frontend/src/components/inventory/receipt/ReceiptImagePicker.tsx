@@ -1,14 +1,13 @@
 import { useState, useRef, DragEvent, ChangeEvent } from 'react';
 import { Camera, Image as ImageIcon, UploadCloud, RefreshCw, Sparkles, FileText, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { SAMPLE_RECEIPT_PREVIEW_URL } from '@/mocks/ocr_scan.mock';
 import { cn } from '@/utils/cn';
 
 interface ReceiptImagePickerProps {
   /** 이미지 선택 완료 시 상위로 파일 및 미리보기 URL 전달 */
   onSelectImage: (file: File | null, previewUrl: string) => void;
-  /** 빠른 샘플 체험 클릭 시 */
-  onSelectSample: () => void;
+  /** 빠른 샘플 체험 클릭 시 (선택) */
+  onSelectSample?: () => void;
 }
 
 /**
@@ -16,7 +15,7 @@ interface ReceiptImagePickerProps {
  * - 모바일: [카메라 직접 촬영] / [갤러리 사진 선택] 액션시트 UI
  * - PC: 드래그 앤 드롭 영역 + 영수증 실시간 미리보기(Preview) 상자 및 사진 변경 UI
  */
-export function ReceiptImagePicker({ onSelectImage, onSelectSample }: ReceiptImagePickerProps) {
+export function ReceiptImagePicker({ onSelectImage }: ReceiptImagePickerProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -80,7 +79,7 @@ export function ReceiptImagePicker({ onSelectImage, onSelectSample }: ReceiptIma
 
   // 이미지 변경(다시 선택)
   const handleResetImage = () => {
-    if (previewUrl && previewUrl !== SAMPLE_RECEIPT_PREVIEW_URL) {
+    if (previewUrl) {
       URL.revokeObjectURL(previewUrl);
     }
     setSelectedFile(null);
@@ -273,9 +272,8 @@ export function ReceiptImagePicker({ onSelectImage, onSelectSample }: ReceiptIma
 
       {/* ======================================================== */}
       {/* 공통 CTA & 샘플 체험 원클릭 영역 */}
-      {/* ======================================================== */}
-      <div className="pt-2 space-y-2.5">
-        {previewUrl ? (
+      <div className="pt-2">
+        {previewUrl && (
           <button
             type="button"
             onClick={handleStartScan}
@@ -284,20 +282,6 @@ export function ReceiptImagePicker({ onSelectImage, onSelectSample }: ReceiptIma
             <Sparkles className="h-4 w-4" />
             <span>영수증 AI 분석 시작하기</span>
           </button>
-        ) : (
-          <div className="rounded-xl border border-dashed border-border/80 bg-muted/30 p-3 text-center">
-            <p className="text-xs text-muted-foreground">
-              영수증 사진이 없으신가요?
-            </p>
-            <button
-              type="button"
-              onClick={onSelectSample}
-              className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-secondary px-3 py-1.5 text-xs font-bold text-secondary-foreground hover:bg-secondary/80 active:scale-95"
-            >
-              <Sparkles className="h-3.5 w-3.5 text-brand-500" />
-              <span>샘플 영수증으로 바로 체험하기</span>
-            </button>
-          </div>
         )}
       </div>
     </div>

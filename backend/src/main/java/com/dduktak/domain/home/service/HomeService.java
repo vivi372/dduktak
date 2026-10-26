@@ -48,13 +48,23 @@ public class HomeService {
                                 .filter(n -> n != null && !n.isBlank())
                                 .orElse("뚝딱이");
 
-                // 2. 소비기한 임박(0 <= D-Day <= 3) 활성 재료 수 집계
+                // 2. 전체 활성 식재료 수 및 소비기한 임박(0 <= D-Day <= 3) 활성 재료 수 집계
+                long totalCount = userIngredientRepository.countActiveByUserId(userId);
                 long expiringCount = userIngredientRepository.countImminentByUserId(userId);
 
-                // 3. 소비기한 가장 임박한 상위 3개 식재료 목록 조회 (expire_date ASC)
+                // 3. 상위 3개 식재료 목록 조회 (임박 재료 우선, 임박 재료 없더라도 활성 재료 있으면 빠른 순 조회)
                 List<ImminentIngredientDto> imminentList = Collections.emptyList();
                 if (expiringCount > 0) {
                         List<UserIngredient> ingredients = userIngredientRepository.findTopImminentByUserId(userId, 3);
+                        imminentList = ingredients.stream()
+                                        .map(ui -> ImminentIngredientDto.builder()
+                                                        .ingredientId(ui.getIngredientId())
+                                                        .name(ui.getName())
+                                                        .dDay(ui.getDDay())
+                                                        .build())
+                                        .collect(Collectors.toList());
+                } else if (totalCount > 0) {
+                        List<UserIngredient> ingredients = userIngredientRepository.findTopActiveByUserId(userId, 3);
                         imminentList = ingredients.stream()
                                         .map(ui -> ImminentIngredientDto.builder()
                                                         .ingredientId(ui.getIngredientId())
@@ -96,6 +106,7 @@ public class HomeService {
                 // 5. 종합 브리핑 DTO 조합 및 반환
                 return HomeBriefingResponseDto.builder()
                                 .nickname(nickname)
+                                .totalIngredientsCount(totalCount)
                                 .expiringIngredientsCount(expiringCount)
                                 .imminentIngredients(imminentList)
                                 .topRecipe(topRecipe)

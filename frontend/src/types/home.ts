@@ -32,6 +32,8 @@ export interface BriefingTopRecipe {
 export interface HomeBriefing {
   /** 유저 닉네임 */
   nickname: string;
+  /** 보관 중인 전체 활성 식재료 수 */
+  totalIngredientsCount: number;
   /** 0 <= D-Day <= 3 범위 임박 식재료 수 */
   expiringIngredientsCount: number;
   /** 임박 식재료 상위 3개 목록 */

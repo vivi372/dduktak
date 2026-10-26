@@ -1,5 +1,4 @@
 import { create } from 'zustand';
-import { mockNotifications } from '@/mocks/notifications.mock';
 import type { NotificationItem, NotificationSettings } from '@/types/notification';
 
 interface NotificationState {
@@ -45,9 +44,9 @@ const calcUnread = (list: NotificationItem[]) => {
  * 알림 센터 및 헤더 Red Dot 뱃지 동기화를 위한 Zustand 전역 스토어
  */
 export const useNotificationStore = create<NotificationState>((set) => ({
-  notifications: mockNotifications.notifications,
-  unreadCount: mockNotifications.unreadCount,
-  hasUnread: mockNotifications.hasUnread,
+  notifications: [],
+  unreadCount: 0,
+  hasUnread: false,
   settings: DEFAULT_SETTINGS,
 
   markAsRead: (notificationId: number) => {
@@ -102,9 +101,9 @@ export const useNotificationStore = create<NotificationState>((set) => ({
 
   resetNotifications: () => {
     set({
-      notifications: mockNotifications.notifications,
-      unreadCount: mockNotifications.unreadCount,
-      hasUnread: mockNotifications.hasUnread,
+      notifications: [],
+      unreadCount: 0,
+      hasUnread: false,
       settings: DEFAULT_SETTINGS,
     });
   },

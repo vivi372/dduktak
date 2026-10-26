@@ -18,18 +18,19 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAuthStore();
   const location = useLocation();
 
-  // 초기 세션 검증 진행 중일 때는 부드러운 스피너 노출
+  // 초기 세션 검증 진행 중일 때는 깔끔한 스켈레톤 뷰 제공
   if (isLoading) {
     return (
-      <div
-        className="flex min-h-[50vh] flex-col items-center justify-center gap-3 p-6 text-center"
-        aria-busy="true"
-        aria-label="인증 정보 확인 중"
-      >
-        <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
-        <p className="text-sm font-medium text-muted-foreground animate-pulse">
-          로그인 정보를 확인하고 있어요...
-        </p>
+      <div className="space-y-4 p-4 animate-in fade-in-50" aria-busy="true" aria-label="인증 확인 중">
+        <div className="flex items-center justify-between">
+          <div className="h-7 w-28 rounded-xl bg-muted/60 animate-pulse" />
+          <div className="h-7 w-20 rounded-xl bg-muted/60 animate-pulse" />
+        </div>
+        <div className="space-y-3 pt-2">
+          <div className="h-28 w-full rounded-2xl bg-muted/50 animate-pulse" />
+          <div className="h-24 w-full rounded-2xl bg-muted/50 animate-pulse" />
+          <div className="h-24 w-full rounded-2xl bg-muted/50 animate-pulse" />
+        </div>
       </div>
     );
   }

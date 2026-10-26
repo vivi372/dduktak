@@ -6,6 +6,8 @@ import { Sparkles, Utensils } from 'lucide-react';
 import { useAppSplashStore } from '@/store/useAppSplashStore';
 import logoHd from '@/assets/logo-hd.png';
 
+import { usePlatformStore } from '@/store/usePlatformStore';
+
 interface AppSplashScreenProps {
   /** 스플래시 노출 유지 시간 (밀리초, 기본값 1600ms) */
   duration?: number;
@@ -13,18 +15,22 @@ interface AppSplashScreenProps {
 
 /**
  * 앱 구동 오프닝 인트로 & 스플래시 애니메이션 (App Launch Splash Screen)
- * - '오늘의 뚝딱' 공식 브랜드 로고(오늘의 뚝딱 로고.png)를 4K 고해상도로 화질 개선하여 적용
- * - Capacitor 네이티브 스플래시 스크린 자동 Hide 및 깜빡임 없는 크로스페이드(Fade-out) 연동
+ * - 모바일 하이브리드 앱(isApp) 환경에서만 실행되며, 일반 웹 브라우저 접속 시에는 노출되지 않습니다.
  */
 export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
   const { isVisible, hideSplash } = useAppSplashStore();
+  const { isApp } = usePlatformStore();
 
   useEffect(() => {
-    // 1. 하이브리드 모바일 환경일 경우 네이티브 스플래시를 즉시 은폐하고 리액트 리치 애니메이션으로 바통 터치
+    // 1. 웹 브라우저 환경인 경우 스플래시를 즉시 숨김
+    if (!isApp) {
+      if (isVisible) hideSplash();
+      return;
+    }
+
+    // 2. 하이브리드 모바일 환경일 경우 네이티브 스플래시를 즉시 은폐하고 리액트 애니메이션으로 전환
     if (Capacitor.isNativePlatform()) {
-      SplashScreen.hide().catch(() => {
-        // 웹 브라우저나 플러그인 미지원 환경 무시
-      });
+      SplashScreen.hide().catch(() => {});
     }
 
     if (!isVisible) return;
@@ -39,7 +45,7 @@ export function AppSplashScreen({ duration = 1600 }: AppSplashScreenProps) {
 
   return (
     <AnimatePresence>
-      {isVisible && (
+      {isApp && isVisible && (
         <motion.div
           key="app-splash-screen"
           role="status"

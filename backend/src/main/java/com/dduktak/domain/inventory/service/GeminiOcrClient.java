@@ -8,9 +8,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
 import java.util.*;
 
 /**
@@ -67,24 +69,29 @@ public class GeminiOcrClient {
             log.info("[GeminiOcrClient] Gemini Flash API 호출 시작 (모델: {}, 이미지 크기: {} bytes)",
                     geminiProperties.getModel(), imageBytes.length);
 
+            SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+            requestFactory.setConnectTimeout(Duration.ofSeconds(10));
+            requestFactory.setReadTimeout(Duration.ofSeconds(60));
+
             RestClient restClient = RestClient.builder()
+                    .requestFactory(requestFactory)
                     .baseUrl(geminiProperties.getBaseUrl())
                     .build();
 
-            // Google AI Studio REST API 페이로드 구성
+            // Google AI Studio REST API 페이로드 구성 (camelCase 표준 스키마 준수)
             Map<String, Object> textPart = Map.of("text", SYSTEM_PROMPT);
             Map<String, Object> inlineData = Map.of(
-                    "mime_type", resolvedMimeType,
+                    "mimeType", resolvedMimeType,
                     "data", base64Image
             );
-            Map<String, Object> imagePart = Map.of("inline_data", inlineData);
+            Map<String, Object> imagePart = Map.of("inlineData", inlineData);
 
             Map<String, Object> contentObj = Map.of(
                     "parts", List.of(textPart, imagePart)
             );
 
             Map<String, Object> generationConfig = Map.of(
-                    "response_mime_type", "application/json"
+                    "responseMimeType", "application/json"
             );
 
             Map<String, Object> requestPayload = Map.of(
@@ -92,21 +99,42 @@ public class GeminiOcrClient {
                     "generationConfig", generationConfig
             );
 
-            String uri = String.format("/v1beta/models/%s:generateContent?key=%s",
-                    geminiProperties.getModel(), apiKey);
+            List<String> targetModels = new ArrayList<>();
+            String primaryModel = geminiProperties.getModel();
+            targetModels.add(primaryModel);
+            if (!"gemini-3.1-flash-lite".equalsIgnoreCase(primaryModel)) {
+                targetModels.add("gemini-3.1-flash-lite");
+            }
 
-            String rawResponse = restClient.post()
-                    .uri(uri)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(requestPayload)
-                    .retrieve()
-                    .body(String.class);
+            String rawResponse = null;
+            for (String currentModel : targetModels) {
+                String uri = String.format("/v1beta/models/%s:generateContent?key=%s",
+                        currentModel, apiKey);
+                try {
+                    log.info("[GeminiOcrClient] Gemini API 호출 시도 (모델: {})", currentModel);
+                    rawResponse = restClient.post()
+                            .uri(uri)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(requestPayload)
+                            .retrieve()
+                            .body(String.class);
+
+                    if (rawResponse != null && !rawResponse.isBlank()) {
+                        log.info("[GeminiOcrClient] Gemini 모델 '{}' 분석 응답 성공", currentModel);
+                        break;
+                    }
+                } catch (Exception ex) {
+                    log.warn("[GeminiOcrClient] Gemini 모델 '{}' 호출 실패: {}. 다음 모델로 폴백 시도합니다.",
+                            currentModel, ex.getMessage());
+                }
+            }
 
             if (rawResponse == null || rawResponse.isBlank()) {
                 log.warn("[GeminiOcrClient] Gemini API 응답 본문이 비어 있습니다.");
                 return Collections.emptyList();
             }
 
+            log.info("[GeminiOcrClient] Gemini API 원문 수신 완료: {}", rawResponse);
             return parseGeminiResponse(rawResponse);
 
         } catch (Exception e) {

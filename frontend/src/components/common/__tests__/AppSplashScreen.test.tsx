@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, act } from '@testing-library/react';
 import { AppSplashScreen } from '@/components/common/AppSplashScreen';
 import { useAppSplashStore } from '@/store/useAppSplashStore';
+import { usePlatformStore } from '@/store/usePlatformStore';
 
 // Capacitor 및 SplashScreen 모킹
 vi.mock('@capacitor/core', () => ({
@@ -19,6 +20,7 @@ vi.mock('@capacitor/splash-screen', () => ({
 describe('AppSplashScreen 컴포넌트 단위 테스트', () => {
   beforeEach(() => {
     vi.useFakeTimers();
+    usePlatformStore.setState({ isApp: true, isWeb: false, mode: 'app' });
     useAppSplashStore.setState({ isVisible: true, hasPlayedThisSession: false });
   });
 

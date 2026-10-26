@@ -5,6 +5,7 @@
  * 그리고 바코드 및 영수증 OCR 스캔 뮤테이션을 제공합니다.
  */
 
+import { mockMasterIngredients } from '@/mocks/master_ingredients.mock';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getMasterIngredients,
@@ -17,7 +18,6 @@ import {
   scanReceiptOcr,
 } from '@/services/inventoryApi';
 import { useAuth } from '@/hooks/useAuth';
-import { mockMasterIngredients, mockInventory } from '@/mocks';
 import type {
   InventoryItem,
   MasterIngredient,
@@ -37,7 +37,7 @@ import type {
 export const INVENTORY_QUERY_KEYS = {
   all: ['inventory'] as const,
   master: (params?: MasterIngredientQueryParams) => ['inventory', 'master-ingredients', params] as const,
-  list: (params?: InventoryQueryParams) => ['inventory', 'list', params] as const,
+  list: (params?: InventoryQueryParams, userId?: string) => ['inventory', 'list', userId, params] as const,
 };
 
 /**
@@ -49,7 +49,11 @@ export function useMasterIngredients(params?: MasterIngredientQueryParams) {
   return useQuery<MasterIngredient[]>({
     queryKey: INVENTORY_QUERY_KEYS.master(params),
     queryFn: async () => {
-      return await getMasterIngredients(params);
+      try {
+        return await getMasterIngredients(params);
+      } catch {
+        return mockMasterIngredients;
+      }
     },
     initialData: mockMasterIngredients,
     staleTime: 1000 * 60 * 30, // 30분 장기 캐싱 (변동이 적은 마스터 데이터)
@@ -63,15 +67,14 @@ export function useMasterIngredients(params?: MasterIngredientQueryParams) {
  * @param params 검색어, 카테고리, 보관장소, 상태 필터
  */
 export function useInventoryList(params?: InventoryQueryParams) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
 
   return useQuery<InventoryItem[]>({
-    queryKey: INVENTORY_QUERY_KEYS.list(params),
+    queryKey: INVENTORY_QUERY_KEYS.list(params, user?.userId),
     queryFn: async () => {
       return await getMyIngredients(params);
     },
-    enabled: isAuthenticated,
-    initialData: mockInventory,
+    enabled: isAuthenticated && Boolean(user?.userId),
     staleTime: 1000 * 60 * 2, // 2분 캐싱
   });
 }

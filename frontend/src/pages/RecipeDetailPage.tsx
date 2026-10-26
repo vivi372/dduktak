@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import {
   Clock,
@@ -28,7 +28,6 @@ import {
 import { useMyIngredients } from '@/hooks/useInventory';
 import { useAuth } from '@/hooks/useAuth';
 import { calculateRecipeMatching } from '@/mocks/matching.mock';
-import { mockRecipeDetails } from '@/mocks/recipes.mock';
 import { ROUTES } from '@/constants/routes';
 import { DEFAULT_RECIPE_THUMBNAIL_URL } from '@/constants/images';
 import { cn } from '@/utils/cn';
@@ -49,7 +48,7 @@ export default function RecipeDetailPage() {
 
   // 1. 레시피 상세 API 조회
   const {
-    data: fetchedRecipe,
+    data: recipe,
     isLoading: isRecipeLoading,
     isError: isRecipeError,
   } = useRecipeDetail(recipeId);
@@ -62,15 +61,16 @@ export default function RecipeDetailPage() {
   const toggleScrapMutation = useToggleRecipeScrap();
   const deleteRecipeMutation = useDeleteRecipe();
 
-  // 폴백 레시피 데이터 (네트워크 지연/에러 시 방어)
-  const recipe = useMemo(() => {
-    if (fetchedRecipe) return fetchedRecipe;
-    return mockRecipeDetails.find((r) => r.recipeId === recipeId) ?? mockRecipeDetails[0];
-  }, [fetchedRecipe, recipeId]);
-
   // 로컬 상호작용 상태
-  const [servings, setServings] = useState<number>(recipe?.servings || 1);
+  const [servings, setServings] = useState<number>(1);
   const [cookModalOpen, setCookModalOpen] = useState<boolean>(false);
+
+  // 레시피 로드 시 레시피의 기본 인분수로 동기화
+  useEffect(() => {
+    if (recipe?.servings) {
+      setServings(recipe.servings);
+    }
+  }, [recipe?.servings]);
 
   // 현재 인분 기준 스마트 매칭 스코어 및 재료 상태 실시간 연산 (실제 myIngredients 연동)
   const matchingScore = useMemo(() => {
@@ -155,7 +155,7 @@ export default function RecipeDetailPage() {
     );
   }
 
-  if (isRecipeError && !recipe) {
+  if (isRecipeError || !recipe) {
     return (
       <div className="py-20 text-center">
         <p className="text-muted-foreground">레시피를 찾을 수 없습니다.</p>

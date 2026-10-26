@@ -1,23 +1,25 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Compass, LogIn, LogOut, Play, Refrigerator, Sparkles, Wrench, X } from 'lucide-react';
+import { Compass, Globe, LogIn, LogOut, Play, Refrigerator, Smartphone, Sparkles, Wrench, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
 import { useMockAuthStore } from '@/store/mockAuthStore';
 import { useAppSplashStore } from '@/store/useAppSplashStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { usePlatformStore, type PlatformMode } from '@/store/usePlatformStore';
 import { cn } from '@/utils/cn';
 
 /**
  * 개발자 검수용 플로팅 상태 스위처 (Floating Dev Switcher)
- * - 한 번의 클릭으로 [정상 브리핑 vs 재료 0개 Empty State], [로그인 vs 비로그인], [온보딩 웰컴 모달]을 즉시 전환
+ * - 한 번의 클릭으로 [플랫폼 모드: 자동/App/Web], [정상 브리핑 vs 재료 0개 Empty State], [로그인 vs 비로그인], [온보딩 웰컴 모달]을 즉시 전환
  */
 export function FloatingDevSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const { replaySplash } = useAppSplashStore();
   const { resetOnboarding } = useOnboardingStore();
+  const { mode, isApp, setMode } = usePlatformStore();
   const {
     isLoggedIn,
     hasIngredients,
@@ -26,6 +28,17 @@ export function FloatingDevSwitcher() {
     logout,
     openWelcomeModal,
   } = useMockAuthStore();
+
+  const handlePlatformChange = (newMode: PlatformMode) => {
+    setMode(newMode);
+    toast.success(
+      newMode === 'auto'
+        ? '🤖 자동 감지 모드로 전환되었습니다.'
+        : newMode === 'app'
+        ? '📱 강제 모바일 앱(Webview) 모드로 전환되었습니다.'
+        : '💻 강제 PC/모바일 웹 브라우저 모드로 전환되었습니다.',
+    );
+  };
 
   /** 재료 보유 상태 토글 */
   const handleToggleIngredients = (has: boolean) => {
@@ -104,6 +117,57 @@ export function FloatingDevSwitcher() {
 
               {/* 컨트롤 옵션 목록 */}
               <div className="space-y-3.5 text-xs">
+                {/* 0. 플랫폼 환경 분기 (웹 / 앱 시뮬레이션) */}
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <span className="font-bold text-muted-foreground flex items-center gap-1">
+                      {isApp ? <Smartphone className="h-3.5 w-3.5 text-brand-500" /> : <Globe className="h-3.5 w-3.5 text-mint-500" />}
+                      실행 플랫폼
+                    </span>
+                    <span className="font-semibold text-brand-600 dark:text-brand-300">
+                      {isApp ? '📱 모바일 앱 모드' : '💻 웹 브라우저 모드'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-1 rounded-xl bg-muted p-1">
+                    <button
+                      type="button"
+                      onClick={() => handlePlatformChange('auto')}
+                      className={cn(
+                        'min-h-8 rounded-lg font-bold text-[11px] transition-all',
+                        mode === 'auto'
+                          ? 'bg-foreground text-background shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      자동 (감지)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePlatformChange('web')}
+                      className={cn(
+                        'min-h-8 rounded-lg font-bold text-[11px] transition-all',
+                        mode === 'web'
+                          ? 'bg-mint-500 text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      강제 Web
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handlePlatformChange('app')}
+                      className={cn(
+                        'min-h-8 rounded-lg font-bold text-[11px] transition-all',
+                        mode === 'app'
+                          ? 'bg-brand-500 text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground',
+                      )}
+                    >
+                      강제 App
+                    </button>
+                  </div>
+                </div>
+
                 {/* 1. 홈 브리핑 식재료 상태 */}
                 <div>
                   <div className="mb-1.5 flex items-center justify-between">

@@ -9,6 +9,7 @@ import RecipeFormPage from '@/pages/RecipeFormPage';
 import MyPage from '@/pages/MyPage';
 import NotificationPage from '@/pages/NotificationPage';
 import LoginPage from '@/pages/LoginPage';
+import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import OnboardingPage from '@/pages/OnboardingPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { ROUTES } from '@/constants/routes';
@@ -77,6 +78,11 @@ export const router = createBrowserRouter([
         path: ROUTES.LOGIN,
         element: <LoginPage />,
         handle: h({ title: '로그인', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
+      },
+      {
+        path: ROUTES.RESET_PASSWORD,
+        element: <ResetPasswordPage />,
+        handle: h({ title: '비밀번호 재설정', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
       },
       {
         path: ROUTES.ONBOARDING,

@@ -73,7 +73,18 @@ export async function signInWithOAuth(provider: 'kakao' | 'google') {
  */
 export async function sendPasswordResetEmail(email: string) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : undefined,
+    redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * 비밀번호 재설정 완료 (새 비밀번호로 갱신)
+ */
+export async function updatePassword(newPassword: string) {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
   });
   if (error) throw error;
   return data;

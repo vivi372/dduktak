@@ -49,6 +49,7 @@ export interface InitProfileResponseDto {
   nickname: string;
   userTag: string;
   profileImage: string;
+  isNewUser?: boolean;
 }
 
 /**

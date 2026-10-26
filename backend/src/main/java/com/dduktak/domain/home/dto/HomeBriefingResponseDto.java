@@ -22,6 +22,11 @@ public class HomeBriefingResponseDto {
     private String nickname;
 
     /**
+     * 보관 중인 전체 활성 식재료 수 (status='ACTIVE')
+     */
+    private long totalIngredientsCount;
+
+    /**
      * 소비기한 임박 식재료 수 (0 <= D-Day <= 3)
      */
     private long expiringIngredientsCount;

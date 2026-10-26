@@ -1,60 +1,55 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bot, Sparkles, AlertCircle } from 'lucide-react';
+import { Bot, Sparkles } from 'lucide-react';
 
 interface ReceiptScanningProgressProps {
-  /** 분석 완료 시 호출 (isSuccess 여부 전달) */
-  onComplete: (isSuccess: boolean) => void;
   /** 미리보기 영수증 이미지 URL (옵션) */
   previewUrl?: string | null;
 }
 
 /**
  * 2. 영수증 OCR 스캔 분석 로딩 UX
- * - 0% ~ 100% 점진적 프로그레스 바
- * - 텍스트 인식 ➔ 표준 식재료 매핑 ➔ 소비기한 연산 실시간 상태 캡션
+ * - Gemini Flash AI Vision 분석 대기 중 실시간 상태 캡션 및 점진적 프로그레스
  * - 4행 식재료 품목 Skeleton UI (Shimmer 애니메이션)
- * - Fail-Safe 테스트를 위한 미인식 시뮬레이션 버튼 지원
  */
 export function ReceiptScanningProgress({
-  onComplete,
+  previewUrl: _previewUrl,
 }: ReceiptScanningProgressProps) {
-  const [progress, setProgress] = useState(15);
+  const [progress, setProgress] = useState(25);
   const [statusMessage, setStatusMessage] = useState('영수증 이미지를 분석하는 중...');
 
   useEffect(() => {
-    // 0% -> 100% 프로그레스 인터벌
+    if (import.meta.env.MODE === 'test') {
+      return;
+    }
+
     const timer1 = setTimeout(() => {
       setProgress(45);
-      setStatusMessage('OCR 텍스트에서 식재료 항목을 추출하고 있어요 📝');
-    }, 400);
+      setStatusMessage('Gemini AI가 영수증 텍스트를 읽고 있어요 📝');
+    }, 1500);
 
     const timer2 = setTimeout(() => {
-      setProgress(80);
-      setStatusMessage('식재료 목록 및 카테고리 분류 중 🔍');
-    }, 900);
+      setProgress(70);
+      setStatusMessage('식재료 항목을 추출하고 표준 마스터 이름과 매핑 중 🔍');
+    }, 4000);
 
     const timer3 = setTimeout(() => {
-      setProgress(100);
-      setStatusMessage('권장 소비기한 D-Day 계산 완료! ✨');
-    }, 1400);
+      setProgress(88);
+      setStatusMessage('권장 소비기한 D-Day를 계산하고 있어요 ✨');
+    }, 10000);
 
-    const finishTimer = setTimeout(() => {
-      onComplete(true);
-    }, 1800);
+    const timer4 = setTimeout(() => {
+      setProgress(95);
+      setStatusMessage('거의 다 되었어요! 잠시만 기다려주세요 ⏳');
+    }, 25000);
 
     return () => {
       clearTimeout(timer1);
       clearTimeout(timer2);
       clearTimeout(timer3);
-      clearTimeout(finishTimer);
+      clearTimeout(timer4);
     };
-  }, [onComplete]);
-
-  // 실패 케이스 강제 시뮬레이션
-  const handleTriggerFail = () => {
-    onComplete(false);
-  };
+  }, []);
 
   return (
     <div className="space-y-6 py-2">
@@ -129,18 +124,7 @@ export function ReceiptScanningProgress({
         ))}
       </div>
 
-      {/* 4. 개발 검수/테스트용 실패 시뮬레이션 버튼 */}
-      <div className="pt-1 text-center">
-        <button
-          type="button"
-          onClick={handleTriggerFail}
-          className="inline-flex items-center gap-1 text-[11px] text-muted-foreground/70 hover:text-destructive hover:underline"
-          title="인식 실패(0건) 예외 처리 흐름을 확인합니다"
-        >
-          <AlertCircle className="h-3 w-3" />
-          <span>(테스트용) 미인식 실패 예외 화면으로 건너뛰기</span>
-        </button>
-      </div>
+
     </div>
   );
 }

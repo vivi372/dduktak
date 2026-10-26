@@ -6,6 +6,8 @@ import { mockCategories } from '@/mocks';
 import { cn } from '@/utils/cn';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { EmptyState } from '@/components/common/EmptyState';
+import { InventoryCardSkeleton } from '@/components/common/Skeleton';
+import { usePlatformStore } from '@/store/usePlatformStore';
 import {
   InventoryAccordionItem,
   ConsumeModal,
@@ -48,6 +50,7 @@ const STORAGE_FILTERS: { key: StorageFilter; label: string }[] = [
  */
 export default function InventoryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const { isApp } = usePlatformStore();
 
   // 검색 및 필터 상태
   const [searchQuery, setSearchQuery] = useState('');
@@ -254,8 +257,8 @@ export default function InventoryPage() {
           </p>
         </div>
 
-        {/* 3대 추가 CTA: 직접 추가 / 바코드 / 영수증 */}
-        <div className="grid grid-cols-3 gap-1.5 sm:gap-2 shrink-0">
+        {/* 추가 CTA: 앱 환경에서는 직접 추가/바코드/영수증 3종, 웹 브라우저 환경에서는 직접 추가/영수증 2종 */}
+        <div className={cn('gap-1.5 sm:gap-2 shrink-0 grid', isApp ? 'grid-cols-3' : 'grid-cols-2')}>
           <button
             type="button"
             onClick={() => {
@@ -265,18 +268,20 @@ export default function InventoryPage() {
             className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-2 sm:px-3.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
           >
             <Plus className="h-4 w-4 shrink-0" />
-            <span className="truncate">재료 추가</span>
+            <span className="truncate">{isApp ? '재료 추가' : '직접 추가'}</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => setIsBarcodeModalOpen(true)}
-            aria-label="바코드 스캔으로 재료 추가"
-            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95 shadow-xs"
-          >
-            <ScanBarcode className="h-4 w-4 shrink-0 text-brand-500" />
-            <span className="truncate">바코드</span>
-          </button>
+          {isApp && (
+            <button
+              type="button"
+              onClick={() => setIsBarcodeModalOpen(true)}
+              aria-label="바코드 스캔으로 재료 추가"
+              className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95 shadow-xs"
+            >
+              <ScanBarcode className="h-4 w-4 shrink-0 text-brand-500" />
+              <span className="truncate">바코드</span>
+            </button>
+          )}
 
           <button
             type="button"
@@ -285,7 +290,7 @@ export default function InventoryPage() {
             className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95 shadow-xs"
           >
             <Receipt className="h-4 w-4 shrink-0 text-mint-600" />
-            <span className="truncate">영수증</span>
+            <span className="truncate">{isApp ? '영수증' : '영수증 스캔'}</span>
           </button>
         </div>
       </div>
@@ -366,9 +371,10 @@ export default function InventoryPage() {
       {/* 4. 메인 인벤토리 리스트 (2-Tier 아코디언) */}
       <section aria-label="보관 중인 신선 재료 목록">
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-            <p className="text-sm font-semibold">내 냉장고 재료를 불러오는 중입니다...</p>
+          <div className="space-y-3">
+            <InventoryCardSkeleton />
+            <InventoryCardSkeleton />
+            <InventoryCardSkeleton />
           </div>
         ) : groupedItems.length > 0 ? (
           <div className="space-y-3">

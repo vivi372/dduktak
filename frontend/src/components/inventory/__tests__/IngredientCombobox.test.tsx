@@ -1,8 +1,18 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IngredientCombobox } from '../IngredientCombobox';
+import { mockMasterIngredients } from '@/mocks/master_ingredients.mock';
+import * as inventoryApi from '@/services/inventoryApi';
+
+vi.mock('@/services/inventoryApi', async () => {
+  const actual = await vi.importActual<typeof import('@/services/inventoryApi')>('@/services/inventoryApi');
+  return {
+    ...actual,
+    getMasterIngredients: vi.fn(),
+  };
+});
 
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({
@@ -16,6 +26,11 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe('IngredientCombobox 표준 식재료 검색 컴포넌트 단위 테스트', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(inventoryApi.getMasterIngredients).mockResolvedValue(mockMasterIngredients);
+  });
+
   it('기본 상태에서는 플레이스홀더 텍스트를 렌더링해야 한다', () => {
     const handleChange = vi.fn();
     renderWithProviders(<IngredientCombobox onChange={handleChange} />);

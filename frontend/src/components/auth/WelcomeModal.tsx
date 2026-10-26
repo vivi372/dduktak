@@ -1,10 +1,10 @@
 import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Camera, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
-import { useMockAuthStore } from '@/store/mockAuthStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /**
  * 첫 로그인 온보딩 웰컴 모달 (06_UI_UX_GUIDELINES.md 4.5절 및 module_01_user.md 2.3절 준수)
@@ -12,7 +12,15 @@ import { useMockAuthStore } from '@/store/mockAuthStore';
  */
 export function WelcomeModal() {
   const navigate = useNavigate();
-  const { showWelcomeModal, closeWelcomeModal, user } = useMockAuthStore();
+  const { pathname } = useLocation();
+  const { user, showWelcomeModal: authShowWelcomeModal, closeWelcomeModal } = useAuthStore();
+
+  const isExcludedPage =
+    pathname === ROUTES.LOGIN ||
+    pathname === ROUTES.ONBOARDING ||
+    pathname === ROUTES.RESET_PASSWORD;
+
+  const showWelcomeModal = !isExcludedPage && authShowWelcomeModal;
 
   // ESC 키로 모달 닫기
   useEffect(() => {
@@ -35,6 +43,9 @@ export function WelcomeModal() {
     closeWelcomeModal();
     navigate(ROUTES.HOME);
   };
+
+  if (!user) return null;
+
 
   return (
     <AnimatePresence>

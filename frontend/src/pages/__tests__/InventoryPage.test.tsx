@@ -1,8 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { usePlatformStore } from '@/store/usePlatformStore';
+import { useAuthStore } from '@/store/useAuthStore';
+import * as inventoryApi from '@/services/inventoryApi';
+import { mockInventory } from '@/mocks/inventory.mock';
 import InventoryPage from '../InventoryPage';
 
 // sonner toast 모킹
@@ -13,6 +17,15 @@ vi.mock('sonner', () => ({
     info: vi.fn(),
   },
 }));
+
+vi.mock('@/services/inventoryApi', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/services/inventoryApi')>();
+  const { mockInventory: items } = await import('@/mocks/inventory.mock');
+  return {
+    ...actual,
+    getMyIngredients: vi.fn().mockImplementation(() => Promise.resolve(items)),
+  };
+});
 
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({
@@ -30,6 +43,23 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
+  beforeEach(() => {
+    usePlatformStore.setState({ isApp: true, isWeb: false, mode: 'app' });
+    useAuthStore.setState({
+      isAuthenticated: true,
+      user: {
+        userId: 'test-user',
+        email: 'test@dduktak.com',
+        nickname: '자취마스터',
+        userTag: '0001',
+        profileImage: '',
+        status: 'ACTIVE',
+        quietTimeStart: '21:00:00',
+        quietTimeEnd: '08:00:00',
+      },
+    });
+    vi.mocked(inventoryApi.getMyIngredients).mockResolvedValue(mockInventory);
+  });
   it('타이틀 및 상단 3대 추가 CTA(재료 추가, 바코드, 영수증)를 렌더링해야 한다', () => {
     renderWithProviders(<InventoryPage />);
 
@@ -39,17 +69,23 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     expect(screen.getByRole('button', { name: '영수증 스캔으로 재료 추가' })).toBeInTheDocument();
   });
 
-  it('2-Tier 아코디언 메인 리스트에 대표 식재료 카드들이 렌더링되어야 한다', () => {
+  it('2-Tier 아코디언 메인 리스트에 대표 식재료 카드들이 렌더링되어야 한다', async () => {
     renderWithProviders(<InventoryPage />);
 
-    expect(screen.getByRole('heading', { level: 2, name: '계란' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: '양파' })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { level: 2, name: '돼지고기 (삼겹살/목살)' })).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2, name: '계란' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: '양파' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 2, name: '돼지고기 (삼겹살/목살)' })).toBeInTheDocument();
+    });
   });
 
   it('보관 장소 필터 탭(냉동) 클릭 시 냉동 재료만 필터링되어야 한다', async () => {
     const user = userEvent.setup();
     renderWithProviders(<InventoryPage />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2, name: '계란' })).toBeInTheDocument();
+    });
 
     const frozenTab = screen.getByRole('tab', { name: '냉동' });
     await user.click(frozenTab);
@@ -63,6 +99,10 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     const user = userEvent.setup();
     renderWithProviders(<InventoryPage />);
 
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 2, name: '계란' })).toBeInTheDocument();
+    });
+
     const searchInput = screen.getByPlaceholderText(/재료명 또는 메모로 검색/);
     await user.type(searchInput, '편의점'); // 계란 메모에 '편의점 1+1 행사' 포함
 
@@ -70,10 +110,12 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     expect(screen.queryByRole('heading', { level: 2, name: '대파' })).not.toBeInTheDocument();
   });
 
-  it('소비기한이 도과한 재료(두부, 떡국떡)는 하단 만료 영역 아코디언으로 분리되어야 한다', () => {
+  it('소비기한이 도과한 재료(두부, 떡국떡)는 하단 만료 영역 아코디언으로 분리되어야 한다', async () => {
     renderWithProviders(<InventoryPage />);
 
-    expect(screen.getByText(/소비기한이 지난 재료 2개/)).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText(/소비기한이 지난 재료 2개/)).toBeInTheDocument();
+    });
   });
 
   it('바코드 버튼 클릭 시 바코드 스캔 모달이 열려야 한다', async () => {

@@ -34,6 +34,10 @@ interface AuthState {
   logout: () => Promise<void>;
   /** 401 인증 만료 처리 */
   handleUnauthorized: () => void;
+  /** 신규 가입자 웰컴 모달 상태 */
+  showWelcomeModal: boolean;
+  openWelcomeModal: () => void;
+  closeWelcomeModal: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -42,6 +46,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isAuthenticated: false,
   isLoading: true,
   isInitialized: false,
+  showWelcomeModal: false,
+  openWelcomeModal: () => set({ showWelcomeModal: true }),
+  closeWelcomeModal: () => set({ showWelcomeModal: false }),
 
   initialize: () => {
     // 1. 전역 401 세션 만료 이벤트 수신 리스너 등록
@@ -59,7 +66,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({ session, isAuthenticated: true, isLoading: true });
         try {
           // 백엔드 세션 동기화 및 지연 프로필 생성 (Lazy Profile JIT Sync)
-          await authApi.initProfile();
+          const initResult = await authApi.initProfile();
           // 전체 프로필 상세 조회
           const profile = await authApi.getMyProfile();
           set({
@@ -68,6 +75,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
             isAuthenticated: true,
             isLoading: false,
             isInitialized: true,
+            showWelcomeModal: Boolean(initResult?.isNewUser),
           });
         } catch {
           // 백엔드 일시 장애 시에도 세션은 유지하고 로딩 해제
@@ -80,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           isAuthenticated: false,
           isLoading: false,
           isInitialized: true,
+          showWelcomeModal: false,
         });
       }
     });

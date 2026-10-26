@@ -44,6 +44,7 @@ function createWrapper(initialEntries = ['/']) {
 
 const mockBriefing = {
   nickname: '자취마스터',
+  totalIngredientsCount: 2,
   expiringIngredientsCount: 2,
   imminentIngredients: [
     { ingredientId: 101, name: '대파', dDay: 1 },

@@ -160,6 +160,7 @@ export async function scanReceiptOcr(
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      timeout: 120000, // Google AI Vision OCR 분석 전용 120초 타임아웃
     },
   );
   return response.data.data;

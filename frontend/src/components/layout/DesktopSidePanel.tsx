@@ -13,12 +13,13 @@ import {
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
-import { useMockAuthStore } from '@/store/mockAuthStore';
 import { useThemeStore } from '@/store/themeStore';
-import { mockEmptyHomeBriefing, mockHomeBriefing, mockNotifications } from '@/mocks';
+import { useHomeBriefing } from '@/hooks/useHome';
+import { useNotifications } from '@/hooks/useNotification';
 import { DDayBadge } from '@/components/common/DDayBadge';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/common/Skeleton';
 import { cn } from '@/utils/cn';
 import logoIcon from '@/assets/logo-icon.png';
 
@@ -47,14 +48,30 @@ interface NavMenuItem {
  */
 export function DesktopSidePanel({ onOpenAddTray }: DesktopSidePanelProps) {
   const { theme, toggle } = useThemeStore();
-  const { user, isAuthenticated } = useAuth();
-  const { hasIngredients } = useMockAuthStore();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  const { data: briefing, isLoading: isBriefingLoading } = useHomeBriefing();
+  const { data: notificationData } = useNotifications();
+  const unreadCount = notificationData?.unreadCount ?? 0;
+  const hasUnread = notificationData?.hasUnread ?? false;
 
-  // 재료 보유 상태에 따라 브리핑 데이터 선택
-  const briefing = hasIngredients ? mockHomeBriefing : mockEmptyHomeBriefing;
+  const isCardLoading = isAuthLoading || (isAuthenticated && isBriefingLoading);
+
+  // 실제 로그인 유저의 재료 보유 상태 연산
+  const hasIngredients = Boolean(
+    isAuthenticated &&
+      briefing &&
+      ((briefing.totalIngredientsCount ?? 0) > 0 ||
+        (briefing.imminentIngredients && briefing.imminentIngredients.length > 0)),
+  );
+
+  const hasExpiring = Boolean(
+    isAuthenticated &&
+      briefing &&
+      briefing.expiringIngredientsCount > 0,
+  );
 
   const NAV_ITEMS: NavMenuItem[] = [
-    { to: ROUTES.HOME, label: '홈 피드', Icon: Home, end: true },
+    { to: ROUTES.HOME, label: '홈', Icon: Home, end: true },
     { to: ROUTES.INVENTORY, label: '내 냉장고', Icon: Refrigerator },
     { to: ROUTES.RECIPES, label: '뚝딱 레시피', Icon: ChefHat },
     { to: ROUTES.MYPAGE, label: '마이페이지', Icon: User },
@@ -62,7 +79,7 @@ export function DesktopSidePanel({ onOpenAddTray }: DesktopSidePanelProps) {
       to: ROUTES.NOTIFICATIONS,
       label: '알림함',
       Icon: Bell,
-      badge: mockNotifications.hasUnread ? mockNotifications.unreadCount : undefined,
+      badge: hasUnread ? unreadCount : undefined,
     },
   ];
 
@@ -169,27 +186,46 @@ export function DesktopSidePanel({ onOpenAddTray }: DesktopSidePanelProps) {
           </Link>
         </div>
 
-        {hasIngredients && briefing.imminentIngredients.length > 0 ? (
+        {isCardLoading ? (
+          <div className="mt-3.5 space-y-2">
+            <Skeleton className="h-6 w-3/4 rounded-lg" />
+            <div className="flex gap-1.5 pt-1">
+              <Skeleton className="h-6 w-16 rounded-md" />
+              <Skeleton className="h-6 w-20 rounded-md" />
+            </div>
+          </div>
+        ) : hasIngredients && briefing ? (
           <div className="mt-3.5">
-            <p className="text-lg font-black text-foreground">
-              <span className="text-dday-urgent">{briefing.expiringIngredientsCount}개</span>
-              <span className="ml-1 text-sm font-bold text-muted-foreground">
-                의 재료가 곧 만료돼요! ⏰
-              </span>
-            </p>
+            {hasExpiring ? (
+              <p className="text-lg font-black text-foreground">
+                <span className="text-dday-urgent">{briefing.expiringIngredientsCount}개</span>
+                <span className="ml-1 text-sm font-bold text-muted-foreground">
+                  의 재료가 곧 만료돼요! ⏰
+                </span>
+              </p>
+            ) : (
+              <p className="text-lg font-black text-foreground">
+                <span className="text-emerald-600 dark:text-emerald-400">총 {briefing.totalIngredientsCount || briefing.imminentIngredients.length}개</span>
+                <span className="ml-1 text-sm font-bold text-muted-foreground">
+                  의 재료가 신선해요! 🥬
+                </span>
+              </p>
+            )}
 
-            {/* 소비기한 임박 재료 리스트 칩 */}
-            <ul className="mt-3 flex flex-wrap gap-2">
-              {briefing.imminentIngredients.map((ing) => (
-                <li
-                  key={ing.ingredientId}
-                  className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/60 py-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground dark:border-white/10"
-                >
-                  <span className="truncate max-w-[80px]">{ing.name}</span>
-                  <DDayBadge dDay={ing.dDay} />
-                </li>
-              ))}
-            </ul>
+            {/* 소비기한 임박/신선 재료 리스트 칩 */}
+            {briefing.imminentIngredients && briefing.imminentIngredients.length > 0 && (
+              <ul className="mt-3 flex flex-wrap gap-2">
+                {briefing.imminentIngredients.map((ing) => (
+                  <li
+                    key={ing.ingredientId}
+                    className="flex items-center gap-1.5 rounded-lg border border-border/70 bg-muted/60 py-1 pl-2.5 pr-1.5 text-xs font-semibold text-foreground dark:border-white/10"
+                  >
+                    <span className="truncate max-w-[80px]">{ing.name}</span>
+                    <DDayBadge dDay={ing.dDay} />
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         ) : (
           <div className="mt-3.5 rounded-xl border border-dashed border-border bg-muted/30 p-3.5 text-center">

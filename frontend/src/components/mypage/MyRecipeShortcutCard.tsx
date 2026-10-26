@@ -12,8 +12,8 @@ interface MyRecipeShortcutCardProps {
  * 마이페이지 내 활동 숏컷 카드 (USER-PAGE-02 내가 작성한 레시피 & USER-PAGE-03 스크랩북)
  */
 export function MyRecipeShortcutCard({
-  myRecipeCount = 3,
-  scrapCount = 5,
+  myRecipeCount = 0,
+  scrapCount = 0,
 }: MyRecipeShortcutCardProps) {
   const navigate = useNavigate();
 

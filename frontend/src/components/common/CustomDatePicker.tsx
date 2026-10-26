@@ -12,6 +12,8 @@ import {
   isSameDay,
   isToday,
   parseISO,
+  isBefore,
+  startOfDay,
 } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { Calendar, ChevronLeft, ChevronRight, X } from 'lucide-react';
@@ -23,8 +25,8 @@ interface CustomDatePickerProps {
   value: string;
   /** 날짜 변경 콜백 */
   onChange: (dateStr: string) => void;
-  /** 최소 선택 가능 날짜 (선택) */
-  minDate?: string;
+  /** 최소 선택 가능 날짜 (미지정 시 오늘, null 지정 시 제한 없음) */
+  minDate?: string | null;
   /** 라벨 텍스트 */
   label?: string;
   /** 인라인 확장 모드 (absolute 팝오버 대신 부모 흐름 내에서 아래 요소를 자연스럽게 밀어내는 방식) */
@@ -43,6 +45,7 @@ const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 export function CustomDatePicker({
   value,
   onChange,
+  minDate,
   inline = false,
   className,
 }: CustomDatePickerProps) {
@@ -229,17 +232,27 @@ export function CustomDatePicker({
                 const isSelected = isSameDay(day, selectedDate);
                 const isCurrentMonth = isSameMonth(day, currentMonth);
                 const isDayToday = isToday(day);
+                const dayStart = startOfDay(day);
+                const minDayStart =
+                  minDate !== undefined
+                    ? minDate
+                      ? startOfDay(parseISO(minDate))
+                      : null
+                    : startOfDay(new Date());
+                const isPast = minDayStart ? isBefore(dayStart, minDayStart) : false;
 
                 return (
                   <button
                     key={day.toISOString()}
                     type="button"
-                    onClick={() => handleSelectDay(day)}
+                    disabled={isPast}
+                    onClick={() => !isPast && handleSelectDay(day)}
                     className={cn(
                       'flex h-7 sm:h-8 w-full items-center justify-center rounded-lg sm:rounded-xl text-xs font-semibold transition-all',
                       !isCurrentMonth && 'text-muted-foreground/30',
-                      isCurrentMonth && !isSelected && 'text-foreground hover:bg-brand-50 dark:hover:bg-slate-800',
-                      isDayToday && !isSelected && 'border border-brand-500 text-brand-600 font-bold',
+                      isPast && 'opacity-25 cursor-not-allowed hover:bg-transparent pointer-events-none text-muted-foreground',
+                      !isPast && isCurrentMonth && !isSelected && 'text-foreground hover:bg-brand-50 dark:hover:bg-slate-800',
+                      !isPast && isDayToday && !isSelected && 'border border-brand-500 text-brand-600 font-bold',
                       isSelected &&
                         'bg-brand-500 text-white font-extrabold shadow-soft scale-105 hover:bg-brand-600',
                     )}

@@ -51,7 +51,7 @@ jwt:
 # Google AI Studio Gemini API 설정 (영수증 OCR 스캔 연동)
 gemini:
   api-key: ${GEMINI_API_KEY:}
-  model: ${GEMINI_MODEL:gemini-flash-latest}
+  model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
   base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
 
 # 식품의약품안전처 푸드QR / 공공 데이터 연동 설정 (바코드 조회)

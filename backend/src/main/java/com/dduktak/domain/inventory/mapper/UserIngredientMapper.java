@@ -88,9 +88,22 @@ public interface UserIngredientMapper {
     );
 
     /**
+     * 특정 회원의 전체 활성 식재료 수 집계 (status='ACTIVE')
+     */
+    long countActiveByUserId(@Param("userId") UUID userId);
+
+    /**
      * 소비기한 임박 식재료 수 집계 (0 <= D-Day <= 3, status='ACTIVE')
      */
     long countImminentByUserId(@Param("userId") UUID userId);
+
+    /**
+     * 소비기한 빠른 순 상위 N개 활성 식재료 목록 조회 (status='ACTIVE', expire_date ASC)
+     */
+    List<UserIngredient> findTopActiveByUserId(
+            @Param("userId") UUID userId,
+            @Param("limit") int limit
+    );
 
     /**
      * 소비기한 가장 임박한 상위 N개 활성 식재료 목록 조회 (0 <= D-Day <= 3, expire_date ASC)

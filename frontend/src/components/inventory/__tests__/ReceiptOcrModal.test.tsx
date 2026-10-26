@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import * as inventoryApi from '@/services/inventoryApi';
 import { ReceiptOcrModal } from '../ReceiptOcrModal';
 import { mockOcrParsedItems } from '@/mocks/ocr_scan.mock';
 
@@ -24,6 +25,23 @@ vi.mock('sonner', () => ({
     info: vi.fn(),
   },
 }));
+
+// inventoryApi scanReceiptOcr 모킹 (테스트 중 실제 네트워크 호출 방지)
+vi.mock('@/services/inventoryApi', async () => {
+  const actual = await vi.importActual<typeof import('@/services/inventoryApi')>('@/services/inventoryApi');
+  return {
+    ...actual,
+    scanReceiptOcr: vi.fn().mockResolvedValue([
+      {
+        masterIngredientId: 1,
+        name: '대파',
+        quantity: 1,
+        unit: '단',
+        recommendedExpireDate: '2026-11-05',
+      },
+    ]),
+  };
+});
 
 describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 테스트', () => {
   const defaultProps = {
@@ -64,12 +82,19 @@ describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 �
       expect(screen.getByText(/PNG, JPG, WEBP 지원/)).toBeInTheDocument();
     });
 
-    it('빠른 테스트용 샘플 영수증 체험 버튼 클릭 시 스캔 로딩(SCANNING) 단계로 전이되어야 한다', async () => {
+    it('영수증 이미지 파일 선택 후 분석 시작 클릭 시 스캔 로딩(SCANNING) 단계로 전이되어야 한다', async () => {
       const user = userEvent.setup();
+      vi.mocked(inventoryApi.scanReceiptOcr).mockImplementationOnce(
+        () => new Promise(() => {}) // pending 상태로 유지하여 SCANNING 단계 확인
+      );
       renderWithProviders(<ReceiptOcrModal {...defaultProps} initialStep="UPLOAD" />);
 
-      const sampleBtn = screen.getByRole('button', { name: /샘플 영수증으로 바로 체험하기/ });
-      await user.click(sampleBtn);
+      const file = new File(['fake-receipt'], 'receipt.jpg', { type: 'image/jpeg' });
+      const pcInput = screen.getByTestId('pc-file-input');
+      await user.upload(pcInput, file);
+
+      const startBtn = screen.getByRole('button', { name: /영수증 AI 분석 시작하기/ });
+      await user.click(startBtn);
 
       // SCANNING 단계의 텍스트가 노출되는지 확인
       await waitFor(() => {
@@ -85,15 +110,14 @@ describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 �
 
       expect(screen.getByText('영수증을 똑똑하게 분석하고 있어요')).toBeInTheDocument();
       expect(screen.getByText(/Gemini Flash OCR/)).toBeInTheDocument();
-
-      // 예외 테스트 버튼이 노출되는지 확인
-      expect(screen.getByText(/미인식 실패 예외 화면으로 건너뛰기/)).toBeInTheDocument();
     });
   });
 
   describe('3. 수동 검수 모달 (STEP 3: REVIEW - ocr_scan.mock.ts 기반)', () => {
     it('목 데이터 기반 품목 목록, 표준 매핑 배지 및 전체 선택 상태를 렌더링해야 한다', () => {
-      renderWithProviders(<ReceiptOcrModal {...defaultProps} initialStep="REVIEW" />);
+      renderWithProviders(
+        <ReceiptOcrModal {...defaultProps} initialStep="REVIEW" initialItems={mockOcrParsedItems} />,
+      );
 
       // 헤더 및 전체 선택 바 확인
       expect(screen.getByRole('heading', { name: '영수증 OCR 결과 검수' })).toBeInTheDocument();
@@ -113,7 +137,9 @@ describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 �
 
     it('수량 증감(+/-) 버튼은 44px+ 터치 타겟을 준수하며 수량이 정상 변경되어야 한다', async () => {
       const user = userEvent.setup();
-      renderWithProviders(<ReceiptOcrModal {...defaultProps} initialStep="REVIEW" />);
+      renderWithProviders(
+        <ReceiptOcrModal {...defaultProps} initialStep="REVIEW" initialItems={mockOcrParsedItems} />,
+      );
 
       // 대파 수량 증가 버튼 찾기
       const plusButton = screen.getByRole('button', { name: '대파 수량 증가' });
@@ -139,7 +165,9 @@ describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 �
 
     it('전체 선택 해제 및 개별 품목 선택 시 CTA 버튼의 수량이 실시간 연동되어야 한다', async () => {
       const user = userEvent.setup();
-      renderWithProviders(<ReceiptOcrModal {...defaultProps} initialStep="REVIEW" />);
+      renderWithProviders(
+        <ReceiptOcrModal {...defaultProps} initialStep="REVIEW" initialItems={mockOcrParsedItems} />,
+      );
 
       const toggleAllBtn = screen.getByRole('button', { name: '전체 선택 토글' });
       const submitBtn = screen.getByRole('button', { name: /선택한 재료 5개 넣기/ });
@@ -159,7 +187,9 @@ describe('ReceiptOcrModal 영수증 OCR 스캔 및 수동 검수 통합 단위 �
 
     it('선택된 재료 넣기 CTA 클릭 시 onAddBatch가 호출되고 모달이 닫혀야 한다', async () => {
       const user = userEvent.setup();
-      renderWithProviders(<ReceiptOcrModal {...defaultProps} initialStep="REVIEW" />);
+      renderWithProviders(
+        <ReceiptOcrModal {...defaultProps} initialStep="REVIEW" initialItems={mockOcrParsedItems} />,
+      );
 
       const submitBtn = screen.getByRole('button', { name: /선택한 재료 5개 넣기/ });
       await user.click(submitBtn);

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
@@ -8,16 +8,14 @@ import {
   ReceiptItemReview,
   ReceiptFailSafeView,
 } from './receipt';
-import {
-  mockOcrParsedItems,
-  SAMPLE_RECEIPT_PREVIEW_URL,
-  type OcrParsedItemWithRaw,
-} from '@/mocks/ocr_scan.mock';
+import type { OcrParsedItemWithRaw } from '@/mocks/ocr_scan.mock';
 import type { InventoryItem } from '@/types/inventory';
 import { useBodyScrollLock } from '@/hooks';
 import { useScanReceiptOcr } from '@/hooks/useInventory';
 
 export type ReceiptOcrStep = 'UPLOAD' | 'SCANNING' | 'REVIEW' | 'FAIL_SAFE';
+
+const EMPTY_INITIAL_ITEMS: OcrParsedItemWithRaw[] = [];
 
 export interface ReceiptOcrModalProps {
   open: boolean;
@@ -28,6 +26,8 @@ export interface ReceiptOcrModalProps {
   onManualSwitch: () => void;
   /** 테스트/개발용: 초기 스텝 강제 지정 (기본값: 'UPLOAD') */
   initialStep?: ReceiptOcrStep;
+  /** 테스트/개발용: 초기 품목 목록 */
+  initialItems?: OcrParsedItemWithRaw[];
 }
 
 /**
@@ -43,23 +43,29 @@ export function ReceiptOcrModal({
   onAddBatch,
   onManualSwitch,
   initialStep = 'UPLOAD',
+  initialItems = EMPTY_INITIAL_ITEMS,
 }: ReceiptOcrModalProps) {
   useBodyScrollLock(open);
 
   const [step, setStep] = useState<ReceiptOcrStep>(initialStep);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [ocrItems, setOcrItems] = useState<OcrParsedItemWithRaw[]>(mockOcrParsedItems);
+  const [ocrItems, setOcrItems] = useState<OcrParsedItemWithRaw[]>(initialItems);
 
   // 실제 Gemini Flash OCR API 뮤테이션 훅
   const scanOcrMutation = useScanReceiptOcr();
 
-  // 모달이 다시 열릴 때 초기 상태로 리셋
+  const prevOpenRef = useRef(false);
+  const initialItemsRef = useRef(initialItems);
+  initialItemsRef.current = initialItems;
+
+  // 모달이 닫혀있다가 새로 열릴 때만 상태를 초기화하여 무한 렌더링 방지
   useEffect(() => {
-    if (open) {
+    if (open && !prevOpenRef.current) {
       setStep(initialStep);
       setPreviewUrl(null);
-      setOcrItems(mockOcrParsedItems);
+      setOcrItems(initialItemsRef.current);
     }
+    prevOpenRef.current = open;
   }, [open, initialStep]);
 
   if (!open) return null;
@@ -102,28 +108,17 @@ export function ReceiptOcrModal({
             selected: true,
           }));
           setOcrItems(mappedItems);
+          setStep('REVIEW');
         } else {
           // 백엔드가 빈 배열(data: [])을 반환한 경우 (인식 실패)
           setOcrItems([]);
+          setStep('FAIL_SAFE');
         }
       } catch {
-        // 네트워크 장애 또는 API 오류 시 빈 배열로 안전하게 초기화
+        // 네트워크 장애 또는 API 오류 시 안전하게 FAIL_SAFE로 전이
         setOcrItems([]);
+        setStep('FAIL_SAFE');
       }
-    }
-  };
-
-  // 1-1. 샘플 영수증으로 빠른 체험
-  const handleSelectSample = () => {
-    setPreviewUrl(SAMPLE_RECEIPT_PREVIEW_URL);
-    setStep('SCANNING');
-    setOcrItems(mockOcrParsedItems);
-  };
-
-  // 2. 스캔 로딩 애니메이션 완료 핸들러
-  const handleScanComplete = (isSuccess: boolean) => {
-    if (isSuccess && ocrItems.length > 0) {
-      setStep('REVIEW');
     } else {
       setStep('FAIL_SAFE');
     }
@@ -233,13 +228,11 @@ export function ReceiptOcrModal({
             {step === 'UPLOAD' && (
               <ReceiptImagePicker
                 onSelectImage={handleSelectImage}
-                onSelectSample={handleSelectSample}
               />
             )}
 
             {step === 'SCANNING' && (
               <ReceiptScanningProgress
-                onComplete={handleScanComplete}
                 previewUrl={previewUrl}
               />
             )}

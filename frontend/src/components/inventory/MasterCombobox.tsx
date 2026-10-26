@@ -131,7 +131,7 @@ export function MasterCombobox({
       {/* 2. 드롭다운 팝오버 */}
       {isOpen && (
         <div
-          className="absolute left-0 top-[calc(100%+6px)] z-50 flex max-h-80 w-full flex-col overflow-hidden rounded-2xl border border-border bg-popover text-popover-foreground shadow-xl animate-in fade-in-0 zoom-in-95"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 flex max-h-80 w-full flex-col overflow-hidden rounded-2xl border border-border bg-card bg-popover text-popover-foreground shadow-2xl animate-in fade-in-0 zoom-in-95"
           role="listbox"
         >
           {/* 2-1. 검색창 */}

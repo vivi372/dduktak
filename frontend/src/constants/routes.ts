@@ -10,5 +10,6 @@ export const ROUTES = {
   RECIPE_EDIT: '/recipes/:id/edit',
   MYPAGE: '/mypage',
   NOTIFICATIONS: '/notifications',
+  RESET_PASSWORD: '/reset-password',
 } as const;
 

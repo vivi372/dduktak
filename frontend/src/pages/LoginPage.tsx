@@ -6,6 +6,7 @@ import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
+import { getFriendlyAuthErrorMessage } from '@/utils/authError';
 import logo from '@/assets/logo.png';
 
 /**
@@ -87,7 +88,7 @@ export default function LoginPage() {
     try {
       await loginWithOAuth(provider);
     } catch (err: any) {
-      toast.error(err?.message || `${provider === 'kakao' ? '카카오' : 'Google'} 로그인 중 오류가 발생했습니다.`);
+      toast.error(getFriendlyAuthErrorMessage(err));
     }
   };
 
@@ -103,7 +104,7 @@ export default function LoginPage() {
       toast.success('로그인되었습니다. 환영합니다!');
       navigate(ROUTES.HOME);
     } catch (err: any) {
-      toast.error(err?.message || '로그인에 실패했습니다. 이메일과 비밀번호를 확인해 주세요.');
+      toast.error(getFriendlyAuthErrorMessage(err));
     }
   };
 
@@ -138,7 +139,7 @@ export default function LoginPage() {
         setMode('login');
       }
     } catch (err: any) {
-      toast.error(err?.message || '회원가입 중 오류가 발생했습니다.');
+      toast.error(getFriendlyAuthErrorMessage(err));
     }
   };
 
@@ -154,7 +155,7 @@ export default function LoginPage() {
       toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
       setMode('login');
     } catch (err: any) {
-      toast.error(err?.message || '비밀번호 재설정 링크 발송에 실패했습니다.');
+      toast.error(getFriendlyAuthErrorMessage(err));
     }
   };
 

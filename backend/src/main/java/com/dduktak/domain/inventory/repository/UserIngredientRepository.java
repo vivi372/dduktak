@@ -90,10 +90,24 @@ public class UserIngredientRepository {
     }
 
     /**
+     * 특정 회원의 전체 활성 식재료 수 집계 (status='ACTIVE')
+     */
+    public long countActiveByUserId(UUID userId) {
+        return userIngredientMapper.countActiveByUserId(userId);
+    }
+
+    /**
      * 소비기한 임박 식재료 수 집계 (0 <= D-Day <= 3, status='ACTIVE')
      */
     public long countImminentByUserId(UUID userId) {
         return userIngredientMapper.countImminentByUserId(userId);
+    }
+
+    /**
+     * 소비기한 빠른 순 상위 N개 활성 식재료 목록 조회 (status='ACTIVE', expire_date ASC)
+     */
+    public List<UserIngredient> findTopActiveByUserId(UUID userId, int limit) {
+        return userIngredientMapper.findTopActiveByUserId(userId, limit);
     }
 
     /**

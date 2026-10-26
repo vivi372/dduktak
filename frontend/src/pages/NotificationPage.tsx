@@ -1,6 +1,6 @@
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
+import { NotificationCardSkeleton } from '@/components/common/Skeleton';
 import { NotificationActionBar, NotificationCard } from '@/components/notification';
 import {
   useNotifications,
@@ -65,9 +65,11 @@ export default function NotificationPage() {
 
   if (isLoading) {
     return (
-      <div className="py-24 flex flex-col items-center justify-center text-muted-foreground space-y-3">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-        <p className="text-sm font-medium">알림을 불러오는 중입니다...</p>
+      <div className="space-y-3 pt-2">
+        <NotificationCardSkeleton />
+        <NotificationCardSkeleton />
+        <NotificationCardSkeleton />
+        <NotificationCardSkeleton />
       </div>
     );
   }

@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Plus, Search, Loader2 } from 'lucide-react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { Plus, Search, X } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
 import { RecipeCard } from '@/components/common/RecipeCard';
+import { RecipeCardSkeleton } from '@/components/common/Skeleton';
 import {
   RecipeMatchingToggle,
   RecipeCategoryTabs,
@@ -20,9 +21,13 @@ import type { RecipeSummary, RecipeDifficulty } from '@/types/recipe';
  * - 8대 고정 카테고리 탭 (GET /api/v1/recipes/categories)
  * - [🟢 내 냉장고 뚝딱 매칭] 실시간 토글 (GET /api/v1/matching/recommendations)
  * - 키워드 실시간 검색 및 다채로운 정렬 지원 (GET /api/v1/recipes)
+ * - 마이페이지 연계 필터 (내가 쓴 레시피 ?filter=MY / 스크랩북 ?filter=SCRAP)
  * - [+ 레시피 작성] 버튼 연동
  */
 export default function RecipeFeedPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filterParam = (searchParams.get('filter') as 'MY' | 'SCRAP' | null) || undefined;
+
   const [categoryId, setCategoryId] = useState<number>(0);
   const [matchOn, setMatchOn] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -42,6 +47,7 @@ export default function RecipeFeedPage() {
   } = useRecipes(
     {
       query: searchQuery.trim() || undefined,
+      filter: filterParam,
       recipeCategoryId: categoryId === 0 ? undefined : categoryId,
       sort: backendSort,
       page: 0,
@@ -85,11 +91,34 @@ export default function RecipeFeedPage() {
       {/* 1. 상단 타이틀 & 레시피 등록 CTA */}
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground whitespace-nowrap">
-            뚝딱 레시피 커뮤니티
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground whitespace-nowrap">
+              {filterParam === 'MY'
+                ? '내가 작성한 레시피'
+                : filterParam === 'SCRAP'
+                  ? '내 스크랩북 📌'
+                  : '뚝딱 레시피 커뮤니티'}
+            </h1>
+            {filterParam && (
+              <button
+                type="button"
+                onClick={() => {
+                  searchParams.delete('filter');
+                  setSearchParams(searchParams, { replace: true });
+                }}
+                className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground transition hover:bg-muted/80"
+              >
+                <span>전체보기</span>
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
           <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground break-keep">
-            1인 가구 자취생들의 알뜰한 냉장고 비우기 맞춤 레시피를 만나보세요.
+            {filterParam === 'MY'
+              ? '내가 직접 등록한 뚝딱 요리 레시피 목록입니다.'
+              : filterParam === 'SCRAP'
+                ? '보관해 둔 나만의 즐겨찾기 레시피 모음입니다.'
+                : '1인 가구 자취생들의 알뜰한 냉장고 비우기 맞춤 레시피를 만나보세요.'}
           </p>
         </div>
 
@@ -135,11 +164,11 @@ export default function RecipeFeedPage() {
 
       {/* 5. 로딩 중 UI */}
       {isLoading ? (
-        <div className="py-16 flex flex-col items-center justify-center text-muted-foreground space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-          <p className="text-sm font-medium">
-            {matchOn ? '내 냉장고 재료와 레시피를 매칭하고 있어요...' : '맛있는 레시피를 불러오고 있어요...'}
-          </p>
+        <div className="space-y-3 pt-1">
+          <RecipeCardSkeleton />
+          <RecipeCardSkeleton />
+          <RecipeCardSkeleton />
+          <RecipeCardSkeleton />
         </div>
       ) : matchOn ? (
         /* 6. 스마트 매칭 추천 레시피 목록 */
