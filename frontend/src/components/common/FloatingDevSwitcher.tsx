@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { LogIn, LogOut, Refrigerator, Sparkles, Wrench, X } from 'lucide-react';
+import { Compass, LogIn, LogOut, Play, Refrigerator, Sparkles, Wrench, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
 import { useMockAuthStore } from '@/store/mockAuthStore';
+import { useAppSplashStore } from '@/store/useAppSplashStore';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { cn } from '@/utils/cn';
 
 /**
@@ -14,6 +16,8 @@ import { cn } from '@/utils/cn';
 export function FloatingDevSwitcher() {
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
+  const { replaySplash } = useAppSplashStore();
+  const { resetOnboarding } = useOnboardingStore();
   const {
     isLoggedIn,
     hasIngredients,
@@ -180,6 +184,39 @@ export function FloatingDevSwitcher() {
                   >
                     <Sparkles className="h-3.5 w-3.5" />
                     <span>온보딩 웰컴 모달 띄우기</span>
+                  </button>
+                </div>
+
+                {/* 4. 최초 실행 가이드 온보딩(/onboarding) 다시보기 */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      resetOnboarding();
+                      navigate(ROUTES.ONBOARDING);
+                      toast.info('온보딩 이력이 초기화되어 가이드 화면으로 이동했습니다.');
+                    }}
+                    className="flex min-h-9 w-full items-center justify-center gap-2 rounded-xl border border-brand-300 bg-brand-50 px-3 font-bold text-brand-700 shadow-sm transition-all hover:bg-brand-100 active:scale-[0.98] dark:border-brand-800 dark:bg-brand-950/60 dark:text-brand-300"
+                  >
+                    <Compass className="h-3.5 w-3.5 text-brand-500" />
+                    <span>앱 온보딩 가이드 다시보기</span>
+                  </button>
+                </div>
+
+                {/* 5. 앱 실행 인트로 스플래시 애니메이션 다시보기 */}
+                <div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      replaySplash();
+                      toast.info('앱 실행 인트로 스플래시 애니메이션을 재생합니다.');
+                    }}
+                    className="flex min-h-9 w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-slate-100 px-3 font-bold text-slate-800 shadow-sm transition-all hover:bg-slate-200 active:scale-[0.98] dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                  >
+                    <Play className="h-3.5 w-3.5 text-brand-500" />
+                    <span>스플래시 인트로 다시보기</span>
                   </button>
                 </div>
               </div>

@@ -161,14 +161,27 @@
     * [x] 알림 통합 환경설정(`PATCH /api/v1/notifications/settings`) 연동: 소비기한 알림, 소셜 알림, 방해금지 시간 단일 통합 API 호출 및 낙관적 업데이트.
     * [x] 딥링크(`targetId`) 클릭 시 해당 화면(냉장고/레시피) 이동 및 삭제된 콘텐츠(404 에러) 감지 시 Fallback 경고 토스트 노출 및 안전한 화면 유지.
     * [x] 단위 테스트(43개 파일, 224개 테스트 100% PASS) 및 TypeScript 컴파일/Vite 프로덕션 번들 빌드(`npm run build`) 오류 0건 무결점 검증 완료.
-* [ ] **Step 3B-6: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 (모바일 전용)** (1차 완료: 2026-10-25 23:25 / 담당자: AI 에이전트)
+* [x] **Step 3B-6: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 및 앱 온보딩 (모바일 전용)** (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)
     * [x] **Capacitor 6.x / Android Native 세팅 & Google ML Kit 네이티브 바코드 스캐너 플러그인 연동 (완료일시: 2026-10-25 23:25 / 담당자: AI 에이전트)**:
         * Capacitor 6.x 전역 설정(`capacitor.config.ts`), Android 네이티브 Gradle 프로젝트 생성 및 `AndroidManifest.xml` 카메라 권한/ML Kit UI 메타데이터 주입 완료.
         * `nativeBarcodeService.ts` 추상화 서비스 작성: `Capacitor.isNativePlatform()` 런타임 환경 감지, Google Play 서비스 ML Kit 모듈 자동 다운로드, 카메라 권한 요청 및 바코드 스캔 Activity 연동.
         * `BarcodeScannerModal.tsx` 하이브리드 분기 연동: 모바일 실기기 카메라 스캔 자동 실행 및 바코드 식재료 조회(`GET /api/v1/inventory/barcode/{barcodeNo}`) 파이프라인 자동 연결 (웹 환경은 뷰파인더 애니메이션 & 모의 바코드 Fallback 100% 정상 유지).
         * 모바일 웹뷰 API 연동을 위한 `.env.example`의 `VITE_API_BASE_URL` 가이드라인 추가.
         * 단위 테스트 5건 신규 작성(전체 40개 파일, 206개 단위 테스트 100% PASS), TypeScript 빌드 무오류 및 `npx cap sync android` 동기화 검증 완료.
-    * [ ] FCM 푸시 알림 수신기 연동 & 하드웨어 뒤로가기 버튼(Back Button) 제어.
+    * [x] **앱 실행 인트로 & 스플래시 애니메이션 (App Launch Intro & Splash Animation) (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)**:
+        * 앱 구동 시 브랜드 공식 로고(`logo-icon.png`)와 테마 컬러(코랄 핑크 `#FF8A7A`, 민트 티얼 `#4ECDC4`)를 활용한 감각적인 오프닝 모션(스케일/바운스, 글로우 펄스, 슬로건 페이드인, 프로그레스 바) 컴포넌트(`AppSplashScreen.tsx`) 구현.
+        * 앱 리소스 로딩 및 초기화 완료 시 부드러운 크로스페이드(Fade-out)로 메인/온보딩 화면과 자연스럽게 교차(깜빡임 없는 Seamless UX) 및 `@capacitor/splash-screen` 네이티브 은폐 처리.
+        * `useAppSplashStore.ts` 세션 관리 및 개발자 스위처(`FloatingDevSwitcher.tsx`)에서 언제든 스플래시 인트로 재체험 지원.
+    * [x] **최초 실행 사용자 가이드 온보딩 (First-Run Onboarding Walkthrough) 제작 (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)**:
+        * 앱 최초 실행 상태 감지(`useOnboardingStore`, `localStorage`) 및 최초 진입 시 온보딩 가이드 화면(`/onboarding`) 자동 분기 라우팅.
+        * "스마트 냉장고 식재료 관리", "영수증·바코드 초간편 등록", "냉장고 속 재료 맞춤 뚝딱 요리 솔루션" 3단계 감성 일러스트/아이콘 비주얼 슬라이드 및 부드러운 인디케이터 닷 구현 (`OnboardingPage.tsx`).
+        * 필수 권한(카메라, 알림) 사전 친화적 안내 다이얼로그 및 '시작하기' / '건너뛰기'를 통한 메인 홈 라우팅 연동.
+        * 개발자 스위처(`FloatingDevSwitcher.tsx`)에 [앱 온보딩 가이드 다시보기] 버튼 연동으로 원클릭 검수 지원.
+    * [x] **FCM 푸시 알림 수신기 연동 & 하드웨어 뒤로가기 버튼(Back Button) 제어 (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)**:
+        * `nativePushService.ts`: `@capacitor/push-notifications` 토큰 발급, 포그라운드 인앱 토스트 알림, 푸시 탭 딥링크 네비게이션 파이프라인 구축.
+        * `useNativeBackButton.ts`: `@capacitor/app` 기반 안드로이드 물리 뒤로가기 버튼(활성 모달 ESC 닫기 ➔ 직전 히스토리 이동 ➔ 홈 화면 2초 내 더블 탭 시 안전한 앱 종료) 제어 훅 연동.
+        * `capacitor.config.ts` 플러그인 구성(SplashScreen, PushNotifications) 및 `npx cap sync android` 네이티브 프로젝트 동기화 완료.
+        * 단위 테스트 4개 파일 신규 작성(전체 47개 파일, 237개 단위 테스트 100% PASS) 및 Vite 프로덕션 번들 빌드(`npm run build`) 오류 0건 무결점 검증 완료.
 
 --------------------------------------------------------------------------------
 

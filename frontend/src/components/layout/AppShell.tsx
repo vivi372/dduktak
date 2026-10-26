@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Outlet, useLocation, useMatches } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Outlet, useLocation, useMatches, useNavigate } from 'react-router-dom';
 import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from 'framer-motion';
 import { cn } from '@/utils/cn';
 import { ROUTES } from '@/constants/routes';
@@ -11,6 +11,9 @@ import { QuickAddTray } from './QuickAddTray';
 import { WelcomeModal } from '@/components/auth/WelcomeModal';
 import { GlobalErrorModal } from '@/components/common/GlobalErrorModal';
 import { FloatingDevSwitcher } from '@/components/common/FloatingDevSwitcher';
+import { AppSplashScreen } from '@/components/common/AppSplashScreen';
+import { useNativeBackButton } from '@/hooks/useNativeBackButton';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
 
 /**
  * 공통 앱 셸 (반응형 2-Column Split 레이아웃)
@@ -18,20 +21,33 @@ import { FloatingDevSwitcher } from '@/components/common/FloatingDevSwitcher';
  *   - 상단 Header + 콘텐츠 스크롤 + 하단 BottomNav + Thumb Zone FAB
  * - 데스크톱 (lg 이상):
  *   - 일반 페이지: max-w-5xl 2-컬럼 스플릿 (좌측 40% Sticky 사이드 패널 + 우측 60% 메인 피드 & 콘텐츠)
- *   - 로그인/인증 페이지 (hideSidePanel): 불필요한 시각적 노이즈를 제거하고 화면 중앙(max-w-[480px] mx-auto) 단독 집중 뷰 제공
+ *   - 로그인/온보딩 페이지 (hideSidePanel): 불필요한 시각적 노이즈를 제거하고 화면 중앙(max-w-[480px] mx-auto) 단독 집중 뷰 제공
  *   - 로그인 성공 시: 중앙 카드가 우측으로 매끄럽게 리포지셔닝되며 좌측 사이드바가 슬라이드 페이드인으로 등장하는 프리미엄 레이아웃 트랜지션
  */
 export function AppShell() {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const matches = useMatches();
   const reduceMotion = useReducedMotion();
   const handle = matches[matches.length - 1]?.handle as RouteHandle | undefined;
 
   const [trayOpen, setTrayOpen] = useState(false);
+  const { hasSeenOnboarding } = useOnboardingStore();
 
-  const showNav = pathname !== ROUTES.LOGIN && !handle?.hideBottomNav;
-  const showHeader = !handle?.hideHeader;
-  const hideSidePanel = Boolean(handle?.hideSidePanel || pathname === ROUTES.LOGIN);
+  // 하이브리드 모바일 안드로이드 하드웨어 물리 뒤로가기 버튼 제어
+  useNativeBackButton();
+
+  // 최초 방문 유저 감지 시 앱 시작 가이드 온보딩(/onboarding) 화면으로 자동 분기
+  useEffect(() => {
+    if (!hasSeenOnboarding && pathname === ROUTES.HOME) {
+      navigate(ROUTES.ONBOARDING, { replace: true });
+    }
+  }, [hasSeenOnboarding, pathname, navigate]);
+
+  const isAuthOrOnboarding = pathname === ROUTES.LOGIN || pathname === ROUTES.ONBOARDING;
+  const showNav = !isAuthOrOnboarding && !handle?.hideBottomNav;
+  const showHeader = !handle?.hideHeader && !isAuthOrOnboarding;
+  const hideSidePanel = Boolean(handle?.hideSidePanel || isAuthOrOnboarding);
 
   return (
     <div className="min-h-dvh w-full">
@@ -120,6 +136,9 @@ export function AppShell() {
 
       {/* 개발자 검수용 상태 스위처 */}
       <FloatingDevSwitcher />
+
+      {/* 앱 구동 오프닝 인트로 및 스플래시 애니메이션 */}
+      <AppSplashScreen />
     </div>
   );
 }

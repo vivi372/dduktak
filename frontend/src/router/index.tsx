@@ -9,6 +9,7 @@ import RecipeFormPage from '@/pages/RecipeFormPage';
 import MyPage from '@/pages/MyPage';
 import NotificationPage from '@/pages/NotificationPage';
 import LoginPage from '@/pages/LoginPage';
+import OnboardingPage from '@/pages/OnboardingPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { ROUTES } from '@/constants/routes';
 import type { RouteHandle } from './handle';
@@ -76,6 +77,11 @@ export const router = createBrowserRouter([
         path: ROUTES.LOGIN,
         element: <LoginPage />,
         handle: h({ title: '로그인', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
+      },
+      {
+        path: ROUTES.ONBOARDING,
+        element: <OnboardingPage />,
+        handle: h({ title: '앱 시작 가이드', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
       },
       { path: '*', element: <NotFoundPage />, handle: h({ title: '길을 잃었어요', brand: true }) },
     ],

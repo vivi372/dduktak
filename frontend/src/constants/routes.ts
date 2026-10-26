@@ -2,6 +2,7 @@
 export const ROUTES = {
   HOME: '/',
   LOGIN: '/login',
+  ONBOARDING: '/onboarding',
   INVENTORY: '/inventory',
   RECIPES: '/recipes',
   RECIPE_DETAIL: '/recipes/:id',

@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AppShell } from '@/components/layout/AppShell';
+import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { useAppSplashStore } from '@/store/useAppSplashStore';
 
 // useMatches 모킹
 const mockUseMatches = vi.fn();
@@ -31,6 +33,13 @@ function renderWithProviders(ui: React.ReactElement) {
 }
 
 describe('AppShell 레이아웃 반응형 및 로그인 분기 단위 테스트', () => {
+  beforeEach(() => {
+    localStorage.setItem('dduktak_has_seen_onboarding', 'true');
+    sessionStorage.setItem('dduktak_splash_shown', 'true');
+    useOnboardingStore.setState({ hasSeenOnboarding: true });
+    useAppSplashStore.setState({ isVisible: false, hasPlayedThisSession: true });
+  });
+
   it('일반 화면(홈 등)에서는 데스크톱 사이드 패널(DesktopSidePanel)과 하단 탭바를 렌더링해야 한다', () => {
     mockUseMatches.mockReturnValue([
       { handle: { title: '홈', hideSidePanel: false, hideBottomNav: false, hideHeader: false } },
