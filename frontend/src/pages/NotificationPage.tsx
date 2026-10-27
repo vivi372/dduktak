@@ -63,29 +63,25 @@ export default function NotificationPage() {
     markReadMutation.mutate(id);
   };
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3 pt-2">
-        <NotificationCardSkeleton />
-        <NotificationCardSkeleton />
-        <NotificationCardSkeleton />
-        <NotificationCardSkeleton />
-      </div>
-    );
-  }
-
   return (
     <div className="space-y-4">
-      {/* 상단 알림 액션 바 */}
+      {/* 상단 알림 액션 바 - 항상 형태를 유지하여 레이아웃 시프트 원천 차단 */}
       <NotificationActionBar
-        totalCount={notifications.length}
-        unreadCount={unreadCount}
+        totalCount={isLoading ? 0 : notifications.length}
+        unreadCount={isLoading ? 0 : unreadCount}
         onMarkAllRead={handleMarkAllRead}
         onDeleteAll={handleDeleteAll}
       />
 
       {/* 알림 목록 영역 */}
-      {notifications.length === 0 ? (
+      {isLoading ? (
+        <div className="space-y-2.5 pt-1">
+          <NotificationCardSkeleton />
+          <NotificationCardSkeleton />
+          <NotificationCardSkeleton />
+          <NotificationCardSkeleton />
+        </div>
+      ) : notifications.length === 0 ? (
         <div className="py-8">
           <EmptyState
             emoji="🔔"

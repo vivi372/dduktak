@@ -6,6 +6,8 @@ export interface RouteHandle {
   brand?: boolean;
   /** 뒤로가기 버튼 노출 여부 */
   showBack?: boolean;
+  /** 뒤로가기 버튼 클릭 시 이동할 고정/기본 경로 (미지정 시 history.back / home fallback) */
+  backPath?: string;
   /** 하단 탭바 숨김 여부 */
   hideBottomNav?: boolean;
   /** 상단 헤더 숨김 여부 (로그인/온보딩 풀스크린 뷰 등) */

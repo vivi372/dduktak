@@ -24,6 +24,7 @@ export function useHomeBriefing() {
       return await getHomeBriefing();
     },
     enabled: isAuthenticated && Boolean(user?.userId),
-    staleTime: 1000 * 60, // 1분간 신선 상태 유지
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5, // 5분간 신선 상태 유지 (화면 전환 시 깜빡임 없이 즉시 캐시 렌더링)
   });
 }

@@ -37,7 +37,8 @@ export function useMatchingRecommendations(
       return await getMatchingRecommendations(params);
     },
     enabled: options?.enabled ?? true,
-    staleTime: 1000 * 30, // 30초 캐싱 (냉장고 변동 반영)
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 3, // 3분 캐싱 (화면 전환 및 카테고리 전환 시 플리커 방지)
   });
 }
 

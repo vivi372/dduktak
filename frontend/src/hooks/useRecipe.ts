@@ -16,7 +16,6 @@ import {
   toggleRecipeLike,
   toggleRecipeScrap,
 } from '@/services/recipeApi';
-import { mockRecipeCategories } from '@/mocks/recipes.mock';
 import type {
   RecipeCategoryResponseDto,
   RecipeListQueryParams,
@@ -42,15 +41,7 @@ export const RECIPE_QUERY_KEYS = {
 export function useRecipeCategories() {
   return useQuery<RecipeCategoryResponseDto[]>({
     queryKey: RECIPE_QUERY_KEYS.categories(),
-    queryFn: async () => {
-      try {
-        return await getRecipeCategories();
-      } catch (err) {
-        // 네트워크 장애 시 mock 폴백 제공
-        return mockRecipeCategories;
-      }
-    },
-    placeholderData: mockRecipeCategories,
+    queryFn: getRecipeCategories,
     staleTime: 1000 * 60 * 30, // 30분 장기 캐싱 (변동이 거의 없는 마스터 카테고리)
   });
 }
@@ -139,8 +130,12 @@ export function useDeleteRecipe() {
     mutationFn: async (recipeId) => {
       await deleteRecipe(recipeId);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: RECIPE_QUERY_KEYS.all });
+    onSuccess: (_, recipeId) => {
+      // 1. 이미 삭제된 레시피 상세 쿼리는 즉시 캐시에서 완전 제거하여 언마운트 직전 재조회(404 원인) 원천 차단
+      queryClient.removeQueries({ queryKey: RECIPE_QUERY_KEYS.detail(recipeId), exact: true });
+      // 2. 레시피 목록 쿼리만 무효화하여 최신 목록으로 갱신
+      queryClient.invalidateQueries({ queryKey: ['recipes', 'list'] });
+      queryClient.invalidateQueries({ queryKey: ['home'] });
     },
   });
 }

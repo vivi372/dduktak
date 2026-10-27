@@ -141,6 +141,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
               <IngredientCombobox
                 value={selectedMaster?.masterIngredientId}
                 onChange={handleSelectMaster}
+                showShelfDays={true}
               />
             </div>
 

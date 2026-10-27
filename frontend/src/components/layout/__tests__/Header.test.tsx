@@ -7,13 +7,15 @@ import { Header } from '@/components/layout/Header';
 import { useThemeStore } from '@/store/themeStore';
 import * as notificationHooks from '@/hooks/useNotification';
 
-// useMatches 모킹
+// useMatches & useNavigate 모킹
 const mockUseMatches = vi.fn();
+const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useMatches: () => mockUseMatches(),
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -100,6 +102,20 @@ describe('Header 컴포넌트 단위 테스트', () => {
     render(<Header />, { wrapper: createWrapper() });
 
     expect(screen.queryByTestId('header-red-dot')).not.toBeInTheDocument();
+  });
+
+  it('handle.backPath가 지정된 서브 페이지일 때 뒤로가기 클릭 시 해당 경로로 navigate되어야 한다', async () => {
+    mockUseMatches.mockReturnValue([
+      { handle: { showBack: true, title: '레시피 상세', backPath: '/recipes' } },
+    ]);
+    const user = userEvent.setup();
+
+    render(<Header />, { wrapper: createWrapper() });
+
+    const backButton = screen.getByRole('button', { name: '뒤로가기' });
+    await user.click(backButton);
+
+    expect(mockNavigate).toHaveBeenCalledWith('/recipes');
   });
 });
 

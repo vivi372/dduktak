@@ -1,12 +1,12 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Plus, ScanBarcode, Receipt, Loader2 } from 'lucide-react';
+import { Search, Plus, ScanBarcode, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
-import { mockCategories } from '@/mocks';
+import { INVENTORY_CATEGORIES } from '@/constants/categories';
 import { cn } from '@/utils/cn';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { EmptyState } from '@/components/common/EmptyState';
-import { InventoryCardSkeleton } from '@/components/common/Skeleton';
+import { Skeleton, InventoryCardSkeleton } from '@/components/common/Skeleton';
 import { usePlatformStore } from '@/store/usePlatformStore';
 import {
   InventoryAccordionItem,
@@ -129,7 +129,7 @@ export default function InventoryPage() {
         existing.mostUrgentDDay = Math.min(existing.mostUrgentDDay, item.dDay);
         existing.items.push(item);
       } else {
-        const categoryObj = mockCategories.find((c) => c.categoryId === item.categoryId);
+        const categoryObj = INVENTORY_CATEGORIES.find((c) => c.categoryId === item.categoryId);
         map.set(item.masterIngredientId, {
           masterIngredientId: item.masterIngredientId,
           name: item.name,
@@ -247,10 +247,13 @@ export default function InventoryPage() {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-2xl font-black tracking-tight whitespace-nowrap">내 냉장고</h1>
-            <span className="rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-600 dark:bg-brand-950/60 dark:text-brand-300 shrink-0">
-              신선 {activeItems.length}종
+            <span className="inline-flex min-h-[22px] min-w-[56px] items-center justify-center rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-600 dark:bg-brand-950/60 dark:text-brand-300 shrink-0">
+              {isLoading && inventoryList.length === 0 ? (
+                <Skeleton className="h-3 w-8 rounded-full" />
+              ) : (
+                `신선 ${activeItems.length}종`
+              )}
             </span>
-            {isLoading && <Loader2 className="h-4 w-4 animate-spin text-brand-500" />}
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground break-keep">
             소비기한이 가장 임박한 순서대로 그룹화하여 보여드려요.
@@ -350,7 +353,7 @@ export default function InventoryPage() {
           >
             카테고리 전체
           </button>
-          {mockCategories.map((cat) => (
+          {INVENTORY_CATEGORIES.map((cat) => (
             <button
               key={cat.categoryId}
               type="button"
@@ -370,8 +373,9 @@ export default function InventoryPage() {
 
       {/* 4. 메인 인벤토리 리스트 (2-Tier 아코디언) */}
       <section aria-label="보관 중인 신선 재료 목록">
-        {isLoading ? (
+        {isLoading && inventoryList.length === 0 ? (
           <div className="space-y-3">
+            <InventoryCardSkeleton />
             <InventoryCardSkeleton />
             <InventoryCardSkeleton />
             <InventoryCardSkeleton />

@@ -1,6 +1,18 @@
 import { create } from 'zustand';
-import { mockUser } from '@/mocks/user.mock';
 import type { UserProfile } from '@/types/user';
+
+const INITIAL_DEV_USER: UserProfile = {
+  userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
+  email: 'user@dduktak.com',
+  nickname: '뚝딱이',
+  userTag: '1024',
+  profileImage:
+    'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png',
+  status: 'ACTIVE',
+  quietTimeStart: '21:00:00',
+  quietTimeEnd: '08:00:00',
+  loginProvider: 'email',
+};
 
 interface MockAuthState {
   /** 로그인 상태 여부 */
@@ -44,7 +56,7 @@ interface MockAuthState {
  */
 export const useMockAuthStore = create<MockAuthState>((set) => ({
   isLoggedIn: true,
-  user: mockUser,
+  user: INITIAL_DEV_USER,
   hasIngredients: true,
   showWelcomeModal: false,
 

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, type FieldErrors } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import {
@@ -12,11 +12,12 @@ import {
   Info,
   Sparkles,
   Loader2,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { IngredientCombobox } from '@/components/inventory';
 import { useRecipeCategories, useRecipeDetail, useCreateRecipe, useUpdateRecipe } from '@/hooks/useRecipe';
-import { uploadRecipeImage } from '@/services/storageService';
+import { uploadRecipeImage, deleteStorageFiles } from '@/services/storageService';
 import type { RecipeDifficulty } from '@/types/recipe';
 import type { MasterIngredient } from '@/types/inventory';
 import { cn } from '@/utils/cn';
@@ -94,9 +95,10 @@ export default function RecipeFormPage() {
   const createMutation = useCreateRecipe();
   const updateMutation = useUpdateRecipe();
 
-  // 4. 업로드 로딩 상태
-  const [isThumbnailUploading, setIsThumbnailUploading] = useState<boolean>(false);
-  const [uploadingStepIndex, setUploadingStepIndex] = useState<number | null>(null);
+  // 4. 지연 업로드(Lazy Upload) 로컬 대기 파일 및 업로드 상태 관리
+  const [pendingThumbnail, setPendingThumbnail] = useState<{ file: File; previewUrl: string } | null>(null);
+  const [pendingStepFiles, setPendingStepFiles] = useState<Record<string, File>>({});
+  const [isUploadingImages, setIsUploadingImages] = useState<boolean>(false);
 
   // 5. react-hook-form 폼 인스턴스 초기화
   const {
@@ -120,7 +122,7 @@ export default function RecipeFormPage() {
       thumbnailUrl: '',
       ingredients: [
         {
-          masterIngredientId: 2, // 기본 계란
+          masterIngredientId: 9, // 기본 계란 (DB 표준 ID: 9)
           categoryId: 2,
           name: '계란',
           quantity: 1,
@@ -130,8 +132,7 @@ export default function RecipeFormPage() {
         },
       ],
       steps: [
-        { stepNo: 1, description: '재료를 깨끗하게 손질하여 준비합니다.', imageUrl: null },
-        { stepNo: 2, description: '팬을 달구고 맛있게 조리합니다.', imageUrl: null },
+        { stepNo: 1, description: '', imageUrl: null },
       ],
     },
   });
@@ -149,7 +150,6 @@ export default function RecipeFormPage() {
     append: appendStep,
     remove: removeStep,
     move: moveStep,
-    update: updateStep,
   } = useFieldArray({ control, name: 'steps' });
 
   // 수정 모드 데이터 로드 시 폼 리셋
@@ -191,46 +191,85 @@ export default function RecipeFormPage() {
   const watchCookingTime = watch('cookingTime');
   const watchServings = watch('servings');
 
-  // 대표 이미지 업로드 핸들러
-  const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // 컴포넌트 언마운트 시 생성된 임시 blob 미리보기 URL 메모리 해제
+  useEffect(() => {
+    return () => {
+      if (pendingThumbnail?.previewUrl?.startsWith('blob:')) {
+        URL.revokeObjectURL(pendingThumbnail.previewUrl);
+      }
+      Object.keys(pendingStepFiles).forEach((url) => {
+        if (url.startsWith('blob:')) {
+          URL.revokeObjectURL(url);
+        }
+      });
+    };
+  }, [pendingThumbnail, pendingStepFiles]);
+
+  // 대표 이미지 선택 핸들러 (지연 업로드: 즉시 Storage에 올리지 않고 로컬 미리보기만 생성)
+  const handleThumbnailUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      setIsThumbnailUploading(true);
-      toast.info('대표 이미지를 압축하여 업로드하고 있어요... 📸');
-      const publicUrl = await uploadRecipeImage(file, 'thumbnails');
-      setValue('thumbnailUrl', publicUrl, { shouldValidate: true });
-      toast.success('대표 사진이 등록되었어요!');
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.';
-      toast.error(msg);
-    } finally {
-      setIsThumbnailUploading(false);
+    if (pendingThumbnail?.previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(pendingThumbnail.previewUrl);
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPendingThumbnail({ file, previewUrl });
+    setValue('thumbnailUrl', previewUrl, { shouldValidate: true });
+    toast.success('대표 사진이 선택되었어요! 📸');
   };
 
-  // Step 이미지 업로드 핸들러
-  const handleStepImageUpload = async (
+  // 대표 이미지 제거 핸들러
+  const handleRemoveThumbnail = () => {
+    if (pendingThumbnail?.previewUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(pendingThumbnail.previewUrl);
+    }
+    setPendingThumbnail(null);
+    setValue('thumbnailUrl', '', { shouldValidate: true });
+  };
+
+  // Step 이미지 선택 핸들러 (지연 업로드: 즉시 Storage에 올리지 않고 blob URL 매핑으로 안전하게 보관)
+  const handleStepImageUpload = (
     index: number,
     e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      setUploadingStepIndex(index);
-      toast.info(`${index + 1}단계 조리 사진을 업로드하고 있어요... 📷`);
-      const publicUrl = await uploadRecipeImage(file, 'steps');
-      const currentStep = stepFields[index];
-      updateStep(index, { ...currentStep, imageUrl: publicUrl });
-      toast.success(`${index + 1}단계 사진이 등록되었어요!`);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.';
-      toast.error(msg);
-    } finally {
-      setUploadingStepIndex(null);
+    // 기존 blob URL 해제
+    const prevUrl = watch(`steps.${index}.imageUrl`);
+    if (prevUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(prevUrl);
+      setPendingStepFiles((prev) => {
+        const next = { ...prev };
+        delete next[prevUrl];
+        return next;
+      });
     }
+
+    const previewUrl = URL.createObjectURL(file);
+    setPendingStepFiles((prev) => ({
+      ...prev,
+      [previewUrl]: file,
+    }));
+
+    setValue(`steps.${index}.imageUrl`, previewUrl, { shouldValidate: true });
+    toast.success(`${index + 1}단계 사진이 선택되었어요! 📷`);
+  };
+
+  // Step 이미지 제거 핸들러
+  const handleRemoveStepImage = (index: number) => {
+    const prevUrl = watch(`steps.${index}.imageUrl`);
+    if (prevUrl?.startsWith('blob:')) {
+      URL.revokeObjectURL(prevUrl);
+      setPendingStepFiles((prev) => {
+        const next = { ...prev };
+        delete next[prevUrl];
+        return next;
+      });
+    }
+    setValue(`steps.${index}.imageUrl`, null, { shouldValidate: true });
   };
 
   // 재료 추가 핸들러
@@ -276,27 +315,99 @@ export default function RecipeFormPage() {
     });
   };
 
-  // 폼 제출 핸들러
+  // 유효성 검증 실패 시 피드백 및 스크롤 핸들러
+  const onInvalid = (fieldErrors: FieldErrors<RecipeFormValues>) => {
+    const errorKeys = Object.keys(fieldErrors);
+    if (errorKeys.length > 0) {
+      toast.error('입력되지 않았거나 올바르지 않은 항목이 있어요. 확인해 주세요!');
+      const firstKey = errorKeys[0];
+      const targetEl = document.querySelector(`[name="${firstKey}"], #${firstKey}`) as HTMLElement | null;
+      if (targetEl) {
+        targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        targetEl.focus?.();
+      } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  };
+
+  // 폼 제출 핸들러 (지연 업로드 ➔ API 호출 ➔ 실패 시 롤백 / 수정 시 교체 파일 정리)
   const onSubmit = async (values: RecipeFormValues) => {
+    const newlyUploadedUrls: string[] = [];
+    setIsUploadingImages(true);
+
     try {
+      // 1. 대표 사진 지연 업로드 (선택된 새 파일이 있을 때만 압축 후 Storage 업로드)
+      let finalThumbnailUrl = values.thumbnailUrl || '';
+      if (pendingThumbnail) {
+        finalThumbnailUrl = await uploadRecipeImage(pendingThumbnail.file, 'thumbnails');
+        newlyUploadedUrls.push(finalThumbnailUrl);
+      }
+
+      // 2. 조리 단계 사진 지연 업로드 (blob URL과 매핑된 pendingStepFiles가 있을 때만 압축 업로드)
+      const finalSteps = await Promise.all(
+        values.steps.map(async (step) => {
+          if (step.imageUrl && pendingStepFiles[step.imageUrl]) {
+            const file = pendingStepFiles[step.imageUrl];
+            const uploadedUrl = await uploadRecipeImage(file, 'steps');
+            newlyUploadedUrls.push(uploadedUrl);
+            return { ...step, imageUrl: uploadedUrl };
+          }
+          const cleanImageUrl = step.imageUrl?.startsWith('blob:') ? null : step.imageUrl;
+          return { ...step, imageUrl: cleanImageUrl };
+        }),
+      );
+
+      const payload: RecipeFormValues = {
+        ...values,
+        thumbnailUrl: finalThumbnailUrl.startsWith('blob:') ? '' : finalThumbnailUrl,
+        steps: finalSteps,
+      };
+
+      // 3. 백엔드 등록/수정 API 호출
       if (isEditMode) {
         const res = await updateMutation.mutateAsync({
           recipeId,
-          dto: values,
+          dto: payload,
         });
+
+        // 4-A. 수정 성공 시: 기존 레시피에서 교체/제거되어 더 이상 쓰이지 않는 이전 이미지 버킷 정리
+        if (targetRecipe) {
+          const newUrls = new Set([
+            payload.thumbnailUrl,
+            ...payload.steps.map((s) => s.imageUrl).filter(Boolean),
+          ]);
+          const oldUrls = [
+            targetRecipe.thumbnailUrl,
+            ...targetRecipe.steps.map((s) => s.imageUrl).filter(Boolean),
+          ];
+          const obsoleteUrls = oldUrls.filter((url) => Boolean(url && !newUrls.has(url)));
+          if (obsoleteUrls.length > 0) {
+            deleteStorageFiles('recipes', obsoleteUrls);
+          }
+        }
+
         toast.success('레시피가 성공적으로 수정되었어요! 🍳');
-        navigate(`/recipes/${res.recipeId}`);
+        navigate(`/recipes/${res.recipeId}`, { replace: true });
       } else {
-        const res = await createMutation.mutateAsync(values);
+        const res = await createMutation.mutateAsync(payload);
         toast.success('새로운 레시피가 커뮤니티에 등록되었어요! 🎉');
-        navigate(`/recipes/${res.recipeId}`);
+        navigate(`/recipes/${res.recipeId}`, { replace: true });
       }
     } catch (err: unknown) {
-      // Axios 에러 처리: _FIELD_ 에러인 경우 폼에 바인딩
-      const apiErr = err as { response?: { data?: { code?: string; message?: string } } };
-      if (apiErr.response?.data?.code?.includes('_FIELD_')) {
-        setError('root', { message: apiErr.response.data.message });
+      // 4-B. 백엔드 에러 발생 시: 방금 업로드된 새 이미지들을 버킷에서 즉시 롤백 삭제하여 고아 이미지 방지
+      if (newlyUploadedUrls.length > 0) {
+        await deleteStorageFiles('recipes', newlyUploadedUrls);
       }
+
+      // Axios 에러 처리: 백엔드 에러 메시지를 토스트 및 root 에러에 동시 바인딩
+      const apiErr = err as { response?: { data?: { code?: string; message?: string } } };
+      const errorMessage =
+        apiErr.response?.data?.message || '요청한 입력값이 올바르지 않습니다. 다시 확인해 주세요.';
+      setError('root', { message: errorMessage });
+      toast.error(errorMessage);
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
@@ -309,11 +420,11 @@ export default function RecipeFormPage() {
     );
   }
 
-  const isSaving = isSubmitting || createMutation.isPending || updateMutation.isPending;
+  const isSaving = isSubmitting || isUploadingImages || createMutation.isPending || updateMutation.isPending;
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, onInvalid)}
       onKeyDown={(e) => {
         // textarea가 아닌 일반 input에서 엔터 키 입력 시 폼이 의도치 않게 새로고침되는 것 방지
         if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
@@ -352,12 +463,7 @@ export default function RecipeFormPage() {
           </label>
           <div className="flex items-center gap-4">
             <div className="relative h-28 w-28 sm:h-32 sm:w-32 shrink-0 overflow-hidden rounded-2xl border-2 border-dashed border-border/80 bg-muted flex items-center justify-center">
-              {isThumbnailUploading ? (
-                <div className="flex flex-col items-center justify-center text-muted-foreground p-2">
-                  <Loader2 className="h-6 w-6 animate-spin text-brand-500 mb-1" />
-                  <span className="text-[10px]">압축 중...</span>
-                </div>
-              ) : watchThumbnailUrl ? (
+              {watchThumbnailUrl ? (
                 <img
                   src={watchThumbnailUrl}
                   alt="대표 사진 미리보기"
@@ -373,26 +479,26 @@ export default function RecipeFormPage() {
             <div className="space-y-2">
               <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground hover:bg-accent active:scale-95 transition-all">
                 <Camera className="h-4 w-4" />
-                <span>사진 선택하기</span>
+                <span>{watchThumbnailUrl ? '사진 변경하기' : '사진 선택하기'}</span>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={handleThumbnailUpload}
-                  disabled={isThumbnailUploading}
+                  disabled={isSaving}
                   className="hidden"
                 />
               </label>
               {watchThumbnailUrl && (
                 <button
                   type="button"
-                  onClick={() => setValue('thumbnailUrl', '')}
+                  onClick={handleRemoveThumbnail}
                   className="block text-xs text-rose-500 font-bold hover:underline"
                 >
                   사진 삭제
                 </button>
               )}
               <p className="text-[11px] text-muted-foreground">
-                1MB 이하로 자동 압축되어 안전하게 저장됩니다.
+                저장 시 1MB 이하 WebP로 자동 압축되어 안전하게 업로드됩니다.
               </p>
             </div>
           </div>
@@ -474,11 +580,17 @@ export default function RecipeFormPage() {
             <label className="block text-xs font-bold text-foreground mb-1">기준 인분</label>
             <div className="flex items-center gap-2">
               <input
+                id="servings"
+                name="servings"
                 type="number"
                 min="1"
                 max="10"
+                step="any"
                 value={watchServings}
-                onChange={(e) => setValue('servings', Math.max(1, parseInt(e.target.value) || 1))}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setValue('servings', isNaN(val) ? 1 : Math.max(1, Math.min(10, val)), { shouldValidate: true });
+                }}
                 className="w-full rounded-xl border border-border/80 bg-background px-3 py-2 text-xs sm:text-sm font-bold text-foreground focus:border-brand-500 focus:outline-none"
               />
               <span className="text-xs font-bold text-muted-foreground shrink-0">인분</span>
@@ -490,11 +602,16 @@ export default function RecipeFormPage() {
             <label className="block text-xs font-bold text-foreground mb-1">조리 시간</label>
             <div className="flex items-center gap-2">
               <input
+                id="cookingTime"
+                name="cookingTime"
                 type="number"
                 min="1"
-                step="5"
+                step="any"
                 value={watchCookingTime}
-                onChange={(e) => setValue('cookingTime', Math.max(1, parseInt(e.target.value) || 5))}
+                onChange={(e) => {
+                  const val = parseInt(e.target.value, 10);
+                  setValue('cookingTime', isNaN(val) ? 1 : Math.max(1, val), { shouldValidate: true });
+                }}
                 className="w-full rounded-xl border border-border/80 bg-background px-3 py-2 text-xs sm:text-sm font-bold text-foreground focus:border-brand-500 focus:outline-none"
               />
               <span className="text-xs font-bold text-muted-foreground shrink-0">분</span>
@@ -531,7 +648,7 @@ export default function RecipeFormPage() {
             <button
               key={time}
               type="button"
-              onClick={() => setValue('cookingTime', time)}
+              onClick={() => setValue('cookingTime', time, { shouldValidate: true })}
               className={cn(
                 'rounded-lg px-2 py-0.5 text-[11px] font-bold border transition-colors',
                 watchCookingTime === time
@@ -644,7 +761,7 @@ export default function RecipeFormPage() {
                     <input
                       type="number"
                       min="0.01"
-                      step="0.1"
+                      step="any"
                       value={ing?.quantity ?? ''}
                       onChange={(e) => {
                         const val = e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value);
@@ -748,7 +865,6 @@ export default function RecipeFormPage() {
         <div className="space-y-3.5">
           {stepFields.map((field, idx) => {
             const step = watch(`steps.${idx}`);
-            const isUploading = uploadingStepIndex === idx;
 
             return (
               <div
@@ -765,7 +881,7 @@ export default function RecipeFormPage() {
                     <button
                       type="button"
                       onClick={() => moveStep(idx, idx - 1)}
-                      disabled={idx === 0}
+                      disabled={idx === 0 || isSaving}
                       aria-label="순서 위로 이동"
                       className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent disabled:opacity-20"
                     >
@@ -774,7 +890,7 @@ export default function RecipeFormPage() {
                     <button
                       type="button"
                       onClick={() => moveStep(idx, idx + 1)}
-                      disabled={idx === stepFields.length - 1}
+                      disabled={idx === stepFields.length - 1 || isSaving}
                       aria-label="순서 아래로 이동"
                       className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent disabled:opacity-20"
                     >
@@ -787,10 +903,12 @@ export default function RecipeFormPage() {
                           toast.error('최소 1개 이상의 조리 순서가 필요해요.');
                           return;
                         }
+                        handleRemoveStepImage(idx);
                         removeStep(idx);
                       }}
+                      disabled={isSaving}
                       aria-label="순서 삭제"
-                      className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-50"
+                      className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-50 disabled:opacity-20"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
@@ -808,17 +926,13 @@ export default function RecipeFormPage() {
                 {/* 과정 사진 첨부 미리보기 */}
                 <div className="flex items-center gap-3">
                   <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-accent active:scale-95 transition-all">
-                    {isUploading ? (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-500" />
-                    ) : (
-                      <Camera className="h-3.5 w-3.5" />
-                    )}
-                    <span>{isUploading ? '업로드 중...' : step?.imageUrl ? '사진 변경' : '과정 사진 첨부'}</span>
+                    <Camera className="h-3.5 w-3.5" />
+                    <span>{step?.imageUrl ? '사진 변경' : '과정 사진 첨부'}</span>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={(e) => handleStepImageUpload(idx, e)}
-                      disabled={isUploading}
+                      disabled={isSaving}
                       className="hidden"
                     />
                   </label>
@@ -832,8 +946,9 @@ export default function RecipeFormPage() {
                       />
                       <button
                         type="button"
-                        onClick={() => updateStep(idx, { ...step, imageUrl: null })}
-                        className="text-[11px] text-rose-500 font-bold hover:underline"
+                        onClick={() => handleRemoveStepImage(idx)}
+                        disabled={isSaving}
+                        className="text-[11px] text-rose-500 font-bold hover:underline disabled:opacity-50"
                       >
                         삭제
                       </button>
@@ -856,6 +971,14 @@ export default function RecipeFormPage() {
         </button>
       </section>
 
+      {/* 루트 에러 메시지 (하단 액션 버튼 위 표시로 모바일 긴 폼 가시성 보장) */}
+      {errors.root && (
+        <div className="flex items-center gap-2 rounded-2xl border border-rose-500/40 bg-rose-50/90 p-4 text-xs sm:text-sm font-bold text-rose-600 dark:bg-rose-950/40 dark:text-rose-400 shadow-sm">
+          <AlertCircle className="h-5 w-5 shrink-0 text-rose-500" />
+          <span>{errors.root.message}</span>
+        </div>
+      )}
+
       {/* ===================== 하단 액션 버튼 ===================== */}
       <div className="flex gap-3 pt-2">
         <button
@@ -873,7 +996,7 @@ export default function RecipeFormPage() {
           {isSaving ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              <span>저장 중...</span>
+              <span>{isUploadingImages ? '이미지 업로드 중...' : '저장 중...'}</span>
             </>
           ) : (
             <>

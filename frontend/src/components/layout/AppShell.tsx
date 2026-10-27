@@ -109,15 +109,7 @@ export function AppShell() {
                 : 'pb-6',
             )}
           >
-            <motion.div
-              key={pathname}
-              initial={reduceMotion ? false : { opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-              className="h-full"
-            >
-              <Outlet />
-            </motion.div>
+            <Outlet />
           </main>
         </div>
       </div>

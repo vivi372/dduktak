@@ -6,8 +6,96 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { usePlatformStore } from '@/store/usePlatformStore';
 import { useAuthStore } from '@/store/useAuthStore';
 import * as inventoryApi from '@/services/inventoryApi';
-import { mockInventory } from '@/mocks/inventory.mock';
+import type { InventoryItem } from '@/types/inventory';
 import InventoryPage from '../InventoryPage';
+
+// 테스트 전용 인라인 냉장고 더미
+const mockInventory: InventoryItem[] = [
+  {
+    ingredientId: 101,
+    masterIngredientId: 9,
+    categoryId: 2,
+    name: '계란',
+    storageType: 'REFRIGERATED',
+    quantity: 10,
+    unit: '개',
+    expireDate: '2026-10-24',
+    dDay: 2,
+    memo: '편의점 1+1 행사',
+  },
+  {
+    ingredientId: 102,
+    masterIngredientId: 9,
+    categoryId: 2,
+    name: '계란',
+    storageType: 'REFRIGERATED',
+    quantity: 15,
+    unit: '개',
+    expireDate: '2026-11-09',
+    dDay: 18,
+    memo: '본가에서 가져옴',
+  },
+  {
+    ingredientId: 103,
+    masterIngredientId: 1,
+    categoryId: 1,
+    name: '양파',
+    storageType: 'ROOM_TEMP',
+    quantity: 3,
+    unit: '개',
+    expireDate: '2026-10-27',
+    dDay: 5,
+    memo: '',
+  },
+  {
+    ingredientId: 104,
+    masterIngredientId: 49,
+    categoryId: 2,
+    name: '돼지고기 (삼겹살/목살)',
+    storageType: 'FROZEN',
+    quantity: 400,
+    unit: 'g',
+    expireDate: '2026-11-20',
+    dDay: 29,
+    memo: '소분 냉동',
+  },
+  {
+    ingredientId: 105,
+    masterIngredientId: 22,
+    categoryId: 5,
+    name: '만두 (냉동)',
+    storageType: 'FROZEN',
+    quantity: 1,
+    unit: '봉지',
+    expireDate: '2026-12-15',
+    dDay: 54,
+    memo: '',
+  },
+  {
+    ingredientId: 106,
+    masterIngredientId: 8,
+    categoryId: 1,
+    name: '두부',
+    storageType: 'REFRIGERATED',
+    quantity: 1,
+    unit: '모',
+    expireDate: '2026-10-20',
+    dDay: -2, // 소비기한 도과
+    memo: '',
+  },
+  {
+    ingredientId: 107,
+    masterIngredientId: 78,
+    categoryId: 5,
+    name: '떡국떡',
+    storageType: 'REFRIGERATED',
+    quantity: 500,
+    unit: 'g',
+    expireDate: '2026-10-18',
+    dDay: -4, // 소비기한 도과
+    memo: '',
+  },
+];
 
 // sonner toast 모킹
 vi.mock('sonner', () => ({
@@ -20,10 +108,9 @@ vi.mock('sonner', () => ({
 
 vi.mock('@/services/inventoryApi', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/services/inventoryApi')>();
-  const { mockInventory: items } = await import('@/mocks/inventory.mock');
   return {
     ...actual,
-    getMyIngredients: vi.fn().mockImplementation(() => Promise.resolve(items)),
+    getMyIngredients: vi.fn().mockImplementation(() => Promise.resolve(mockInventory)),
   };
 });
 
@@ -60,6 +147,7 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     });
     vi.mocked(inventoryApi.getMyIngredients).mockResolvedValue(mockInventory);
   });
+
   it('타이틀 및 상단 3대 추가 CTA(재료 추가, 바코드, 영수증)를 렌더링해야 한다', () => {
     renderWithProviders(<InventoryPage />);
 
@@ -90,9 +178,8 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     const frozenTab = screen.getByRole('tab', { name: '냉동' });
     await user.click(frozenTab);
 
-    // 냉동 보관인 '만두 (냉동)' 또는 냉동 삼겹살은 보이고, 순수 냉장만 있는 '우유'는 사라짐
     expect(screen.getByRole('heading', { level: 2, name: '만두 (냉동)' })).toBeInTheDocument();
-    expect(screen.queryByRole('heading', { level: 2, name: '우유' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 2, name: '양파' })).not.toBeInTheDocument();
   });
 
   it('검색창에 키워드 입력 시 재료명 또는 메모와 일치하는 카드만 노출되어야 한다', async () => {

@@ -203,8 +203,8 @@ export default function MyPage() {
   const formattedQuietEnd = displayUser.quietTimeEnd.slice(0, 5);
 
   // 실제 내가 작성한 레시피 및 스크랩북 건수 조회 (로그인 시)
-  const { data: myRecipesData } = useRecipes({ filter: 'MY', size: 1 }, { enabled: isAuthenticated });
-  const { data: scrapRecipesData } = useRecipes({ filter: 'SCRAP', size: 1 }, { enabled: isAuthenticated });
+  const { data: myRecipesData, isLoading: isMyRecipesLoading } = useRecipes({ filter: 'MY', size: 1 }, { enabled: isAuthenticated });
+  const { data: scrapRecipesData, isLoading: isScrapLoading } = useRecipes({ filter: 'SCRAP', size: 1 }, { enabled: isAuthenticated });
   const myRecipeCount = myRecipesData?.totalElements ?? 0;
   const scrapCount = scrapRecipesData?.totalElements ?? 0;
 
@@ -255,7 +255,11 @@ export default function MyPage() {
       {/* 2. 내 활동 숏컷 (로그인 시) */}
       {isAuthenticated && (
         <section aria-label="내 활동 바로가기">
-          <MyRecipeShortcutCard myRecipeCount={myRecipeCount} scrapCount={scrapCount} />
+          <MyRecipeShortcutCard
+            myRecipeCount={myRecipeCount}
+            scrapCount={scrapCount}
+            isLoading={isMyRecipesLoading || isScrapLoading}
+          />
         </section>
       )}
 

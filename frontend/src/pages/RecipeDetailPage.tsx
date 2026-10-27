@@ -17,6 +17,7 @@ import {
   IngredientBadgeList,
   RecipeStepList,
   CookConfirmationModal,
+  RecipeDeleteModal,
 } from '@/components/recipe';
 import { RecipeDetailSkeleton } from '@/components/common/Skeleton';
 import {
@@ -27,9 +28,10 @@ import {
 } from '@/hooks/useRecipe';
 import { useMyIngredients } from '@/hooks/useInventory';
 import { useAuth } from '@/hooks/useAuth';
-import { calculateRecipeMatching } from '@/mocks/matching.mock';
+import { calculateRecipeMatching } from '@/utils/matchingCalculator';
 import { ROUTES } from '@/constants/routes';
 import { DEFAULT_RECIPE_THUMBNAIL_URL } from '@/constants/images';
+import { deleteStorageFiles } from '@/services/storageService';
 import { cn } from '@/utils/cn';
 
 /**
@@ -64,6 +66,7 @@ export default function RecipeDetailPage() {
   // 로컬 상호작용 상태
   const [servings, setServings] = useState<number>(1);
   const [cookModalOpen, setCookModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
 
   // 레시피 로드 시 레시피의 기본 인분수로 동기화
   useEffect(() => {
@@ -112,17 +115,36 @@ export default function RecipeDetailPage() {
     });
   };
 
-  // 레시피 삭제 핸들러
+  // 레시피 삭제 모달 오픈 핸들러
   const handleDeleteRecipe = () => {
     if (!recipe) return;
-    if (window.confirm('정말 이 레시피를 삭제하시겠습니까?')) {
-      deleteRecipeMutation.mutate(recipe.recipeId, {
-        onSuccess: () => {
-          toast.success('레시피가 삭제되었습니다.');
-          navigate(ROUTES.RECIPES);
-        },
-      });
-    }
+    setIsDeleteModalOpen(true);
+  };
+
+  // 레시피 삭제 실제 확정 핸들러
+  const handleConfirmDelete = () => {
+    if (!recipe || deleteRecipeMutation.isPending) return;
+    deleteRecipeMutation.mutate(recipe.recipeId, {
+      onSuccess: () => {
+        setIsDeleteModalOpen(false);
+
+        // 레시피 관련 이미지 Supabase Storage 버킷 일괄 정리 (고아 파일 방지)
+        const targetImages = [
+          recipe.thumbnailUrl,
+          ...recipe.steps.map((s) => s.imageUrl).filter(Boolean),
+        ];
+        deleteStorageFiles('recipes', targetImages);
+
+        toast.success('레시피가 성공적으로 삭제되었습니다.');
+        navigate(ROUTES.RECIPES, { replace: true });
+      },
+      onError: (err: unknown) => {
+        const msg =
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ||
+          '레시피 삭제에 실패했습니다.';
+        toast.error(msg);
+      },
+    });
   };
 
   // 공유 핸들러
@@ -378,6 +400,15 @@ export default function RecipeDetailPage() {
         recipe={recipe}
         initialServings={servings}
         onConfirmCook={handleConfirmCook}
+      />
+
+      {/* 레시피 삭제 전용 2차 확인 모달 */}
+      <RecipeDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        isDeleting={deleteRecipeMutation.isPending}
+        recipeTitle={recipe.title}
       />
     </div>
   );

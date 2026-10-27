@@ -1,10 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { calculateRecipeMatching, calculateFifoDeductionItems } from '@/mocks/matching.mock';
+import { calculateRecipeMatching, calculateFifoDeductionItems } from '@/utils/matchingCalculator';
 import { ServingsCalculator } from '@/components/recipe/ServingsCalculator';
 import { CookConfirmationModal } from '@/components/recipe/CookConfirmationModal';
-import { mockRecipeDetails } from '@/mocks/recipes.mock';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { InventoryItem } from '@/types/inventory';
+import type { RecipeDetail } from '@/types/recipe';
 
 // 테스트용 유저 냉장고 더미
 const testInventory: InventoryItem[] = [
@@ -32,10 +33,153 @@ const testInventory: InventoryItem[] = [
   },
 ];
 
+// 테스트 전용 레시피 더미 데이터 (외부 mock 의존성 제거)
+const testRecipeDetails: RecipeDetail[] = [
+  {
+    recipeId: 1,
+    recipeCategoryId: 1,
+    categoryName: '한그릇/밥',
+    title: '계란 볶음밥',
+    description: '간단하고 맛있는 계란볶음밥',
+    servings: 1,
+    cookingTime: 15,
+    difficulty: '쉬움',
+    thumbnailUrl: '',
+    likeCount: 10,
+    cookedCount: 20,
+    authorNickname: '셰프',
+    authorTag: '1234',
+    isLiked: false,
+    isScrapped: false,
+    ingredients: [
+      {
+        recipeIngId: 1,
+        masterIngredientId: 18,
+        altIngredientId: null,
+        categoryId: 2,
+        name: '계란',
+        quantity: 2,
+        unit: '개',
+        typeCode: 'MAIN',
+        isOptional: false,
+      },
+    ],
+    steps: [
+      { stepNo: 1, description: '밥을 볶습니다.', imageUrl: null },
+    ],
+  },
+  {
+    recipeId: 3,
+    recipeCategoryId: 1,
+    categoryName: '한그릇/밥',
+    title: '스팸김치볶음밥',
+    description: '스팸김치볶음밥',
+    servings: 1,
+    cookingTime: 20,
+    difficulty: '쉬움',
+    thumbnailUrl: '',
+    likeCount: 5,
+    cookedCount: 10,
+    authorNickname: '셰프',
+    authorTag: '1234',
+    isLiked: false,
+    isScrapped: false,
+    ingredients: [
+      {
+        recipeIngId: 2,
+        masterIngredientId: 13,
+        altIngredientId: null,
+        categoryId: 2,
+        name: '스팸',
+        quantity: 1,
+        unit: '개',
+        typeCode: 'MAIN',
+        isOptional: false,
+      },
+      {
+        recipeIngId: 3,
+        masterIngredientId: 19,
+        altIngredientId: null,
+        categoryId: 5,
+        name: '배추김치',
+        quantity: 100,
+        unit: 'g',
+        typeCode: 'MAIN',
+        isOptional: false,
+      },
+    ],
+    steps: [{ stepNo: 1, description: '볶습니다.', imageUrl: null }],
+  },
+  {
+    recipeId: 6,
+    recipeCategoryId: 3,
+    categoryName: '반찬/나물/조림',
+    title: '촉촉한 계란말이',
+    description: '부드러운 계란말이',
+    servings: 1,
+    cookingTime: 15,
+    difficulty: '보통',
+    thumbnailUrl: '',
+    likeCount: 8,
+    cookedCount: 12,
+    authorNickname: '셰프',
+    authorTag: '1234',
+    isLiked: false,
+    isScrapped: false,
+    ingredients: [
+      {
+        recipeIngId: 4,
+        masterIngredientId: 18,
+        altIngredientId: null,
+        categoryId: 2,
+        name: '계란',
+        quantity: 3,
+        unit: '개',
+        typeCode: 'MAIN',
+        isOptional: false,
+      },
+      {
+        recipeIngId: 5,
+        masterIngredientId: 2,
+        altIngredientId: null,
+        categoryId: 1,
+        name: '대파',
+        quantity: 1,
+        unit: '뿌리',
+        typeCode: 'SUB',
+        isOptional: false,
+      },
+      {
+        recipeIngId: 6,
+        masterIngredientId: 86,
+        altIngredientId: null,
+        categoryId: 6,
+        name: '소금',
+        quantity: 2,
+        unit: 'g',
+        typeCode: 'SUB',
+        isOptional: false,
+      },
+      {
+        recipeIngId: 7,
+        masterIngredientId: 28,
+        altIngredientId: null,
+        categoryId: 6,
+        name: '식용유',
+        quantity: 5,
+        unit: 'ml',
+        typeCode: 'SUB',
+        isOptional: false,
+      },
+    ],
+    steps: [{ stepNo: 1, description: '말아줍니다.', imageUrl: null }],
+  },
+];
+
 describe('스마트 매칭 엔진 알고리즘 (module_04_matching.md) 검증', () => {
   it('주재료를 1개도 보유하지 않은 경우 Hard Gate에 의해 매칭 점수가 0%여야 한다', () => {
-    // 스팸김치볶음밥 (주재료: 스팸, 김치, 밥) - testInventory에 주재료 0개
-    const spamRiceRecipe = mockRecipeDetails.find((r) => r.recipeId === 3)!;
+    // 스팸김치볶음밥 (주재료: 스팸, 김치) - testInventory에 주재료 0개
+    const spamRiceRecipe = testRecipeDetails.find((r) => r.recipeId === 3)!;
     const result = calculateRecipeMatching(spamRiceRecipe, testInventory);
 
     expect(result.isHardGatePassed).toBe(false);
@@ -43,8 +187,8 @@ describe('스마트 매칭 엔진 알고리즘 (module_04_matching.md) 검증', 
   });
 
   it('주재료 보유 시 점수 계산 및 소비기한 임박 가산점(+10, +5)이 정상 합산되어야 한다', () => {
-    // 촉촉한 계란말이 (주재료: 계란 / 부재료: 대파, 우유, 소금, 식용유)
-    const eggRollRecipe = mockRecipeDetails.find((r) => r.recipeId === 6)!;
+    // 촉촉한 계란말이 (주재료: 계란 / 부재료: 대파, 소금, 식용유)
+    const eggRollRecipe = testRecipeDetails.find((r) => r.recipeId === 6)!;
     const result = calculateRecipeMatching(eggRollRecipe, testInventory);
 
     expect(result.isHardGatePassed).toBe(true);
@@ -53,7 +197,7 @@ describe('스마트 매칭 엔진 알고리즘 (module_04_matching.md) 검증', 
   });
 
   it('양념/소스류는 차감 대상에서 자동 제외되어 toDeductQuantity가 0이어야 한다', () => {
-    const eggRollRecipe = mockRecipeDetails.find((r) => r.recipeId === 6)!;
+    const eggRollRecipe = testRecipeDetails.find((r) => r.recipeId === 6)!;
     const deductions = calculateFifoDeductionItems(eggRollRecipe, 1, testInventory);
 
     const saltItem = deductions.find((d) => d.name === '소금');
@@ -86,8 +230,6 @@ describe('인분 변환 계산기 (ServingsCalculator) 단위 테스트', () => 
   });
 });
 
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-
 const createTestQueryClient = () =>
   new QueryClient({
     defaultOptions: {
@@ -103,7 +245,7 @@ const renderWithClient = (ui: React.ReactElement) => {
 
 describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터랙션 테스트', () => {
   it('모달 오픈 시 1단계 2-Way 옵션이 렌더링되어야 한다', () => {
-    const recipe = mockRecipeDetails[0];
+    const recipe = testRecipeDetails[0];
     renderWithClient(
       <CookConfirmationModal
         open={true}
@@ -119,7 +261,7 @@ describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터�
   });
 
   it('재료 자동으로 차감하고 요리하기 선택 후 다음 단계로 이동하면 차감 검수 화면이 나와야 한다', () => {
-    const recipe = mockRecipeDetails[0];
+    const recipe = testRecipeDetails[0];
     renderWithClient(
       <CookConfirmationModal
         open={true}
@@ -136,4 +278,3 @@ describe('요리하기 2차 확인 차감 모달 (CookConfirmationModal) 인터�
     expect(screen.getByText('임박한 재료부터 자동 차감')).toBeInTheDocument();
   });
 });
-

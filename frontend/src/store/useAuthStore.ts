@@ -63,7 +63,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // 2. Supabase Auth 상태 변화 리스너 등록
     const { data: authListener } = authApi.onAuthStateChange(async (_event, session) => {
       if (session) {
-        set({ session, isAuthenticated: true, isLoading: true });
+        set({ session, isAuthenticated: true, isLoading: !get().isInitialized });
         try {
           // 백엔드 세션 동기화 및 지연 프로필 생성 (Lazy Profile JIT Sync)
           const initResult = await authApi.initProfile();

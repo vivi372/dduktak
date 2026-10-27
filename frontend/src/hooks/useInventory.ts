@@ -5,7 +5,6 @@
  * 그리고 바코드 및 영수증 OCR 스캔 뮤테이션을 제공합니다.
  */
 
-import { mockMasterIngredients } from '@/mocks/master_ingredients.mock';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getMasterIngredients,
@@ -48,14 +47,7 @@ export const INVENTORY_QUERY_KEYS = {
 export function useMasterIngredients(params?: MasterIngredientQueryParams) {
   return useQuery<MasterIngredient[]>({
     queryKey: INVENTORY_QUERY_KEYS.master(params),
-    queryFn: async () => {
-      try {
-        return await getMasterIngredients(params);
-      } catch {
-        return mockMasterIngredients;
-      }
-    },
-    initialData: mockMasterIngredients,
+    queryFn: () => getMasterIngredients(params),
     staleTime: 1000 * 60 * 30, // 30분 장기 캐싱 (변동이 적은 마스터 데이터)
   });
 }
@@ -75,7 +67,8 @@ export function useInventoryList(params?: InventoryQueryParams) {
       return await getMyIngredients(params);
     },
     enabled: isAuthenticated && Boolean(user?.userId),
-    staleTime: 1000 * 60 * 2, // 2분 캐싱
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5, // 5분 캐싱 (화면 전환 시 즉시 캐시 렌더링)
   });
 }
 

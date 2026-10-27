@@ -12,8 +12,7 @@ import {
 import { toast } from 'sonner';
 import { CustomDatePicker } from '@/components/common/CustomDatePicker';
 import { DDayBadge } from '@/components/common/DDayBadge';
-import type { OcrParsedItemWithRaw } from '@/mocks/ocr_scan.mock';
-import type { InventoryItem } from '@/types/inventory';
+import type { OcrParsedItemWithRaw, InventoryItem } from '@/types/inventory';
 import { cn } from '@/utils/cn';
 
 interface ReceiptItemReviewProps {

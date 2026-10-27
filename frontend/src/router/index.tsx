@@ -40,7 +40,7 @@ export const router = createBrowserRouter([
             <RecipeFormPage />
           </ProtectedRoute>
         ),
-        handle: h({ title: '레시피 작성', showBack: true }),
+        handle: h({ title: '레시피 작성', showBack: true, backPath: ROUTES.RECIPES }),
       },
       {
         path: ROUTES.RECIPE_EDIT,
@@ -54,7 +54,7 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.RECIPE_DETAIL,
         element: <RecipeDetailPage />,
-        handle: h({ title: '레시피 상세', showBack: true }),
+        handle: h({ title: '레시피 상세', showBack: true, backPath: ROUTES.RECIPES }),
       },
       {
         path: ROUTES.MYPAGE,
@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
             <NotificationPage />
           </ProtectedRoute>
         ),
-        handle: h({ title: '알림함', showBack: true }),
+        handle: h({ title: '알림함', showBack: true, backPath: ROUTES.HOME }),
       },
       {
         path: ROUTES.LOGIN,

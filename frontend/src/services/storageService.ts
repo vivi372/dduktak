@@ -117,3 +117,68 @@ export async function uploadRecipeImage(
   return publicUrlData.publicUrl;
 }
 
+/**
+ * Supabase Storage Public URL에서 버킷 내부 상대 파일 경로를 안전하게 추출
+ * - 시드 레시피 기본 이미지(recipe_1.png ~ recipe_30.png) 등 공용 자산은 삭제되지 않도록 null 반환
+ *
+ * @param urlOrPath Public URL 또는 스토리지 파일 상대 경로
+ * @param bucket 버킷명 (기본: 'recipes')
+ * @returns 버킷 내 상대 파일 경로 또는 null
+ */
+export function extractStoragePathFromUrl(
+  urlOrPath?: string | null,
+  bucket: string = 'recipes',
+): string | null {
+  if (!urlOrPath || typeof urlOrPath !== 'string') return null;
+
+  // 1. 공용 시드 이미지 보호 (예: recipe_1.png, recipe_30.png, Default Profile.png)
+  if (/recipe_\d+\.png$/i.test(urlOrPath) || urlOrPath.includes('Default%20Profile.png')) {
+    return null;
+  }
+
+  // 2. 이미 상대 경로인 경우 (예: 'thumbnails/1234_abc.webp', 'steps/1234_abc.webp')
+  if (urlOrPath.startsWith('thumbnails/') || urlOrPath.startsWith('steps/') || urlOrPath.startsWith('avatars/')) {
+    return urlOrPath;
+  }
+
+  // 3. Supabase Public URL 파싱 (예: .../storage/v1/object/public/recipes/thumbnails/...)
+  const prefix = `/storage/v1/object/public/${bucket}/`;
+  const idx = urlOrPath.indexOf(prefix);
+  if (idx !== -1) {
+    const relativePath = decodeURIComponent(urlOrPath.substring(idx + prefix.length));
+    return relativePath.trim() !== '' ? relativePath : null;
+  }
+
+  return null;
+}
+
+/**
+ * Supabase Storage 버킷에서 지정된 파일들을 일괄 삭제 (고아 이미지 정리 및 롤백용)
+ *
+ * @param bucket 버킷명 ('recipes' | 'profiles')
+ * @param filePathsOrUrls 삭제 대상 URL 또는 상대 파일 경로 배열
+ */
+export async function deleteStorageFiles(
+  bucket: string,
+  filePathsOrUrls: (string | null | undefined)[],
+): Promise<void> {
+  const targetPaths = Array.from(
+    new Set(
+      filePathsOrUrls
+        .map((item) => extractStoragePathFromUrl(item, bucket))
+        .filter((path): path is string => Boolean(path)),
+    ),
+  );
+
+  if (targetPaths.length === 0) return;
+
+  try {
+    const { error } = await supabase.storage.from(bucket).remove(targetPaths);
+    if (error) {
+      console.warn(`[StorageService] 이미지 삭제 경고 (${bucket}):`, error.message);
+    }
+  } catch (err) {
+    console.warn(`[StorageService] 이미지 삭제 중 예외 발생 (${bucket}):`, err);
+  }
+}
+

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Clock, Heart, ChefHat, Sparkles } from 'lucide-react';
 import { cn } from '@/utils/cn';
+import { DEFAULT_RECIPE_THUMBNAIL_URL } from '@/constants/images';
 import type { RecipeSummary } from '@/types/recipe';
 
 interface RecipeCardProps {
@@ -55,6 +56,11 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
     ? '관리자'
     : `${recipe.authorNickname}${recipe.authorTag ? `#${recipe.authorTag}` : ''}`;
 
+  const thumbnailSrc =
+    recipe.thumbnailUrl && recipe.thumbnailUrl !== 'null' && recipe.thumbnailUrl.trim() !== ''
+      ? recipe.thumbnailUrl
+      : DEFAULT_RECIPE_THUMBNAIL_URL;
+
   if (variant === 'carousel') {
     return (
       <Link
@@ -64,11 +70,14 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
           className,
         )}
       >
-        <div className="relative aspect-[4/3] overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted">
           <img
-            src={recipe.thumbnailUrl}
+            src={thumbnailSrc}
             alt={recipe.title}
             loading="lazy"
+            onError={(e) => {
+              e.currentTarget.src = DEFAULT_RECIPE_THUMBNAIL_URL;
+            }}
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
           {typeof matchingRate === 'number' && matchingRate > 0 && (
@@ -96,7 +105,15 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
       )}
     >
       <div className="relative h-20 w-20 sm:h-24 sm:w-24 shrink-0 overflow-hidden rounded-xl bg-muted">
-        <img src={recipe.thumbnailUrl} alt={recipe.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <img
+          src={thumbnailSrc}
+          alt={recipe.title}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_RECIPE_THUMBNAIL_URL;
+          }}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        />
       </div>
       <div className="flex min-w-0 flex-1 flex-col justify-between py-0.5">
         <div className="space-y-0.5 sm:space-y-1 min-w-0">

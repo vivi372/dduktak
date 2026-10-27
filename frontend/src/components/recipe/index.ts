@@ -5,3 +5,4 @@ export * from './ServingsCalculator';
 export * from './IngredientBadgeList';
 export * from './RecipeStepList';
 export * from './CookConfirmationModal';
+export * from './RecipeDeleteModal';

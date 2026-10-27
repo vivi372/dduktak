@@ -1,4 +1,8 @@
-import { mockRecipeDetails } from './recipes.mock';
+/**
+ * 스마트 매칭 엔진 및 FIFO 차감 클라이언트 연산 유틸리티
+ * (module_04_matching.md 및 03_REQUIREMENTS_SUMMARY.md 공식 100% 구현)
+ */
+
 import type { RecipeDetail, RecipeIngredient } from '@/types/recipe';
 import type {
   IngredientMatchStatus,
@@ -258,7 +262,7 @@ function getStatusRatio(status?: IngredientStatusType, isOptional?: boolean): nu
  * 모든 레시피의 매칭 스코어를 일괄 산출하여 Map으로 반환
  */
 export function getAllRecipeMatchingScores(
-  recipes: RecipeDetail[] = mockRecipeDetails,
+  recipes: RecipeDetail[] = [],
   inventory: InventoryItem[] = [],
 ): Map<number, RecipeMatchingScore> {
   const scoreMap = new Map<number, RecipeMatchingScore>();

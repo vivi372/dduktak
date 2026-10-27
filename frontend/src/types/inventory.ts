@@ -152,6 +152,16 @@ export interface OcrParsedItem {
   selected: boolean; // 일괄 등록 체크 여부
 }
 
+/** 영수증 OCR 원문 및 신뢰도가 포함된 확장 품목 모델 */
+export interface OcrParsedItemWithRaw extends OcrParsedItem {
+  /** 영수증에 인쇄되었던 원본 텍스트 */
+  rawText: string;
+  /** OCR 인식 신뢰도 (0 ~ 1) */
+  confidence: number;
+  /** 매핑된 표준 카테고리명 */
+  categoryName: string;
+}
+
 /** 내 냉장고 목록 조회 쿼리 파라미터 */
 export interface InventoryQueryParams {
   query?: string;

@@ -1,11 +1,13 @@
 import { BookMarked, Utensils, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/common/Skeleton';
 import { ROUTES } from '@/constants/routes';
 
 interface MyRecipeShortcutCardProps {
   myRecipeCount?: number;
   scrapCount?: number;
+  isLoading?: boolean;
 }
 
 /**
@@ -14,6 +16,7 @@ interface MyRecipeShortcutCardProps {
 export function MyRecipeShortcutCard({
   myRecipeCount = 0,
   scrapCount = 0,
+  isLoading = false,
 }: MyRecipeShortcutCardProps) {
   const navigate = useNavigate();
 
@@ -40,10 +43,14 @@ export function MyRecipeShortcutCard({
         </div>
         <div className="mt-3">
           <p className="text-xs font-bold text-muted-foreground">내가 쓴 레시피</p>
-          <p className="mt-0.5 text-lg font-black tracking-tight text-foreground">
-            {myRecipeCount}
-            <span className="ml-0.5 text-xs font-normal text-muted-foreground">개</span>
-          </p>
+          {isLoading ? (
+            <Skeleton className="mt-1 h-6 w-12 rounded" />
+          ) : (
+            <p className="mt-0.5 text-lg font-black tracking-tight text-foreground">
+              {myRecipeCount}
+              <span className="ml-0.5 text-xs font-normal text-muted-foreground">개</span>
+            </p>
+          )}
         </div>
       </Card>
 
@@ -68,10 +75,14 @@ export function MyRecipeShortcutCard({
         </div>
         <div className="mt-3">
           <p className="text-xs font-bold text-muted-foreground">스크랩북</p>
-          <p className="mt-0.5 text-lg font-black tracking-tight text-foreground">
-            {scrapCount}
-            <span className="ml-0.5 text-xs font-normal text-muted-foreground">개</span>
-          </p>
+          {isLoading ? (
+            <Skeleton className="mt-1 h-6 w-12 rounded" />
+          ) : (
+            <p className="mt-0.5 text-lg font-black tracking-tight text-foreground">
+              {scrapCount}
+              <span className="ml-0.5 text-xs font-normal text-muted-foreground">개</span>
+            </p>
+          )}
         </div>
       </Card>
     </div>

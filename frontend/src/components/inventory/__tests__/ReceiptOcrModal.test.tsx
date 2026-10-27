@@ -4,7 +4,80 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import * as inventoryApi from '@/services/inventoryApi';
 import { ReceiptOcrModal } from '../ReceiptOcrModal';
-import { mockOcrParsedItems } from '@/mocks/ocr_scan.mock';
+import type { OcrParsedItemWithRaw } from '@/types/inventory';
+
+const mockOcrParsedItems: OcrParsedItemWithRaw[] = [
+  {
+    id: 'ocr-item-1',
+    masterIngredientId: 2,
+    name: '대파',
+    rawText: '흙대파 1단 (국내산)',
+    categoryId: 1,
+    categoryName: '채소/과일',
+    quantity: 1,
+    unit: '단',
+    recommendedExpireDate: '2026-11-05',
+    dDay: 7,
+    selected: true,
+    confidence: 0.98,
+  },
+  {
+    id: 'ocr-item-2',
+    masterIngredientId: 1,
+    name: '양파',
+    rawText: '햇양파 1.5kg 망',
+    categoryId: 1,
+    categoryName: '채소/과일',
+    quantity: 1,
+    unit: '망',
+    recommendedExpireDate: '2026-11-12',
+    dDay: 14,
+    selected: true,
+    confidence: 0.95,
+  },
+  {
+    id: 'ocr-item-3',
+    masterIngredientId: 49,
+    name: '돼지고기 (삼겹살/목살)',
+    rawText: '한돈 삼겹살 구이용 600g',
+    categoryId: 2,
+    categoryName: '정육/계란',
+    quantity: 600,
+    unit: 'g',
+    recommendedExpireDate: '2026-10-31',
+    dDay: 3,
+    selected: true,
+    confidence: 0.92,
+  },
+  {
+    id: 'ocr-item-4',
+    masterIngredientId: 8,
+    name: '두부',
+    rawText: '찌개용 부침두부 300g',
+    categoryId: 1,
+    categoryName: '채소/과일',
+    quantity: 1,
+    unit: '모',
+    recommendedExpireDate: '2026-11-03',
+    dDay: 5,
+    selected: true,
+    confidence: 0.88,
+  },
+  {
+    id: 'ocr-item-5',
+    masterIngredientId: 9,
+    name: '계란',
+    rawText: '무항생제 신선란 10구',
+    categoryId: 2,
+    categoryName: '정육/계란',
+    quantity: 10,
+    unit: '개',
+    recommendedExpireDate: '2026-11-19',
+    dDay: 21,
+    selected: true,
+    confidence: 0.99,
+  },
+];
 
 function renderWithProviders(ui: React.ReactElement) {
   const queryClient = new QueryClient({

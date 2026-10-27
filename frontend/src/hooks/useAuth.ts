@@ -8,7 +8,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/useAuthStore';
 import * as authApi from '@/services/authApi';
-import { uploadProfileAvatar } from '@/services/storageService';
+import { uploadProfileAvatar, deleteStorageFiles } from '@/services/storageService';
 import type {
   UpdateProfileRequestDto,
   QuietTimeRequestDto,
@@ -99,7 +99,7 @@ export function useAuth() {
     },
   });
 
-  // 8. 프로필 아바타 이미지 압축 & Supabase Storage 직업로드 후 프로필 수정
+  // 8. 프로필 아바타 이미지 압축 & Supabase Storage 직업로드 후 프로필 수정 (방안 3 적용: 에러 시 롤백 및 이전 이미지 버킷 정리)
   const updateProfileWithAvatarMutation = useMutation({
     mutationFn: async ({
       nickname,
@@ -109,18 +109,35 @@ export function useAuth() {
       avatarFileOrDataUrl?: File | Blob | string;
     }) => {
       let profileImageUrl = user?.profileImage;
+      const oldProfileImage = user?.profileImage;
+      let newlyUploadedUrl: string | null = null;
 
-      // 새 이미지가 전달된 경우 Supabase Storage 직업로드 수행
-      if (avatarFileOrDataUrl && user?.userId) {
-        profileImageUrl = await uploadProfileAvatar(user.userId, avatarFileOrDataUrl);
+      try {
+        // 새 이미지가 전달된 경우 Supabase Storage 직업로드 수행
+        if (avatarFileOrDataUrl && user?.userId) {
+          profileImageUrl = await uploadProfileAvatar(user.userId, avatarFileOrDataUrl);
+          newlyUploadedUrl = profileImageUrl;
+        }
+
+        const updated = await authApi.updateMyProfile({
+          nickname,
+          profileImage: profileImageUrl,
+        });
+        await syncProfile();
+
+        // 수정 성공 시: 기존 이미지가 시드가 아니고 새 이미지로 교체된 경우 버킷에서 정리
+        if (newlyUploadedUrl && oldProfileImage && oldProfileImage !== newlyUploadedUrl) {
+          deleteStorageFiles('profiles', [oldProfileImage]);
+        }
+
+        return updated;
+      } catch (err) {
+        // 백엔드 에러 발생 시: 방금 업로드된 새 프로필 이미지를 즉시 롤백 삭제
+        if (newlyUploadedUrl) {
+          await deleteStorageFiles('profiles', [newlyUploadedUrl]);
+        }
+        throw err;
       }
-
-      const updated = await authApi.updateMyProfile({
-        nickname,
-        profileImage: profileImageUrl,
-      });
-      await syncProfile();
-      return updated;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['auth', 'profile'] });
@@ -139,10 +156,14 @@ export function useAuth() {
     },
   });
 
-  // 10. 회원 탈퇴 뮤테이션 (USER-02)
+  // 10. 회원 탈퇴 뮤테이션 (USER-02 및 버킷 프로필 이미지 정리)
   const withdrawMutation = useMutation({
     mutationFn: async (dto?: WithdrawRequestDto) => {
+      const avatarToDelete = user?.profileImage;
       await authApi.withdraw(dto);
+      if (avatarToDelete) {
+        deleteStorageFiles('profiles', [avatarToDelete]);
+      }
       await storeLogout();
       queryClient.clear();
     },

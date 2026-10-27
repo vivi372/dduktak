@@ -16,7 +16,7 @@ import {
 import { useBodyScrollLock } from '@/hooks';
 import { useCookRecipe } from '@/hooks/useMatching';
 import { useMyIngredients } from '@/hooks/useInventory';
-import { calculateFifoDeductionItems } from '@/mocks/matching.mock';
+import { calculateFifoDeductionItems } from '@/utils/matchingCalculator';
 import type { RecipeDetail } from '@/types/recipe';
 import type { FifoDeductionItem } from '@/types/matching';
 import { cn } from '@/utils/cn';

@@ -15,11 +15,11 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, isInitialized } = useAuthStore();
   const location = useLocation();
 
-  // 초기 세션 검증 진행 중일 때는 깔끔한 스켈레톤 뷰 제공
-  if (isLoading) {
+  // 최초 앱 구동 시 세션 검증 진행 중일 때만 스켈레톤 뷰 제공 (이미 초기화된 경우 화면 깜빡임 방지)
+  if (!isInitialized && isLoading) {
     return (
       <div className="space-y-4 p-4 animate-in fade-in-50" aria-busy="true" aria-label="인증 확인 중">
         <div className="flex items-center justify-between">

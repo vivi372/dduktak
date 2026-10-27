@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Search, Check, ChevronDown, Sparkles, X, Loader2 } from 'lucide-react';
 import { useMasterIngredients } from '@/hooks/useInventory';
-import { mockCategories } from '@/mocks';
+import { INVENTORY_CATEGORIES } from '@/constants/categories';
 import { cn } from '@/utils/cn';
 import type { MasterIngredient } from '@/types/inventory';
 
@@ -15,6 +15,8 @@ export interface MasterComboboxProps {
   className?: string;
   /** 플레이스홀더 텍스트 */
   placeholder?: string;
+  /** 소비기한 보관 일수 권장 표시 여부 (기본값: false, 냉장고 수동 등록 모달에서만 true) */
+  showShelfDays?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export function MasterCombobox({
   disabled = false,
   className,
   placeholder = '식재료를 검색하여 선택하세요',
+  showShelfDays = false,
 }: MasterComboboxProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,9 +111,11 @@ export function MasterCombobox({
               <span className="shrink-0 whitespace-nowrap rounded-md bg-accent px-1.5 py-0.5 text-xs text-muted-foreground">
                 {selectedIngredient.categoryName}
               </span>
-              <span className="shrink-0 whitespace-nowrap text-xs text-brand-600 font-semibold dark:text-brand-400">
-                기본 {selectedIngredient.defaultShelfDays}일 보관
-              </span>
+              {showShelfDays && (
+                <span className="shrink-0 whitespace-nowrap text-xs text-brand-600 font-semibold dark:text-brand-400">
+                  기본 {selectedIngredient.defaultShelfDays}일 보관
+                </span>
+              )}
             </>
           ) : (
             <span className="truncate">{isLoading ? '식재료 목록 불러오는 중...' : placeholder}</span>
@@ -170,7 +175,7 @@ export function MasterCombobox({
             >
               전체
             </button>
-            {mockCategories.map((cat) => (
+            {INVENTORY_CATEGORIES.map((cat) => (
               <button
                 key={cat.categoryId}
                 type="button"
@@ -223,7 +228,8 @@ export function MasterCombobox({
 
                     <div className="flex items-center gap-2">
                       <span className="text-[11px] text-muted-foreground">
-                        {item.defaultUnit} · {item.defaultShelfDays}일 권장
+                        {item.defaultUnit}
+                        {showShelfDays && ` · ${item.defaultShelfDays}일 권장`}
                       </span>
                       {isSelected && <Check className="h-4 w-4 text-brand-500 shrink-0" />}
                     </div>

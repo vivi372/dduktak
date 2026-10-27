@@ -23,36 +23,51 @@ export function Skeleton({ className, shimmer = true, ...props }: SkeletonProps)
 }
 
 /**
- * 인벤토리(내 냉장고) 2-Tier 아코디언 카드 스켈레톤
+ * 인벤토리(내 냉장고) 2-Tier 아코디언 카드 스켈레톤 (InventoryAccordionItem 1차 뷰와 100% 동일한 컨테이너/치수 유지)
  */
 export function InventoryCardSkeleton() {
   return (
-    <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Skeleton className="h-10 w-10 rounded-xl" />
-          <div className="space-y-1.5">
-            <Skeleton className="h-4 w-28" />
-            <Skeleton className="h-3 w-16" />
-          </div>
-        </div>
+    <div className="overflow-hidden rounded-2xl border border-border/80 bg-card shadow-card min-h-[64px] p-4 flex items-center justify-between gap-3">
+      <div className="min-w-0 flex-1 space-y-1.5">
         <div className="flex items-center gap-2">
-          <Skeleton className="h-6 w-14 rounded-full" />
-          <Skeleton className="h-6 w-6 rounded-full" />
+          <Skeleton className="h-4.5 w-24 sm:w-28 rounded-md" />
+          <Skeleton className="h-4 w-12 rounded-full" />
+        </div>
+        <div className="flex items-center gap-2 pt-0.5">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-3 w-12" />
+          <Skeleton className="h-3 w-14" />
         </div>
       </div>
-      <div className="flex items-center justify-between pt-1 border-t border-border/40">
-        <Skeleton className="h-3 w-20" />
-        <Skeleton className="h-3 w-12" />
+      <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
+        <Skeleton className="h-6 w-12 sm:w-16 rounded-full" />
+        <Skeleton className="h-7 w-7 rounded-full" />
       </div>
     </div>
   );
 }
 
 /**
- * 레시피 피드 카드 스켈레톤
+ * 레시피 피드 및 캐러셀 카드 스켈레톤 (RecipeCard와 100% 동일한 외형/치수 유지)
  */
-export function RecipeCardSkeleton({ variant = 'list' }: { variant?: 'list' | 'grid' }) {
+export function RecipeCardSkeleton({ variant = 'list' }: { variant?: 'list' | 'grid' | 'carousel' }) {
+  if (variant === 'carousel') {
+    return (
+      <div className="w-56 shrink-0 snap-start overflow-hidden rounded-2xl border border-border/80 bg-card shadow-card">
+        <Skeleton className="aspect-[4/3] w-full rounded-none" />
+        <div className="space-y-1.5 p-3">
+          <Skeleton className="h-3 w-14 rounded" />
+          <Skeleton className="h-4 w-4/5 rounded" />
+          <Skeleton className="h-3 w-20 rounded" />
+          <div className="flex items-center justify-between pt-1 border-t border-border/40">
+            <Skeleton className="h-3 w-14" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (variant === 'grid') {
     return (
       <div className="rounded-2xl border border-border/80 bg-card overflow-hidden shadow-card">
@@ -69,18 +84,39 @@ export function RecipeCardSkeleton({ variant = 'list' }: { variant?: 'list' | 'g
   }
 
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-border/80 bg-card p-3 shadow-card">
-      <Skeleton className="h-20 w-20 shrink-0 rounded-xl" />
-      <div className="flex-1 min-w-0 space-y-2">
-        <div className="flex items-center gap-1.5">
-          <Skeleton className="h-3.5 w-12 rounded-full" />
-          <Skeleton className="h-3.5 w-16 rounded-full" />
-        </div>
-        <Skeleton className="h-4 w-4/5" />
-        <div className="flex items-center justify-between pt-0.5">
-          <Skeleton className="h-3 w-20" />
+    <div className="flex gap-3 overflow-hidden rounded-2xl border border-border/80 bg-card p-2.5 shadow-card">
+      <Skeleton className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-xl" />
+      <div className="flex-1 min-w-0 space-y-1.5 py-0.5">
+        <Skeleton className="h-3 w-14 rounded" />
+        <Skeleton className="h-4 w-4/5 rounded" />
+        <Skeleton className="h-3 w-20 rounded" />
+        <div className="flex items-center justify-between pt-1 border-t border-border/40">
+          <Skeleton className="h-3 w-16" />
           <Skeleton className="h-3 w-14" />
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * 메인 홈 냉장고 브리핑 단일 위젯 카드 스켈레톤 (HomePage 브리핑 Card와 100% 동일한 컨테이너 유지)
+ */
+export function HomeBriefingCardSkeleton() {
+  return (
+    <div className="rounded-2xl border border-border/80 bg-card p-4 shadow-card space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-1.5">
+          <span className="h-2 w-2 rounded-full bg-muted/60" />
+          <Skeleton className="h-3.5 w-28 rounded-md" />
+        </div>
+        <Skeleton className="h-4 w-4 rounded-full" />
+      </div>
+      <Skeleton className="h-7 w-44 rounded-lg" />
+      <div className="flex flex-wrap gap-2 pt-1">
+        <Skeleton className="h-7 w-20 rounded-full" />
+        <Skeleton className="h-7 w-24 rounded-full" />
+        <Skeleton className="h-7 w-20 rounded-full" />
       </div>
     </div>
   );

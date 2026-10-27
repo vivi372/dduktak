@@ -16,10 +16,15 @@ export function Header() {
   const unreadCount = notificationData?.unreadCount ?? 0;
   const handle = matches[matches.length - 1]?.handle as RouteHandle | undefined;
 
-  // 직접 URL로 진입해 히스토리가 없으면 홈으로 이동
+  // 상단 헤더 뒤로가기: handle에 명시된 backPath가 있으면 해당 부모 경로로 고정 이동, 없으면 히스토리 이전/홈 이동
   const goBack = () => {
-    if (window.history.state?.idx > 0) navigate(-1);
-    else navigate(ROUTES.HOME);
+    if (handle?.backPath) {
+      navigate(handle.backPath);
+    } else if (window.history.state?.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate(ROUTES.HOME);
+    }
   };
 
   return (

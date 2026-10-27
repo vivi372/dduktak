@@ -8,8 +8,7 @@ import {
   ReceiptItemReview,
   ReceiptFailSafeView,
 } from './receipt';
-import type { OcrParsedItemWithRaw } from '@/mocks/ocr_scan.mock';
-import type { InventoryItem } from '@/types/inventory';
+import type { OcrParsedItemWithRaw, InventoryItem } from '@/types/inventory';
 import { useBodyScrollLock } from '@/hooks';
 import { useScanReceiptOcr } from '@/hooks/useInventory';
 

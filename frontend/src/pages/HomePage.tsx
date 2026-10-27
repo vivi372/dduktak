@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { DDayBadge } from '@/components/common/DDayBadge';
 import { EmptyState } from '@/components/common/EmptyState';
 import { RecipeCard } from '@/components/common/RecipeCard';
-import { Skeleton } from '@/components/common/Skeleton';
+import { RecipeCardSkeleton, HomeBriefingCardSkeleton } from '@/components/common/Skeleton';
 import { SectionHeader } from '@/components/common/SectionHeader';
 import { HorizontalCarousel } from '@/components/common/HorizontalCarousel';
 import { ROUTES } from '@/constants/routes';
@@ -134,17 +134,7 @@ export default function HomePage() {
       {/* 3. 내 냉장고 브리핑 위젯 (06_UI_UX_GUIDELINES.md & module_06_main.md 2.1절) */}
       <section aria-label="내 냉장고 브리핑">
         {isBriefingLoading ? (
-          <Card className="p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-3.5 w-24 rounded-full" />
-              <Skeleton className="h-4 w-4 rounded-full" />
-            </div>
-            <Skeleton className="h-7 w-40" />
-            <div className="flex gap-2 pt-1">
-              <Skeleton className="h-6 w-20 rounded-full" />
-              <Skeleton className="h-6 w-24 rounded-full" />
-            </div>
-          </Card>
+          <HomeBriefingCardSkeleton />
         ) : hasIngredients && briefing ? (
           /* [정상 브리핑 상태]: 전체 보관 재료 현황 및 상위 3개 재료 노출 */
           <Link to={ROUTES.INVENTORY} className="block group">
@@ -214,7 +204,14 @@ export default function HomePage() {
           moreTo={ROUTES.RECIPES}
         />
 
-        {hasSmartMatch && topRecipeSummary ? (
+        {isBriefingLoading ? (
+          /* [로딩 중 스켈레톤]: 캐러셀 형태와 동일한 규격의 카드 3종 노출로 레이아웃 시프트 원천 차단 */
+          <HorizontalCarousel>
+            <RecipeCardSkeleton variant="carousel" />
+            <RecipeCardSkeleton variant="carousel" />
+            <RecipeCardSkeleton variant="carousel" />
+          </HorizontalCarousel>
+        ) : hasSmartMatch && topRecipeSummary ? (
           /* [정상 매칭 캐러셀]: 백엔드 브리핑 topRecipe 및 높은 매칭률 순 탐색 */
           <HorizontalCarousel>
             <RecipeCard
@@ -262,9 +259,9 @@ export default function HomePage() {
         <div className="space-y-3">
           {isPopularLoading ? (
             <>
-              <Skeleton className="h-24 w-full rounded-2xl" />
-              <Skeleton className="h-24 w-full rounded-2xl" />
-              <Skeleton className="h-24 w-full rounded-2xl" />
+              <RecipeCardSkeleton variant="list" />
+              <RecipeCardSkeleton variant="list" />
+              <RecipeCardSkeleton variant="list" />
             </>
           ) : popularRecipes.length > 0 ? (
             popularRecipes.map((recipe) => (
