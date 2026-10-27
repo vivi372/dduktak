@@ -62,7 +62,7 @@ public class SecurityConfig {
                         .requestMatchers("/error").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/inventory/master-ingredients").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/recipes/categories").permitAll()
-                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/recipes/**").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/recipes", "/api/v1/recipes/**").permitAll()
                         // 2. 그 외 모든 요청(세션 동기화, 본인 정보 조회/수정/탈퇴 등)은 Supabase JWT 인증 필수
                         .anyRequest().authenticated())
                 // 인증 및 인가 실패 핸들러 등록

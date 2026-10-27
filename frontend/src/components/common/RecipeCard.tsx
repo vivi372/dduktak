@@ -37,8 +37,14 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
       </div>
       <div className="flex items-center gap-2 whitespace-nowrap">
         <span className="flex items-center gap-0.5">
-          <Heart className="h-3 w-3 shrink-0 text-rose-500/80" aria-hidden />
-          <span>{recipe.likeCount}</span>
+          <Heart
+            className={cn(
+              "h-3 w-3 shrink-0",
+              recipe.isLiked ? "fill-rose-500 text-rose-500" : "text-rose-500/80"
+            )}
+            aria-hidden
+          />
+          <span className={cn(recipe.isLiked && "font-semibold text-rose-500")}>{recipe.likeCount}</span>
         </span>
         <span className="flex items-center gap-0.5">
           <ChefHat className="h-3 w-3 shrink-0 text-amber-500/80" aria-hidden />

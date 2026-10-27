@@ -22,7 +22,15 @@ export const router = createBrowserRouter([
   {
     element: <AppShell />,
     children: [
-      { path: ROUTES.HOME, element: <HomePage />, handle: h({ title: '홈', brand: true }) },
+      {
+        path: ROUTES.HOME,
+        element: (
+          <ProtectedRoute>
+            <HomePage />
+          </ProtectedRoute>
+        ),
+        handle: h({ title: '홈', brand: true }),
+      },
       {
         path: ROUTES.INVENTORY,
         element: (

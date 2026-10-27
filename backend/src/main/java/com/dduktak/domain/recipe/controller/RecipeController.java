@@ -3,6 +3,8 @@ package com.dduktak.domain.recipe.controller;
 import com.dduktak.domain.recipe.dto.*;
 import com.dduktak.domain.recipe.service.RecipeService;
 import com.dduktak.global.error.ApiResponseDto;
+import com.dduktak.global.error.CustomException;
+import com.dduktak.global.error.ErrorCode;
 import com.dduktak.global.security.SecurityUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +48,10 @@ public class RecipeController {
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
-        UUID userId = SecurityUtil.getCurrentUserId();
+        UUID userId = SecurityUtil.getCurrentUserIdOrNull();
+        if (("MY".equalsIgnoreCase(filter) || "SCRAP".equalsIgnoreCase(filter)) && userId == null) {
+            throw new CustomException(ErrorCode.AUTH_ALERT_UNAUTHORIZED);
+        }
         RecipeListResponseDto response = recipeService.getRecipes(
                 userId, query, filter, recipeCategoryId, sort, page, size
         );
@@ -60,7 +65,7 @@ public class RecipeController {
     public ResponseEntity<ApiResponseDto<RecipeDetailResponseDto>> getRecipeDetail(
             @PathVariable("recipeId") Long recipeId
     ) {
-        UUID userId = SecurityUtil.getCurrentUserId();
+        UUID userId = SecurityUtil.getCurrentUserIdOrNull();
         RecipeDetailResponseDto response = recipeService.getRecipeDetail(userId, recipeId);
         return ResponseEntity.ok(ApiResponseDto.success(response, "레시피 상세 조회가 완료되었습니다."));
     }

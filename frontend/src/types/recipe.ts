@@ -77,6 +77,8 @@ export interface RecipeSummary {
   authorTag?: string | null;
   authorId?: string | null;
   matchingRate?: number;
+  /** 현재 로그인한 유저의 좋아요 여부 */
+  isLiked?: boolean;
 }
 export type RecipeSummaryResponseDto = RecipeSummary;
 

@@ -32,4 +32,10 @@ public class UserProfileResponseDto {
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "HH:mm:ss")
     private LocalTime quietTimeEnd;
+
+    @Builder.Default
+    private Boolean isExpireWarnEnabled = true;
+
+    @Builder.Default
+    private Boolean isReactionNoticeEnabled = true;
 }

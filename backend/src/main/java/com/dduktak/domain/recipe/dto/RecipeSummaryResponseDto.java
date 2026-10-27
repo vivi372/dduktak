@@ -23,4 +23,5 @@ public class RecipeSummaryResponseDto {
     private String authorNickname;
     private String authorTag;
     private Integer matchingRate; // 매칭 모드 배지용 점수 (선택)
+    private Boolean isLiked; // 현재 사용자의 좋아요 여부
 }

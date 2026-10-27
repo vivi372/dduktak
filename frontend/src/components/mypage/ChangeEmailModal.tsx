@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Mail, AlertCircle, Check, X, Send } from 'lucide-react';
+import { Mail, AlertCircle, Check, X, Send, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useBodyScrollLock } from '@/hooks';
+import { updateUserEmail } from '@/services/authApi';
 import type { UserProfile } from '@/types/user';
 
 interface ChangeEmailModalProps {
@@ -15,8 +16,8 @@ interface ChangeEmailModalProps {
 
 /**
  * 계정 이메일(아이디) 변경 모달 (USER-PAGE-01-1)
- * - 이메일 로그인 유저: 새 이메일 입력 ➔ 인증 확인 링크 발송
- * - 소셜 로그인 유저: 앱 내 직접 수정 불가 안내 노출 ("소셜 로그인은 해당 플랫폼에서 이메일을 변경해 주세요")
+ * - 이메일 로그인 유저: 새 이메일 입력 ➔ Supabase Auth updateUser 연동으로 실제 확인 링크 발송
+ * - 소셜 로그인 유저: 앱 내 직접 수정 불가 안내 노출
  */
 export function ChangeEmailModal({
   open,
@@ -30,16 +31,18 @@ export function ChangeEmailModal({
   const [newEmail, setNewEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSent, setIsSent] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (open) {
       setNewEmail('');
       setErrorMessage('');
       setIsSent(false);
+      setIsSubmitting(false);
     }
   }, [open]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = newEmail.trim();
 
@@ -58,36 +61,51 @@ export function ChangeEmailModal({
       return;
     }
 
-    // 신규 이메일 인증 링크 발송 시뮬레이션
-    setIsSent(true);
-    onEmailChanged(trimmed);
-    toast.success('인증 확인 링크가 발송되었습니다! 메일함을 확인해 주세요. ✉️');
+    try {
+      setIsSubmitting(true);
+      setErrorMessage('');
+      // 실제 Supabase Auth를 통해 이메일 변경 확인 메일 발송
+      await updateUserEmail(trimmed);
+      setIsSent(true);
+      onEmailChanged(trimmed);
+      toast.success('인증 확인 메일이 발송되었습니다! 메일함을 확인해 주세요. ✉️');
+    } catch (err: unknown) {
+      const errorMsg =
+        err instanceof Error ? err.message : '이메일 변경 인증 메일 발송에 실패했습니다.';
+      setErrorMessage(errorMsg);
+      toast.error(errorMsg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <AnimatePresence>
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <motion.div
+          key="change-email-modal-container"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           role="dialog"
           aria-modal="true"
         >
           {/* 배경 딤 */}
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            className="fixed inset-0 bg-black/60"
             onClick={onClose}
+            aria-hidden="true"
           />
 
           {/* 모달 창 */}
           <motion.div
             className="relative w-full max-w-[420px] rounded-3xl border border-border bg-card p-6 shadow-2xl"
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
           >
             <div className="flex items-center justify-between pb-2">
               <div className="flex items-center gap-2">
@@ -142,7 +160,7 @@ export function ChangeEmailModal({
                 <div>
                   <h3 className="text-base font-bold text-foreground">인증 링크가 발송되었습니다</h3>
                   <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground break-keep">
-                    <strong>{newEmail}</strong>(으)로 인증 확인 링크를 전송했습니다. 메일함에서 링크를 클릭하면 최종적으로 변경이 반영됩니다.
+                    새로운 이메일(<strong>{newEmail}</strong>)로 인증 확인 링크가 전송되었습니다. 해당 메일함에서 링크를 클릭하시면 이메일 변경이 최종 완료됩니다.
                   </p>
                 </div>
                 <div className="pt-2">
@@ -179,32 +197,42 @@ export function ChangeEmailModal({
                       if (errorMessage) setErrorMessage('');
                     }}
                     placeholder="example@dduktak.com"
-                    className="mt-1.5 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                    disabled={isSubmitting}
+                    className="mt-1.5 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold transition focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
                   />
                   {errorMessage ? (
                     <p className="mt-1 text-xs font-semibold text-destructive">{errorMessage}</p>
                   ) : (
-                    <p className="mt-1.5 text-[11px] text-muted-foreground">
-                      * 입력하신 주소로 인증 링크가 즉시 발송됩니다.
+                    <p className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed">
+                      * 입력하신 새로운 이메일 주소로 인증 확인 링크가 발송됩니다.
                     </p>
                   )}
                 </div>
 
                 <div className="mt-6 flex flex-row justify-end gap-2 border-t border-border/60 pt-4">
-                  <Button type="button" variant="ghost" onClick={onClose} className="rounded-full">
+                  <Button type="button" variant="ghost" onClick={onClose} disabled={isSubmitting} className="rounded-full">
                     취소
                   </Button>
                   <Button
                     type="submit"
+                    disabled={isSubmitting}
                     className="rounded-full bg-brand-500 text-white hover:bg-brand-600"
                   >
-                    <Send className="mr-1 h-3.5 w-3.5" /> 인증 링크 발송
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> 발송 중...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-1 h-3.5 w-3.5" /> 인증 링크 발송
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
             )}
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

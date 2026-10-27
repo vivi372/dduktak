@@ -4,3 +4,4 @@ export { QuietTimeModal } from './QuietTimeModal';
 export { WithdrawModal } from './WithdrawModal';
 export { MyRecipeShortcutCard } from './MyRecipeShortcutCard';
 export { ChangeEmailModal } from './ChangeEmailModal';
+export { ChangePasswordModal } from './ChangePasswordModal';

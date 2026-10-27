@@ -1,6 +1,8 @@
 import { useMemo, useState, useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Search, X } from 'lucide-react';
+import { toast } from 'sonner';
+import { useAuthStore } from '@/store/useAuthStore';
 import { EmptyState } from '@/components/common/EmptyState';
 import { RecipeCard } from '@/components/common/RecipeCard';
 import { RecipeCardSkeleton } from '@/components/common/Skeleton';
@@ -25,8 +27,12 @@ import type { RecipeSummary, RecipeDifficulty } from '@/types/recipe';
  * - [+ 레시피 작성] 버튼 연동
  */
 export default function RecipeFeedPage() {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuthStore();
   const [searchParams, setSearchParams] = useSearchParams();
-  const filterParam = (searchParams.get('filter') as 'MY' | 'SCRAP' | null) || undefined;
+  const rawFilterParam = (searchParams.get('filter') as 'MY' | 'SCRAP' | null) || undefined;
+  // 비로그인 상태일 때는 MY, SCRAP 필터가 들어와도 일반 전체 목록으로 폴백
+  const filterParam = isAuthenticated ? rawFilterParam : undefined;
 
   // URL searchParams 기반 초기 상태 복원 (뒤로가기 시 검색어, 카테고리, 정렬 유지)
   const [categoryId, setCategoryId] = useState<number>(() => {
@@ -113,7 +119,7 @@ export default function RecipeFeedPage() {
     { enabled: !matchOn },
   );
 
-  // 2. 스마트 매칭 맞춤 추천 쿼리 (매칭 모드 ON일 때 활성화)
+  // 2. 스마트 매칭 맞춤 추천 쿼리 (매칭 모드 ON 및 로그인 상태일 때만 활성화)
   const {
     data: recommendations = [],
     isLoading: isMatchingLoading,
@@ -123,7 +129,7 @@ export default function RecipeFeedPage() {
       page: 0,
       size: 30,
     },
-    { enabled: matchOn },
+    { enabled: matchOn && isAuthenticated },
   );
 
   // 매칭 가능한 레시피 건수 (주재료 하드게이트 통과된 결과 수)
@@ -146,30 +152,15 @@ export default function RecipeFeedPage() {
   return (
     <div className="space-y-4 sm:space-y-5">
       {/* 1. 상단 타이틀 & 레시피 등록 CTA */}
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex items-start sm:items-center justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground whitespace-nowrap">
-              {filterParam === 'MY'
-                ? '내가 작성한 레시피'
-                : filterParam === 'SCRAP'
-                  ? '내 스크랩북 📌'
-                  : '뚝딱 레시피 커뮤니티'}
-            </h1>
-            {filterParam && (
-              <button
-                type="button"
-                onClick={() => {
-                  searchParams.delete('filter');
-                  setSearchParams(searchParams, { replace: true });
-                }}
-                className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-bold text-muted-foreground transition hover:bg-muted/80"
-              >
-                <span>전체보기</span>
-                <X className="h-3 w-3" />
-              </button>
-            )}
-          </div>
+          <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground whitespace-nowrap">
+            {filterParam === 'MY'
+              ? '내가 작성한 레시피'
+              : filterParam === 'SCRAP'
+                ? '내 스크랩북 📌'
+                : '뚝딱 레시피 커뮤니티'}
+          </h1>
           <p className="mt-0.5 text-xs sm:text-sm text-muted-foreground break-keep">
             {filterParam === 'MY'
               ? '내가 직접 등록한 뚝딱 요리 레시피 목록입니다.'
@@ -179,23 +170,47 @@ export default function RecipeFeedPage() {
           </p>
         </div>
 
-        <Link
-          to={ROUTES.RECIPE_NEW}
-          className="flex min-h-[44px] shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-brand-500 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
-        >
-          <Plus className="h-4 w-4 stroke-[2.5]" />
-          <span>레시피 등록</span>
-        </Link>
+        <div className="flex items-center gap-2 shrink-0">
+          {filterParam && (
+            <button
+              type="button"
+              onClick={() => {
+                searchParams.delete('filter');
+                setSearchParams(searchParams, { replace: true });
+              }}
+              className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-border bg-card px-3.5 py-2 text-xs sm:text-sm font-bold text-foreground shadow-sm transition-all hover:bg-accent active:scale-95"
+            >
+              <span>전체 레시피 보기</span>
+            </button>
+          )}
+
+          <Link
+            to={ROUTES.RECIPE_NEW}
+            className="flex min-h-[44px] shrink-0 whitespace-nowrap items-center gap-1.5 rounded-full bg-brand-500 px-3.5 sm:px-4 py-2 text-xs sm:text-sm font-extrabold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
+          >
+            <Plus className="h-4 w-4 stroke-[2.5]" />
+            <span>레시피 등록</span>
+          </Link>
+        </div>
       </div>
 
       {/* 2. 내 냉장고 뚝딱 매칭 토글 스위치 */}
       <RecipeMatchingToggle
         enabled={matchOn}
         onChange={(val) => {
+          if (val && !isAuthenticated) {
+            toast.info('내 냉장고 맞춤 레시피를 보려면 로그인이 필요합니다.', {
+              action: {
+                label: '로그인',
+                onClick: () => navigate(ROUTES.LOGIN),
+              },
+            });
+            return;
+          }
           setMatchOn(val);
           if (val) setSortBy('matching');
         }}
-        matchedCount={matchableCount}
+        matchedCount={isAuthenticated ? matchableCount : undefined}
       />
 
       {/* 3. 검색창 및 정렬 드롭다운 */}

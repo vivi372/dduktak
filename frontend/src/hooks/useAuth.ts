@@ -6,9 +6,10 @@
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '@/store/useAuthStore';
+import { useAuthStore, resolveLoginProvider } from '@/store/useAuthStore';
 import * as authApi from '@/services/authApi';
 import { uploadProfileAvatar, deleteStorageFiles } from '@/services/storageService';
+import { DEFAULT_AVATAR_URL } from '@/constants/images';
 import type {
   UpdateProfileRequestDto,
   QuietTimeRequestDto,
@@ -36,8 +37,10 @@ export function useAuth() {
     queryKey: ['auth', 'profile', user?.userId],
     queryFn: async () => {
       const data = await authApi.getMyProfile();
-      setUser(data);
-      return data;
+      const loginProvider = resolveLoginProvider(session, user?.loginProvider);
+      const updated = { ...data, loginProvider };
+      setUser(updated);
+      return updated;
     },
     enabled: isAuthenticated && Boolean(user?.userId),
     staleTime: 1000 * 60 * 5, // 5분 캐시
@@ -113,10 +116,19 @@ export function useAuth() {
       let newlyUploadedUrl: string | null = null;
 
       try {
-        // 새 이미지가 전달된 경우 Supabase Storage 직업로드 수행
+        // 새 이미지가 전달된 경우 Supabase Storage 직업로드 수행 (기본 이미지로 리셋인 경우 업로드 스킵)
         if (avatarFileOrDataUrl && user?.userId) {
-          profileImageUrl = await uploadProfileAvatar(user.userId, avatarFileOrDataUrl);
-          newlyUploadedUrl = profileImageUrl;
+          if (
+            typeof avatarFileOrDataUrl === 'string' &&
+            (avatarFileOrDataUrl === DEFAULT_AVATAR_URL ||
+              avatarFileOrDataUrl.includes('Default%20Profile.png') ||
+              avatarFileOrDataUrl.includes('Default Profile.png'))
+          ) {
+            profileImageUrl = DEFAULT_AVATAR_URL;
+          } else {
+            profileImageUrl = await uploadProfileAvatar(user.userId, avatarFileOrDataUrl);
+            newlyUploadedUrl = profileImageUrl;
+          }
         }
 
         const updated = await authApi.updateMyProfile({
@@ -125,8 +137,8 @@ export function useAuth() {
         });
         await syncProfile();
 
-        // 수정 성공 시: 기존 이미지가 시드가 아니고 새 이미지로 교체된 경우 버킷에서 정리
-        if (newlyUploadedUrl && oldProfileImage && oldProfileImage !== newlyUploadedUrl) {
+        // 수정 성공 시: 기존 이미지가 시드가 아니고 새 이미지/디폴트 이미지로 교체된 경우 버킷에서 정리
+        if (oldProfileImage && profileImageUrl && oldProfileImage !== profileImageUrl) {
           deleteStorageFiles('profiles', [oldProfileImage]);
         }
 
@@ -176,6 +188,7 @@ export function useAuth() {
     isAuthenticated,
     isLoading: isLoading || profileQuery.isLoading,
     isInitialized,
+    loginProvider: resolveLoginProvider(session, user?.loginProvider),
 
     // 액션 및 뮤테이션
     loginWithEmail: loginWithEmailMutation.mutateAsync,

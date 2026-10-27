@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   BellRing,
@@ -11,6 +11,7 @@ import {
   Mail,
   FileText,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
@@ -25,6 +26,7 @@ import {
   WithdrawModal,
   MyRecipeShortcutCard,
   ChangeEmailModal,
+  ChangePasswordModal,
 } from '@/components/mypage';
 import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import { ROUTES } from '@/constants/routes';
@@ -107,6 +109,7 @@ export default function MyPage() {
   const {
     user,
     isAuthenticated,
+    loginProvider,
     logout,
     updateProfileWithAvatar,
     isUpdatingProfileWithAvatar,
@@ -123,8 +126,28 @@ export default function MyPage() {
   const [quietTimeModalOpen, setQuietTimeModalOpen] = useState(false);
   const [withdrawModalOpen, setWithdrawModalOpen] = useState(false);
   const [changeEmailModalOpen, setChangeEmailModalOpen] = useState(false);
+  const [changePasswordModalOpen, setChangePasswordModalOpen] = useState(false);
   const [termsModalOpen, setTermsModalOpen] = useState(false);
   const [termsTab, setTermsTab] = useState<TermsTab>('terms');
+
+  // 백엔드 유저 프로필에 저장된 알림 설정과 프론트엔드 스토어 동기화
+  useEffect(() => {
+    if (user) {
+      updateSettings({
+        ...(user.isExpireWarnEnabled !== undefined && { isExpireWarnEnabled: user.isExpireWarnEnabled }),
+        ...(user.isReactionNoticeEnabled !== undefined && { isReactionNoticeEnabled: user.isReactionNoticeEnabled }),
+        ...(user.quietTimeStart && { quietTimeStart: user.quietTimeStart }),
+        ...(user.quietTimeEnd && { quietTimeEnd: user.quietTimeEnd }),
+      });
+    }
+  }, [
+    user?.userId,
+    user?.isExpireWarnEnabled,
+    user?.isReactionNoticeEnabled,
+    user?.quietTimeStart,
+    user?.quietTimeEnd,
+    updateSettings,
+  ]);
 
   const handleOpenTerms = (tab: TermsTab) => {
     setTermsTab(tab);
@@ -165,13 +188,11 @@ export default function MyPage() {
     );
   };
 
-
   const handleSaveQuietTime = async (start: string, end: string) => {
     await updateNotificationSettingsMutation.mutateAsync({ quietTimeStart: start, quietTimeEnd: end });
     await updateQuietTime({ quietTimeStart: start, quietTimeEnd: end });
     updateSettings({ quietTimeStart: start, quietTimeEnd: end });
   };
-
 
   const handleSaveProfile = async (nickname: string, newAvatar?: string) => {
     await updateProfileWithAvatar({
@@ -183,10 +204,17 @@ export default function MyPage() {
   const handleWithdraw = async () => {
     await withdraw();
     setWithdrawModalOpen(false);
-    navigate(ROUTES.LOGIN);
+    navigate(ROUTES.LOGIN, { replace: true });
   };
 
   // 실제 로그인 유저 데이터 또는 기본 폴백
+  const resolvedProvider: 'email' | 'kakao' | 'google' =
+    user?.loginProvider === 'google' || user?.loginProvider === 'kakao'
+      ? user.loginProvider
+      : loginProvider === 'google' || loginProvider === 'kakao'
+        ? loginProvider
+        : 'email';
+
   const displayUser = {
     userId: user?.userId || '',
     email: user?.email || '',
@@ -196,7 +224,7 @@ export default function MyPage() {
     status: (user?.status || 'ACTIVE') as 'ACTIVE' | 'WITHDRAWN',
     quietTimeStart: user?.quietTimeStart || settings.quietTimeStart || '21:00:00',
     quietTimeEnd: user?.quietTimeEnd || settings.quietTimeEnd || '08:00:00',
-    loginProvider: (user?.loginProvider || 'email') as 'email' | 'kakao' | 'google',
+    loginProvider: resolvedProvider,
   };
 
   const formattedQuietStart = displayUser.quietTimeStart.slice(0, 5);
@@ -221,9 +249,24 @@ export default function MyPage() {
             className="h-16 w-16 rounded-full bg-brand-100 object-cover ring-2 ring-brand-300 dark:ring-brand-700/60 shadow-sm"
           />
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
               <p className="truncate text-lg font-extrabold text-foreground">{displayUser.nickname}</p>
               <span className="text-xs font-bold text-muted-foreground/80">#{displayUser.userTag}</span>
+              {displayUser.loginProvider === 'google' && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[11px] font-bold text-rose-600 dark:bg-rose-950/40 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
+                  구글 연동
+                </span>
+              )}
+              {displayUser.loginProvider === 'kakao' && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                  카카오 연동
+                </span>
+              )}
+              {displayUser.loginProvider === 'email' && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground border border-border/80">
+                  이메일 계정
+                </span>
+              )}
             </div>
             <p className="truncate text-sm text-muted-foreground">{displayUser.email}</p>
           </div>
@@ -263,46 +306,49 @@ export default function MyPage() {
         </section>
       )}
 
-      {/* 3. 알림 설정 섹션 */}
-      <section aria-label="알림 설정">
-        <h2 className="mb-2 px-1 text-sm font-bold font-sans text-muted-foreground">알림 설정</h2>
+      {/* 3. 휴대폰 팝업 알림 (푸시) 설정 섹션 */}
+      <section aria-label="휴대폰 팝업 알림 설정">
+        <div className="mb-2 px-1 flex items-baseline justify-between">
+          <h2 className="text-sm font-bold font-sans text-muted-foreground">휴대폰 팝업 알림 (푸시)</h2>
+          <span className="text-xs text-muted-foreground">앱 외부 상단 푸시 알림</span>
+        </div>
         <Card className="divide-y divide-border overflow-hidden p-0 shadow-card">
           <Row
             icon={<BellRing className="h-5 w-5" />}
-            label="소비기한 임박 알림"
+            label="소비기한 임박 팝업 알림"
             right={
               <Toggle
                 checked={settings.isExpireWarnEnabled}
                 onChange={handleToggleExpireWarn}
-                label="소비기한 임박 알림"
+                label="소비기한 임박 팝업 알림"
               />
             }
           />
           <Row
             icon={<BellRing className="h-5 w-5" />}
-            label="좋아요/요리완료 알림"
+            label="소셜 반응 팝업 알림 (좋아요/요리완료)"
             right={
               <Toggle
                 checked={settings.isReactionNoticeEnabled}
                 onChange={handleToggleReaction}
-                label="좋아요 요리완료 알림"
+                label="소셜 반응 팝업 알림"
               />
             }
           />
           <Row
             icon={<MoonStar className="h-5 w-5" />}
-            label="방해금지 시간"
+            label="야간 팝업 방해금지 시간"
             onClick={() => setQuietTimeModalOpen(true)}
             right={
-              <span className="flex items-center gap-1 text-sm text-muted-foreground">
+              <span className="flex items-center gap-1 text-sm text-muted-foreground font-medium">
                 {formattedQuietStart} ~ {formattedQuietEnd}
                 <ChevronRight className="h-4 w-4" aria-hidden />
               </span>
             }
           />
         </Card>
-        <p className="mt-2 px-1 text-xs text-muted-foreground/80">
-          * 야간 푸시 방지 정책에 따라 {formattedQuietStart} ~ {formattedQuietEnd} 시간대에는 푸시가 발송되지 않습니다.
+        <p className="mt-2 px-1 text-xs text-muted-foreground/80 leading-relaxed">
+          * 야간 방해금지 시간대({formattedQuietStart} ~ {formattedQuietEnd})에는 휴대폰 팝업(푸시) 알림이 울리지 않으며, 상단 알림함에만 조용히 보관됩니다.
         </p>
       </section>
 
@@ -324,17 +370,37 @@ export default function MyPage() {
         <Card className="divide-y divide-border overflow-hidden p-0 shadow-card">
           {isAuthenticated ? (
             <>
-              <Row
-                icon={<Mail className="h-5 w-5" />}
-                label="이메일 변경"
-                onClick={() => setChangeEmailModalOpen(true)}
-                right={
-                  <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                    {displayUser.email}
-                    <ChevronRight className="h-4 w-4" aria-hidden />
-                  </span>
-                }
-              />
+              {displayUser.loginProvider === 'email' ? (
+                <>
+                  <Row
+                    icon={<Mail className="h-5 w-5" />}
+                    label="이메일 변경"
+                    onClick={() => setChangeEmailModalOpen(true)}
+                    right={
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        {displayUser.email}
+                        <ChevronRight className="h-4 w-4" aria-hidden />
+                      </span>
+                    }
+                  />
+                  <Row
+                    icon={<Lock className="h-5 w-5" />}
+                    label="비밀번호 변경"
+                    onClick={() => setChangePasswordModalOpen(true)}
+                    right={<ChevronRight className="h-4 w-4 text-muted-foreground" aria-hidden />}
+                  />
+                </>
+              ) : (
+                <Row
+                  icon={<ShieldCheck className="h-5 w-5 text-brand-600 dark:text-brand-400" />}
+                  label="연동된 소셜 계정"
+                  right={
+                    <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
+                      {displayUser.loginProvider === 'kakao' ? '카카오 로그인' : '구글 로그인'}
+                    </span>
+                  }
+                />
+              )}
               <Row
                 icon={<LogOut className="h-5 w-5" />}
                 label="로그아웃"
@@ -404,6 +470,11 @@ export default function MyPage() {
             onEmailChanged={() => {
               toast.success('이메일 변경 인증 메일이 발송되었습니다.');
             }}
+          />
+
+          <ChangePasswordModal
+            open={changePasswordModalOpen}
+            onClose={() => setChangePasswordModalOpen(false)}
           />
 
           <QuietTimeModal

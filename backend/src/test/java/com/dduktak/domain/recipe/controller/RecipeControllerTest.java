@@ -161,6 +161,54 @@ class RecipeControllerTest {
     }
 
     @Test
+    @DisplayName("GET /api/v1/recipes: 미인증 비로그인 유저도 레시피 목록 조회 성공 (200 OK)")
+    void getRecipes_unauthenticated_success() throws Exception {
+        // given: 인증 정보 제거
+        SecurityContextHolder.clearContext();
+
+        RecipeSummaryResponseDto item = RecipeSummaryResponseDto.builder()
+                .recipeId(1L)
+                .title("버터 간장계란밥")
+                .authorNickname("셰프")
+                .authorTag("1024")
+                .likeCount(5)
+                .cookedCount(2)
+                .build();
+        RecipeListResponseDto responseDto = RecipeListResponseDto.builder()
+                .recipes(List.of(item))
+                .totalPages(1)
+                .totalElements(1)
+                .currentPage(0)
+                .build();
+
+        given(recipeService.getRecipes(isNull(), any(), eq("ALL"), any(), eq("latest"), eq(0), eq(10)))
+                .willReturn(responseDto);
+
+        // when & then
+        mockMvc.perform(get("/api/v1/recipes")
+                        .param("filter", "ALL")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.recipes[0].title").value("버터 간장계란밥"));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/recipes: 미인증 유저가 MY/SCRAP 필터 요청 시 401 Unauthorized 에러")
+    void getRecipes_unauthenticated_myFilter_fail() throws Exception {
+        // given: 인증 정보 제거
+        SecurityContextHolder.clearContext();
+
+        // when & then
+        mockMvc.perform(get("/api/v1/recipes")
+                        .param("filter", "MY"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.success").value(false))
+                .andExpect(jsonPath("$.code").value("AUTH_ALERT_UNAUTHORIZED"));
+    }
+
+    @Test
     @DisplayName("POST /api/v1/recipes: 레시피 신규 등록 성공 (201 Created)")
     void createRecipe_success() throws Exception {
         // given

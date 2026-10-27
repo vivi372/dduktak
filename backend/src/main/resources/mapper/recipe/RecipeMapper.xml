@@ -112,7 +112,18 @@
             r.like_count,
             r.cooked_count,
             COALESCE(p.nickname, '관리자') AS author_nickname,
-            p.user_tag AS author_tag
+            p.user_tag AS author_tag,
+            <choose>
+                <when test="userId != null">
+                    CASE WHEN EXISTS (
+                        SELECT 1 FROM public.recipe_like rl
+                        WHERE rl.recipe_id = r.recipe_id AND rl.user_id = #{userId}
+                    ) THEN true ELSE false END AS is_liked
+                </when>
+                <otherwise>
+                    false AS is_liked
+                </otherwise>
+            </choose>
         FROM public.recipe r
         JOIN public.recipe_category rc ON r.recipe_category_id = rc.recipe_category_id
         LEFT JOIN public.profiles p ON r.user_id = p.id

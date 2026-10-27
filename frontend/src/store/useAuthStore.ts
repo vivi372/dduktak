@@ -40,6 +40,27 @@ interface AuthState {
   closeWelcomeModal: () => void;
 }
 
+/** Supabase 세션 또는 기존 프로필에서 OAuth 제공자(google, kakao) 또는 email 추출 */
+export function resolveLoginProvider(
+  session: Session | null,
+  userLoginProvider?: string,
+): 'email' | 'kakao' | 'google' {
+  if (userLoginProvider === 'google' || userLoginProvider === 'kakao') return userLoginProvider;
+  if (!session?.user) return 'email';
+  const appProvider = session.user.app_metadata?.provider;
+  if (appProvider === 'google' || appProvider === 'kakao') return appProvider;
+
+  const identityProvider = session.user.identities?.[0]?.provider;
+  if (identityProvider === 'google' || identityProvider === 'kakao') return identityProvider;
+
+  const providers = session.user.app_metadata?.providers;
+  if (Array.isArray(providers)) {
+    if (providers.includes('google')) return 'google';
+    if (providers.includes('kakao')) return 'kakao';
+  }
+  return 'email';
+}
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
@@ -61,27 +82,44 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
 
     // 2. Supabase Auth 상태 변화 리스너 등록
+    let activeSyncPromise: Promise<void> | null = null;
+
     const { data: authListener } = authApi.onAuthStateChange(async (_event, session) => {
       if (session) {
         set({ session, isAuthenticated: true, isLoading: !get().isInitialized });
-        try {
-          // 백엔드 세션 동기화 및 지연 프로필 생성 (Lazy Profile JIT Sync)
-          const initResult = await authApi.initProfile();
-          // 전체 프로필 상세 조회
-          const profile = await authApi.getMyProfile();
-          set({
-            user: profile,
-            session,
-            isAuthenticated: true,
-            isLoading: false,
-            isInitialized: true,
-            showWelcomeModal: Boolean(initResult?.isNewUser),
-          });
-        } catch {
-          // 백엔드 일시 장애 시에도 세션은 유지하고 로딩 해제
-          set({ isLoading: false, isInitialized: true });
+
+        // 동일 세션에 대해 이미 동기화가 진행 중이면 중복 요청 방어
+        if (activeSyncPromise) {
+          await activeSyncPromise;
+          return;
         }
+
+        activeSyncPromise = (async () => {
+          try {
+            // 백엔드 세션 동기화 및 지연 프로필 생성 (Lazy Profile JIT Sync)
+            const initResult = await authApi.initProfile();
+            // 전체 프로필 상세 조회
+            const profile = await authApi.getMyProfile();
+            const loginProvider = resolveLoginProvider(session);
+            set({
+              user: { ...profile, loginProvider },
+              session,
+              isAuthenticated: true,
+              isLoading: false,
+              isInitialized: true,
+              showWelcomeModal: Boolean(initResult?.isNewUser),
+            });
+          } catch {
+            // 백엔드 일시 장애 시에도 세션은 유지하고 로딩 해제
+            set({ isLoading: false, isInitialized: true });
+          } finally {
+            activeSyncPromise = null;
+          }
+        })();
+
+        await activeSyncPromise;
       } else {
+        activeSyncPromise = null;
         set({
           user: null,
           session: null,
@@ -105,8 +143,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   syncProfile: async () => {
     try {
       const profile = await authApi.getMyProfile();
-      set({ user: profile });
-      return profile;
+      const currentSession = get().session;
+      const loginProvider = resolveLoginProvider(currentSession, get().user?.loginProvider);
+      const updatedUser = { ...profile, loginProvider };
+      set({ user: updatedUser });
+      return updatedUser;
     } catch {
       return null;
     }

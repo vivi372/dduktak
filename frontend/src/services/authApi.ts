@@ -114,6 +114,19 @@ export function onAuthStateChange(callback: (event: AuthChangeEvent, session: Se
   return supabase.auth.onAuthStateChange(callback);
 }
 
+/**
+ * 이메일 변경 인증 메일 발송 (Supabase Auth updateUser)
+ * Supabase 보안 정책(Secure Email Change)에 따라 기존 메일 또는 신규 메일로 확인 링크 전송
+ */
+export async function updateUserEmail(newEmail: string) {
+  const { data, error } = await supabase.auth.updateUser(
+    { email: newEmail },
+    { emailRedirectTo: `${window.location.origin}/mypage` },
+  );
+  if (error) throw error;
+  return data;
+}
+
 // ==============================================================================
 // 2. 백엔드 Spring Boot REST API (/api/v1/auth) 연동 함수
 // ==============================================================================

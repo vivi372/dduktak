@@ -32,28 +32,31 @@ export function TermsModal({ open, initialTab = 'terms', onClose }: TermsModalPr
   return (
     <AnimatePresence>
       {open && (
-        <div
+        <motion.div
+          key="terms-modal-container"
           className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           role="dialog"
           aria-modal="true"
           aria-labelledby="terms-modal-title"
         >
           {/* 배경 딤 */}
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            className="fixed inset-0 bg-black/60"
             onClick={onClose}
+            aria-hidden="true"
           />
 
           {/* 모달 창 (내부 모든 제목 및 본문에 font-sans 강제 적용하여 야놀자체 배제) */}
           <motion.div
             className="relative flex flex-col w-full max-w-[540px] max-h-[85vh] rounded-3xl border border-border bg-card p-6 shadow-2xl dark:border-white/10 font-sans [&_h1]:!font-sans [&_h2]:!font-sans [&_h3]:!font-sans [&_h4]:!font-sans"
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
           >
             {/* 상단 헤더 & 닫기 버튼 */}
             <div className="flex items-center justify-between pb-3.5 border-b border-border/80">
@@ -235,7 +238,7 @@ export function TermsModal({ open, initialTab = 'terms', onClose }: TermsModalPr
               </Button>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

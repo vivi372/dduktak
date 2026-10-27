@@ -76,13 +76,15 @@ public class AuthService {
                 .build();
 
         profileRepository.save(profile);
-        log.info("[AuthService] 지연 프로필 생성 완료 - UserID: {}, Nickname: {}#{}", userId, nickname, userTag);
+        Profile savedProfile = profileRepository.findById(userId).orElse(profile);
+        log.info("[AuthService] 지연 프로필 생성 완료 - UserID: {}, Nickname: {}#{}",
+                userId, savedProfile.getNickname(), savedProfile.getUserTag());
 
         return InitProfileResponseDto.builder()
-                .userId(profile.getId())
-                .nickname(profile.getNickname())
-                .userTag(profile.getUserTag())
-                .profileImage(profile.getProfileImage())
+                .userId(savedProfile.getId())
+                .nickname(savedProfile.getNickname())
+                .userTag(savedProfile.getUserTag())
+                .profileImage(savedProfile.getProfileImage())
                 .build();
     }
 

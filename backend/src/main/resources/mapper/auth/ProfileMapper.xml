@@ -31,7 +31,9 @@
             p.profile_image,
             'ACTIVE' AS status,
             p.quiet_time_start,
-            p.quiet_time_end
+            p.quiet_time_end,
+            p.is_expire_warn_enabled,
+            p.is_reaction_notice_enabled
         FROM public.profiles p
         LEFT JOIN auth.users u ON p.id = u.id
         WHERE p.id = #{id}
@@ -77,6 +79,7 @@
             NOW(),
             NOW()
         )
+        ON CONFLICT (id) DO NOTHING
     </insert>
 
     <!-- 프로필 정보(닉네임, 프로필 이미지) 수정 -->

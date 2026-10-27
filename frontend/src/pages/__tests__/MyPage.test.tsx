@@ -22,6 +22,14 @@ vi.mock('@/services/notificationApi', () => ({
   getNotifications: vi.fn().mockResolvedValue({ items: [], unreadCount: 0 }),
 }));
 
+vi.mock('@/services/authApi', async () => {
+  const actual = await vi.importActual('@/services/authApi');
+  return {
+    ...actual,
+    updateUserEmail: vi.fn().mockResolvedValue({ user: {} }),
+  };
+});
+
 const mockUser: UserProfileResponseDto = {
   userId: '3f7f754c-d561-4b93-b79b-9d73a4f29f2a',
   email: 'user@dduktak.com',
@@ -107,7 +115,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
 
     renderWithProviders(<MyPage />);
 
-    const expireToggle = screen.getByRole('switch', { name: '소비기한 임박 알림' });
+    const expireToggle = screen.getByRole('switch', { name: '소비기한 임박 팝업 알림' });
     expect(expireToggle).toHaveAttribute('aria-checked', 'true');
 
     await user.click(expireToggle);
@@ -152,11 +160,13 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
     const submitBtn = screen.getByRole('button', { name: /인증 링크 발송/ });
     await user.click(submitBtn);
 
-    expect(screen.getByText('인증 링크가 발송되었습니다')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(screen.getByText('인증 링크가 발송되었습니다')).toBeInTheDocument();
+    });
     expect(screen.getAllByText(/new_user@dduktak.com/).length).toBeGreaterThanOrEqual(1);
   });
 
-  it('소셜 로그인 유저는 이메일 변경 클릭 시 소셜 플랫폼 변경 안내가 노출되어야 한다', async () => {
+  it('소셜 로그인 유저는 이메일/비밀번호 변경 대신 연동된 소셜 계정 정보가 노출되어야 한다', () => {
     useAuthStore.setState((prev) => ({
       ...prev,
       user: {
@@ -166,14 +176,33 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
       },
     }));
 
+    renderWithProviders(<MyPage />);
+
+    expect(screen.queryByRole('button', { name: /이메일 변경/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /비밀번호 변경/ })).not.toBeInTheDocument();
+    expect(screen.getByText('연동된 소셜 계정')).toBeInTheDocument();
+    expect(screen.getByText('카카오 로그인')).toBeInTheDocument();
+  });
+
+  it('이메일 로그인 유저는 비밀번호 변경 모달을 열어 새 비밀번호를 설정할 수 있어야 한다', async () => {
+    useAuthStore.setState((prev) => ({
+      ...prev,
+      user: {
+        ...prev.user!,
+        loginProvider: 'email',
+        email: 'email_user@dduktak.com',
+      },
+    }));
+
     const user = userEvent.setup();
 
     renderWithProviders(<MyPage />);
 
-    const changeEmailRow = screen.getByRole('button', { name: /이메일 변경/ });
-    await user.click(changeEmailRow);
+    const changePasswordRow = screen.getByRole('button', { name: /비밀번호 변경/ });
+    await user.click(changePasswordRow);
 
-    expect(screen.getByText(/소셜 로그인은 해당 플랫폼/)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: '비밀번호 변경' })).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/8자 이상 영문, 숫자, 특수문자 조합/)).toBeInTheDocument();
   });
 
   it('마이페이지에서 서비스 이용약관 및 개인정보 처리방침을 클릭하면 모달이 열려야 한다', async () => {

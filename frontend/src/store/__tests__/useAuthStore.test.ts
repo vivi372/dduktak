@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Session } from '@supabase/supabase-js';
 import { useAuthStore } from '@/store/useAuthStore';
 import * as authApi from '@/services/authApi';
 
@@ -77,8 +78,43 @@ describe('useAuthStore 세션 스토어 단위 테스트 (Zustand & Supabase Syn
     const state = useAuthStore.getState();
     expect(state.isAuthenticated).toBe(true);
     expect(state.isLoading).toBe(false);
-    expect(state.user).toEqual(fakeProfile);
+    expect(state.user).toEqual({ ...fakeProfile, loginProvider: 'email' });
     expect(state.session).toEqual(fakeSession);
+  });
+
+  it('구글 소셜 세션인 경우 loginProvider가 google로 설정되어야 한다', async () => {
+    const googleSession = {
+      access_token: 'fake-token-google',
+      user: {
+        id: 'user-uuid-google',
+        email: 'google_user@gmail.com',
+        app_metadata: { provider: 'google', providers: ['google'] },
+      },
+    } as unknown as Session;
+
+    vi.mocked(authApi.initProfile).mockResolvedValue({
+      userId: 'user-uuid-google',
+      isNewUser: false,
+      nickname: '구글유저',
+      userTag: '9999',
+      profileImage: 'https://example.com/g.png',
+    });
+    vi.mocked(authApi.getMyProfile).mockResolvedValue({
+      userId: 'user-uuid-google',
+      email: 'google_user@gmail.com',
+      nickname: '구글유저',
+      userTag: '9999',
+      profileImage: 'https://example.com/g.png',
+      status: 'ACTIVE',
+      quietTimeStart: '21:00:00',
+      quietTimeEnd: '08:00:00',
+    });
+
+    useAuthStore.getState().initialize();
+    await authChangeCallback('SIGNED_IN', googleSession);
+
+    const state = useAuthStore.getState();
+    expect(state.user?.loginProvider).toBe('google');
   });
 
   it('세션이 null인 경우 비인증 상태로 전환되어야 한다', async () => {

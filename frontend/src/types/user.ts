@@ -11,6 +11,8 @@ export interface UserProfile {
   status: 'ACTIVE' | 'WITHDRAWN';
   quietTimeStart: string; // HH:mm:ss
   quietTimeEnd: string;
+  isExpireWarnEnabled?: boolean;
+  isReactionNoticeEnabled?: boolean;
   loginProvider?: LoginProvider;
 }
 

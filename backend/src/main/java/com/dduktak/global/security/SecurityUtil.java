@@ -40,4 +40,31 @@ public final class SecurityUtil {
 
         throw new CustomException(ErrorCode.AUTH_ALERT_UNAUTHORIZED);
     }
+
+    /**
+     * 현재 SecurityContext에 인증된 회원의 userId(auth.users.id UUID)를 반환합니다.
+     * 미인증 상태이거나 익명 사용자인 경우 null을 반환합니다. (선택적 인증용)
+     *
+     * @return 로그인한 회원의 userId (UUID) 또는 null
+     */
+    public static java.util.UUID getCurrentUserIdOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return null;
+        }
+
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof UserPrincipal userPrincipal) {
+            return userPrincipal.getUserId();
+        }
+        if (principal instanceof String principalStr && !"anonymousUser".equals(principalStr)) {
+            try {
+                return java.util.UUID.fromString(principalStr);
+            } catch (IllegalArgumentException ignored) {
+                return null;
+            }
+        }
+
+        return null;
+    }
 }

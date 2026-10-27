@@ -65,6 +65,8 @@ export interface UserProfileResponseDto {
   status: 'ACTIVE' | 'WITHDRAWN';
   quietTimeStart: string; // HH:mm:ss 형식
   quietTimeEnd: string;   // HH:mm:ss 형식
+  isExpireWarnEnabled?: boolean;
+  isReactionNoticeEnabled?: boolean;
   loginProvider?: LoginProvider | string;
 }
 

@@ -144,11 +144,20 @@ export function _resetUnauthorizedNoticeTimer(): void {
 function notifyUnauthorizedOnce(traceId?: string) {
   if (unauthorizedNoticeTimer) return;
 
-  toast.error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', {
-    id: 'dduktak-session-expired',
-    duration: 3000,
-    description: traceId ? `식별 코드: ${traceId}` : undefined,
-  });
+  // 이미 로그인 관련 화면에 있거나 세션이 없는 상태에서는 불필요한 만료 토스트 노출 방어
+  const isAuthPage =
+    typeof window !== 'undefined' &&
+    (window.location.pathname.startsWith('/login') ||
+      window.location.pathname.startsWith('/reset-password') ||
+      window.location.pathname.startsWith('/onboarding'));
+
+  if (!isAuthPage) {
+    toast.error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', {
+      id: 'dduktak-session-expired',
+      duration: 3000,
+      description: traceId ? `식별 코드: ${traceId}` : undefined,
+    });
+  }
 
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('dduktak:unauthorized'));

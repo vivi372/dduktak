@@ -143,27 +143,30 @@ export function ProfileCropModal({
   return (
     <AnimatePresence>
       {open && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <motion.div
+          key="profile-crop-modal-container"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           role="dialog"
           aria-modal="true"
         >
           {/* 배경 딤 */}
-          <motion.div
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <div
+            className="fixed inset-0 bg-black/60"
             onClick={onClose}
+            aria-hidden="true"
           />
 
           {/* 모달 컨텐츠 */}
           <motion.div
             className="relative w-full max-w-[420px] rounded-3xl border border-border bg-card p-5 sm:p-6 shadow-2xl"
-            initial={{ opacity: 0, scale: 0.95, y: 15 }}
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 15 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
           >
             <div className="flex items-center justify-between pb-2">
               <h2 className="text-base sm:text-lg font-bold">프로필 사진 조절</h2>
@@ -282,7 +285,7 @@ export function ProfileCropModal({
               </div>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       )}
     </AnimatePresence>
   );

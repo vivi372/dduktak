@@ -90,6 +90,23 @@ export function RecipeCategoryTabs({
         role="tablist"
         aria-label="레시피 8대 카테고리 목록"
       >
+        {/* 1. 전체 탭 (항상 첫 번째에 고정 노출) */}
+        <button
+          type="button"
+          role="tab"
+          aria-selected={selectedId === 0}
+          onClick={() => onSelect(0)}
+          className={cn(
+            'min-h-[44px] shrink-0 rounded-full px-4 text-xs sm:text-sm font-bold transition-all active:scale-95 whitespace-nowrap',
+            selectedId === 0
+              ? 'bg-brand-500 text-white shadow-soft dark:bg-brand-500'
+              : 'border border-border/80 bg-card text-muted-foreground hover:bg-accent hover:text-foreground dark:border-white/10',
+          )}
+        >
+          전체
+        </button>
+
+        {/* 2. 서버에서 불러온 8대 카테고리 목록 */}
         {categories.map((category) => {
           const isSelected = selectedId === category.recipeCategoryId;
           return (
@@ -98,7 +115,7 @@ export function RecipeCategoryTabs({
               type="button"
               role="tab"
               aria-selected={isSelected}
-              onClick={() => onSelect(category.recipeCategoryId)}
+              onClick={() => onSelect(isSelected ? 0 : category.recipeCategoryId)}
               className={cn(
                 'min-h-[44px] shrink-0 rounded-full px-4 text-xs sm:text-sm font-bold transition-all active:scale-95 whitespace-nowrap',
                 isSelected

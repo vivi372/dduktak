@@ -565,17 +565,6 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* 하단 둘러보기 링크 */}
-      <div className="pt-4 text-center">
-        <button
-          type="button"
-          onClick={() => navigate(ROUTES.HOME)}
-          className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-        >
-          로그인 없이 먼저 둘러볼래요 →
-        </button>
-      </div>
-
       {/* 이용약관 및 개인정보 처리방침 조회 모달 */}
       <TermsModal
         open={termsModalOpen}
