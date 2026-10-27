@@ -73,15 +73,15 @@ describe('OnboardingPage 최초 실행 사용자 가이드 온보딩 단위 테�
     expect(screen.getByText('카메라 (선택)')).toBeInTheDocument();
     expect(screen.getByText('알림 (선택)')).toBeInTheDocument();
 
-    // 다이얼로그 확인 클릭 시 홈(/)으로 이동 및 localStorage 저장 확인
+    // 다이얼로그 확인 클릭 시 비로그인 유저는 로그인 화면(/login)으로 이동 및 localStorage 저장 확인
     const confirmStartBtn = screen.getByRole('button', { name: '확인하고 뚝딱 시작하기' });
     fireEvent.click(confirmStartBtn);
 
     expect(localStorage.getItem(ONBOARDING_STORAGE_KEY)).toBe('true');
-    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
   });
 
-  it('건너뛰기 클릭 시 즉시 온보딩 완료 처리 및 홈 화면으로 이동해야 한다', () => {
+  it('건너뛰기 클릭 시 비로그인 유저는 로그인 화면으로 이동해야 한다', () => {
     render(
       <MemoryRouter>
         <OnboardingPage />
@@ -92,6 +92,6 @@ describe('OnboardingPage 최초 실행 사용자 가이드 온보딩 단위 테�
     fireEvent.click(skipBtn);
 
     expect(localStorage.getItem(ONBOARDING_STORAGE_KEY)).toBe('true');
-    expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
+    expect(mockNavigate).toHaveBeenCalledWith('/login', { replace: true });
   });
 });

@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { ROUTES } from '@/constants/routes';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { useAuthStore } from '@/store/useAuthStore';
 
 /** 온보딩 슬라이드 데이터 인터페이스 */
 interface OnboardingSlide {
@@ -44,7 +45,12 @@ export default function OnboardingPage() {
   /** 온보딩 완료 및 서비스 진입 */
   const handleFinishOnboarding = () => {
     markOnboardingAsSeen();
-    navigate(ROUTES.HOME, { replace: true });
+    const { isAuthenticated } = useAuthStore.getState();
+    if (isAuthenticated) {
+      navigate(ROUTES.HOME, { replace: true });
+    } else {
+      navigate(ROUTES.LOGIN, { replace: true });
+    }
   };
 
   /** 건너뛰기 클릭 */

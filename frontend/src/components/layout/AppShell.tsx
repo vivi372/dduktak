@@ -15,7 +15,6 @@ import { AppSplashScreen } from '@/components/common/AppSplashScreen';
 import { ScrollToTop } from '@/components/common/ScrollToTop';
 import { useNativeBackButton } from '@/hooks/useNativeBackButton';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
-import { usePlatformStore } from '@/store/usePlatformStore';
 
 /**
  * 공통 앱 셸 (반응형 2-Column Split 레이아웃)
@@ -35,17 +34,24 @@ export function AppShell() {
 
   const [trayOpen, setTrayOpen] = useState(false);
   const { hasSeenOnboarding } = useOnboardingStore();
-  const { isApp } = usePlatformStore();
 
   // 하이브리드 모바일 안드로이드 하드웨어 물리 뒤로가기 버튼 제어
   useNativeBackButton();
 
-  // 최초 방문 유저 감지 시 앱 시작 가이드 온보딩(/onboarding) 화면으로 자동 분기 (모바일 앱 환경 한정)
+  // 최초 방문 유저 감지 시 앱 시작 가이드 온보딩(/onboarding) 화면으로 자동 분기 (웹 & 모바일 공통)
   useEffect(() => {
-    if (isApp && !hasSeenOnboarding && pathname === ROUTES.HOME) {
-      navigate(ROUTES.ONBOARDING, { replace: true });
+    // 특수 인증 경로(비밀번호 재설정, 이메일 인증 콜백) 및 이미 온보딩 화면인 경우 제외
+    const isSpecialAuthRoute =
+      pathname === ROUTES.RESET_PASSWORD ||
+      pathname === ROUTES.AUTH_CALLBACK ||
+      pathname === ROUTES.ONBOARDING;
+
+    if (!hasSeenOnboarding && !isSpecialAuthRoute) {
+      if (pathname === ROUTES.HOME || pathname === ROUTES.LOGIN) {
+        navigate(ROUTES.ONBOARDING, { replace: true });
+      }
     }
-  }, [isApp, hasSeenOnboarding, pathname, navigate]);
+  }, [hasSeenOnboarding, pathname, navigate]);
 
   const isAuthOrOnboarding =
     pathname === ROUTES.LOGIN ||
