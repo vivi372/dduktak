@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X, Check, AlertTriangle } from 'lucide-react';
 import { format, addDays } from 'date-fns';
@@ -25,14 +25,25 @@ const STORAGE_OPTIONS: StorageType[] = ['REFRIGERATED', 'FROZEN', 'ROOM_TEMP'];
 export function EditIngredientModal({ item, onClose, onSave }: EditIngredientModalProps) {
   useBodyScrollLock(!!item);
 
+  const [quantity, setQuantity] = useState<number | ''>(item?.quantity ?? 1);
+  const [storageType, setStorageType] = useState<StorageType>(item?.storageType ?? 'REFRIGERATED');
+  const [expireDate, setExpireDate] = useState<string>(item?.expireDate ?? '');
+  const [memo, setMemo] = useState<string>(item?.memo ?? '');
+
+  // item 변경 시 폼 필드 동기화
+  useEffect(() => {
+    if (item) {
+      setQuantity(item.quantity);
+      setStorageType(item.storageType);
+      setExpireDate(item.expireDate);
+      setMemo(item.memo ?? '');
+    }
+  }, [item]);
+
   if (!item) return null;
 
-  const [quantity, setQuantity] = useState<number>(item.quantity);
-  const [storageType, setStorageType] = useState<StorageType>(item.storageType);
-  const [expireDate, setExpireDate] = useState<string>(item.expireDate);
-  const [memo, setMemo] = useState<string>(item.memo ?? '');
-
-  const isInvalidQuantity = quantity <= 0;
+  const currentQuantityNum = typeof quantity === 'number' ? quantity : 0;
+  const isInvalidQuantity = quantity === '' || currentQuantityNum <= 0;
 
   // 빠른 소비기한 세팅 핸들러
   const handleQuickExpire = (days: number) => {
@@ -58,7 +69,7 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
 
     onSave({
       ...item,
-      quantity,
+      quantity: currentQuantityNum,
       unit: item.unit,
       storageType,
       expireDate,
@@ -146,8 +157,13 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  disabled={quantity <= 1}
+                  onClick={() =>
+                    setQuantity((prev) => {
+                      const curr = typeof prev === 'number' ? prev : 1;
+                      return Math.max(1, curr - 1);
+                    })
+                  }
+                  disabled={typeof quantity === 'number' && quantity <= 1}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95 disabled:opacity-40"
                   aria-label="1개 감소"
                 >
@@ -161,7 +177,22 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
                     min={1}
                     required
                     value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setQuantity('');
+                      } else {
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setQuantity(num);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      if (quantity === '' || quantity <= 0) {
+                        setQuantity(1);
+                      }
+                    }}
                     className="h-11 w-full rounded-xl border bg-background px-3 pr-16 text-center text-base font-bold tabular-nums text-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
@@ -172,7 +203,12 @@ export function EditIngredientModal({ item, onClose, onSave }: EditIngredientMod
                 </div>
                 <button
                   type="button"
-                  onClick={() => setQuantity((prev) => prev + 1)}
+                  onClick={() =>
+                    setQuantity((prev) => {
+                      const curr = typeof prev === 'number' ? prev : 0;
+                      return curr + 1;
+                    })
+                  }
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95"
                   aria-label="1개 증가"
                 >

@@ -91,7 +91,7 @@ public class RecipeService {
                                 .orElse("기타");
 
                 // 작성자 프로필 정보 (탈퇴 회원의 익명 레시피인 경우 기본값 처리)
-                String authorNickname = "(알 수 없음)";
+                String authorNickname = "관리자";
                 String authorTag = null;
                 if (recipe.getUserId() != null) {
                         Profile author = profileRepository.findById(recipe.getUserId()).orElse(null);

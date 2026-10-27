@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   X,
@@ -57,6 +57,17 @@ export function CookConfirmationModal({
   // 현재 수량 편집 중인 식재료 ID
   const [editingId, setEditingId] = useState<number | null>(null);
 
+  // 모달이 열릴 때 부모의 인분 수 및 단계 동기화
+  useEffect(() => {
+    if (open) {
+      setServings(initialServings);
+      setStep(1);
+      setDeductOption('AUTO');
+      setCustomQuantities({});
+      setEditingId(null);
+    }
+  }, [open, initialServings]);
+
   // 실제 내 냉장고 보유 식재료 조회
   const { data: myIngredients = [] } = useMyIngredients();
 
@@ -84,8 +95,6 @@ export function CookConfirmationModal({
 
   // 스마트 매칭 요리완료 및 FIFO 자동 차감 뮤테이션 연동
   const cookMutation = useCookRecipe();
-
-  if (!open) return null;
 
   // 1단계 제출 핸들러 (기록 전용 선택 시 즉시 실행)
   const handleStep1Submit = () => {
@@ -138,20 +147,22 @@ export function CookConfirmationModal({
 
   return (
     <AnimatePresence>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cook-modal-title"
-      >
-        {/* 배경 딤 */}
-        <motion.div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleClose}
-        />
+      {open && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cook-modal-title"
+        >
+          {/* 배경 딤 (깜빡임 없는 소프트 다크 오버레이) */}
+          <motion.div
+            className="fixed inset-0 bg-black/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            onClick={handleClose}
+          />
 
         {/* 모달 컨테이너 */}
         <motion.div
@@ -527,7 +538,8 @@ export function CookConfirmationModal({
             </div>
           )}
         </motion.div>
-      </div>
+        </div>
+      )}
     </AnimatePresence>
   );
 }

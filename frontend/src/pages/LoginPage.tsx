@@ -78,6 +78,17 @@ export default function LoginPage() {
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreeRecipeAnonymize, setAgreeRecipeAnonymize] = useState(false);
 
+  /** 폼 모드 전환 시 이전 폼 입력값 및 체크박스 초기화 */
+  const switchMode = (nextMode: AuthMode) => {
+    setEmail('');
+    setPassword('');
+    setNickname('');
+    setShowPassword(false);
+    setAgreeTerms(false);
+    setAgreeRecipeAnonymize(false);
+    setMode(nextMode);
+  };
+
   const handleOpenTerms = (tab: TermsTab) => {
     setTermsTab(tab);
     setTermsModalOpen(true);
@@ -136,7 +147,7 @@ export default function LoginPage() {
         toast.success('인증 메일이 발송되었습니다! 메일함(받은편지함/스팸함)을 확인해 주세요.', {
           duration: 6000,
         });
-        setMode('login');
+        switchMode('login');
       }
     } catch (err: any) {
       toast.error(getFriendlyAuthErrorMessage(err));
@@ -153,7 +164,7 @@ export default function LoginPage() {
     try {
       await sendPasswordReset(email.trim());
       toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
-      setMode('login');
+      switchMode('login');
     } catch (err: any) {
       toast.error(getFriendlyAuthErrorMessage(err));
     }
@@ -168,7 +179,7 @@ export default function LoginPage() {
           <div className="w-full flex justify-start mb-2">
             <button
               type="button"
-              onClick={() => setMode(mode === 'forgot-password' ? 'login' : 'social')}
+              onClick={() => switchMode(mode === 'forgot-password' ? 'login' : 'social')}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground active:scale-95 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -256,7 +267,7 @@ export default function LoginPage() {
               type="button"
               variant="outline"
               size="lg"
-              onClick={() => setMode('login')}
+              onClick={() => switchMode('login')}
               className="w-full font-bold border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-950/40"
             >
               <Mail className="h-4 w-4" />
@@ -299,7 +310,7 @@ export default function LoginPage() {
               <div className="grid grid-cols-2 rounded-xl bg-muted p-1 mb-5">
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => switchMode('login')}
                   className={`rounded-lg py-2 text-xs font-extrabold transition-all ${
                     mode === 'login'
                       ? 'bg-background text-foreground shadow-sm'
@@ -310,7 +321,7 @@ export default function LoginPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setMode('signup')}
+                  onClick={() => switchMode('signup')}
                   className={`rounded-lg py-2 text-xs font-extrabold transition-all ${
                     mode === 'signup'
                       ? 'bg-background text-foreground shadow-sm'
@@ -365,7 +376,7 @@ export default function LoginPage() {
                 <div className="pt-1 text-center">
                   <button
                     type="button"
-                    onClick={() => setMode('login')}
+                    onClick={() => switchMode('login')}
                     className="text-xs font-semibold text-muted-foreground hover:text-foreground"
                   >
                     ← 로그인으로 돌아가기
@@ -415,7 +426,7 @@ export default function LoginPage() {
                 <div className="flex justify-end pt-0.5">
                   <button
                     type="button"
-                    onClick={() => setMode('forgot-password')}
+                    onClick={() => switchMode('forgot-password')}
                     className="text-[11px] font-semibold text-muted-foreground hover:text-brand-600 hover:underline"
                   >
                     비밀번호를 잊으셨나요?

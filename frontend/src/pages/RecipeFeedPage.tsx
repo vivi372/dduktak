@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { Plus, Search, X } from 'lucide-react';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -28,10 +28,67 @@ export default function RecipeFeedPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const filterParam = (searchParams.get('filter') as 'MY' | 'SCRAP' | null) || undefined;
 
-  const [categoryId, setCategoryId] = useState<number>(0);
-  const [matchOn, setMatchOn] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>('');
-  const [sortBy, setSortBy] = useState<RecipeSortOption>('latest');
+  // URL searchParams 기반 초기 상태 복원 (뒤로가기 시 검색어, 카테고리, 정렬 유지)
+  const [categoryId, setCategoryId] = useState<number>(() => {
+    const cat = searchParams.get('category');
+    return cat ? Number(cat) : 0;
+  });
+  const [matchOn, setMatchOn] = useState<boolean>(() => {
+    return searchParams.get('match') === 'true';
+  });
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    return searchParams.get('q') || '';
+  });
+  const [sortBy, setSortBy] = useState<RecipeSortOption>(() => {
+    const sort = searchParams.get('sort');
+    if (sort === 'popular' || sort === 'cooked' || sort === 'matching' || sort === 'latest') {
+      return sort;
+    }
+    return 'latest';
+  });
+
+  // 검색어, 카테고리, 정렬, 매칭 상태를 URL 쿼리 파라미터와 동기화 (뒤로가기 시 100% 복원 보장)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (searchQuery.trim()) {
+            next.set('q', searchQuery.trim());
+          } else {
+            next.delete('q');
+          }
+
+          if (categoryId > 0) {
+            next.set('category', String(categoryId));
+          } else {
+            next.delete('category');
+          }
+
+          if (sortBy !== 'latest') {
+            next.set('sort', sortBy);
+          } else {
+            next.delete('sort');
+          }
+
+          if (matchOn) {
+            next.set('match', 'true');
+          } else {
+            next.delete('match');
+          }
+
+          if (prev.toString() === next.toString()) {
+            return prev;
+          }
+
+          return next;
+        },
+        { replace: true },
+      );
+    }, 150);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery, categoryId, sortBy, matchOn, setSearchParams]);
 
   // 백엔드 sort 파라미터 매핑: 'latest' | 'like' | 'cooked'
   const backendSort = useMemo<'latest' | 'like' | 'cooked'>(() => {
@@ -150,8 +207,18 @@ export default function RecipeFeedPage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="요리명이나 보유 재료(계란, 김치 등) 검색"
-            className="min-h-[44px] w-full rounded-2xl border border-border/80 bg-card pl-10 pr-4 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
+            className="min-h-[44px] w-full rounded-2xl border border-border/80 bg-card pl-10 pr-9 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/70 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 transition-colors"
+              aria-label="검색어 지우기"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
 
         {!matchOn && (
@@ -191,8 +258,8 @@ export default function RecipeFeedPage() {
                 difficulty: (r.difficulty as RecipeDifficulty) || '쉬움',
                 likeCount: 0,
                 cookedCount: 0,
-                authorNickname: '뚝딱',
-                authorTag: '추천',
+                authorNickname: '관리자',
+                authorTag: undefined,
                 matchingRate: r.matchingRate,
               };
               return (

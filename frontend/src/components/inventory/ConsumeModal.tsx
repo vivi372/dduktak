@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Minus, Plus, Utensils, X, AlertTriangle } from 'lucide-react';
 import { STORAGE_LABEL } from '@/utils/dday';
@@ -23,21 +23,35 @@ interface ConsumeModalProps {
 export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
   useBodyScrollLock(!!item);
 
+  // 기본 차감 수량 (초기 입력 및 백스페이스 허용을 위해 number | '' 지원)
+  const [quantity, setQuantity] = useState<number | ''>(1);
+
+  // item 변경 시 기본 차감 수량 1로 동기화
+  useEffect(() => {
+    if (item) {
+      setQuantity(1);
+    }
+  }, [item]);
+
   if (!item) return null;
 
-  // 기본 차감 수량은 1 또는 보유 수량
-  const [quantity, setQuantity] = useState<number>(1);
-
+  const currentQuantityNum = typeof quantity === 'number' ? quantity : 0;
   // 유효성 검사: 0 이하이거나 보유 수량 초과 여부
-  const isOverQuantity = quantity > item.quantity;
-  const isInvalid = quantity <= 0 || isOverQuantity;
+  const isOverQuantity = currentQuantityNum > item.quantity;
+  const isInvalid = quantity === '' || currentQuantityNum <= 0 || isOverQuantity;
 
   const handleDecrease = () => {
-    setQuantity((prev) => Math.max(1, prev - 1));
+    setQuantity((prev) => {
+      const curr = typeof prev === 'number' ? prev : 1;
+      return Math.max(1, curr - 1);
+    });
   };
 
   const handleIncrease = () => {
-    setQuantity((prev) => prev + 1);
+    setQuantity((prev) => {
+      const curr = typeof prev === 'number' ? prev : 0;
+      return curr + 1;
+    });
   };
 
   const handleAll = () => {
@@ -47,7 +61,7 @@ export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isInvalid) return;
-    onConfirm(item, quantity);
+    onConfirm(item, currentQuantityNum);
     onClose();
   };
 
@@ -113,7 +127,7 @@ export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
                 <button
                   type="button"
                   onClick={handleDecrease}
-                  disabled={quantity <= 1}
+                  disabled={typeof quantity === 'number' && quantity <= 1}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95 disabled:opacity-40"
                   aria-label="1개 감소"
                 >
@@ -128,7 +142,22 @@ export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
                     min={1}
                     max={item.quantity}
                     value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setQuantity('');
+                      } else {
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setQuantity(num);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      if (quantity === '' || quantity <= 0) {
+                        setQuantity(1);
+                      }
+                    }}
                     className="h-11 w-full rounded-xl border bg-background px-3 text-center text-lg font-bold tabular-nums focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rounded-md bg-muted px-1.5 py-0.5 text-xs font-semibold text-muted-foreground">

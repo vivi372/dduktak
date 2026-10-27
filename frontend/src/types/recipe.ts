@@ -73,8 +73,8 @@ export interface RecipeSummary {
   difficulty: RecipeDifficulty;
   likeCount: number;
   cookedCount: number;
-  authorNickname: string;
-  authorTag: string;
+  authorNickname?: string | null;
+  authorTag?: string | null;
   authorId?: string | null;
   matchingRate?: number;
 }

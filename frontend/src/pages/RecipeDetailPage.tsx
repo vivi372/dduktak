@@ -9,7 +9,6 @@ import {
   Sparkles,
   Pencil,
   AlertCircle,
-  Loader2,
   Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -19,6 +18,7 @@ import {
   RecipeStepList,
   CookConfirmationModal,
 } from '@/components/recipe';
+import { RecipeDetailSkeleton } from '@/components/common/Skeleton';
 import {
   useRecipeDetail,
   useToggleRecipeLike,
@@ -145,14 +145,9 @@ export default function RecipeDetailPage() {
     }
   };
 
-  // 로딩 상태 표시
+  // 로딩 상태 표시 (스켈레톤 UI를 통해 상세 진입 시 깜빡임 및 레이아웃 시프트 방지)
   if (isRecipeLoading) {
-    return (
-      <div className="py-24 flex flex-col items-center justify-center text-muted-foreground space-y-3">
-        <Loader2 className="h-8 w-8 animate-spin text-brand-500" />
-        <p className="text-sm font-medium">레시피 상세 정보를 불러오는 중입니다...</p>
-      </div>
-    );
+    return <RecipeDetailSkeleton />;
   }
 
   if (isRecipeError || !recipe) {
@@ -222,7 +217,9 @@ export default function RecipeDetailPage() {
               {recipe.categoryName}
             </span>
             <span className="text-xs text-white/80">
-              by {recipe.authorNickname}#{recipe.authorTag}
+              {!recipe.authorNickname || recipe.authorNickname === '(알 수 없음)' || recipe.authorNickname.trim() === ''
+                ? '관리자'
+                : `${recipe.authorNickname}${recipe.authorTag ? `#${recipe.authorTag}` : ''}`}
             </span>
           </div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight">{recipe.title}</h1>

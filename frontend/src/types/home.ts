@@ -26,6 +26,10 @@ export interface BriefingTopRecipe {
   difficulty?: string;
   /** 매칭 점수 (0 ~ 100%, 0개 폴백 시 0%) */
   matchingRate: number;
+  /** 작성자 닉네임 */
+  authorNickname?: string;
+  /** 작성자 태그 */
+  authorTag?: string;
 }
 
 /** 메인 화면 종합 브리핑 응답 모델 (GET /api/v1/home/briefing) */

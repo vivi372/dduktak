@@ -153,3 +153,64 @@ export function NotificationCardSkeleton() {
     </div>
   );
 }
+
+/**
+ * 레시피 상세 페이지 스켈레톤 (상세 로딩 중 레이아웃 시프트 및 깜빡임 방지)
+ */
+export function RecipeDetailSkeleton() {
+  return (
+    <div className="space-y-6 pb-6">
+      {/* 1. 상단 히어로 이미지 영역 */}
+      <div className="relative -mx-4 -mt-4 overflow-hidden aspect-[16/10] sm:aspect-[2/1] sm:rounded-3xl sm:mx-0 sm:mt-0 bg-muted">
+        <Skeleton className="h-full w-full rounded-none" />
+      </div>
+
+      {/* 2. 카테고리, 제목, 작성자 영역 */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-14" />
+          </div>
+        </div>
+        <Skeleton className="h-7 w-3/4 rounded-xl" />
+        <div className="flex items-center gap-3 pt-1">
+          <Skeleton className="h-9 w-9 rounded-full" />
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      </div>
+
+      {/* 3. 인분 계산기 카드 영역 */}
+      <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-card space-y-3">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-8 w-24 rounded-xl" />
+        </div>
+      </div>
+
+      {/* 4. 필요 재료 리스트 영역 */}
+      <div className="rounded-2xl border border-border/70 bg-card p-4 shadow-card space-y-3">
+        <Skeleton className="h-5 w-24" />
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <Skeleton className="h-12 rounded-xl" />
+          <Skeleton className="h-12 rounded-xl" />
+          <Skeleton className="h-12 rounded-xl" />
+          <Skeleton className="h-12 rounded-xl" />
+        </div>
+      </div>
+
+      {/* 5. 조리 순서(스텝) 영역 */}
+      <div className="space-y-3">
+        <Skeleton className="h-5 w-28" />
+        <div className="space-y-2.5">
+          <Skeleton className="h-24 rounded-2xl" />
+          <Skeleton className="h-24 rounded-2xl" />
+        </div>
+      </div>
+    </div>
+  );
+}

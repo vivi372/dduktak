@@ -81,6 +81,7 @@ public class HomeService {
                 if (!recommendations.isEmpty() && recommendations.get(0).getMatchingRate() != null
                                 && recommendations.get(0).getMatchingRate() > 0) {
                         MatchingRecommendationResponseDto rec = recommendations.get(0);
+                        String[] authorInfo = resolveAuthorInfo(rec.getRecipeId());
                         topRecipe = BriefingTopRecipeDto.builder()
                                         .recipeId(rec.getRecipeId())
                                         .title(rec.getTitle())
@@ -88,18 +89,33 @@ public class HomeService {
                                         .cookingTime(rec.getCookingTime())
                                         .difficulty(rec.getDifficulty())
                                         .matchingRate(rec.getMatchingRate())
+                                        .authorNickname(authorInfo[0])
+                                        .authorTag(authorInfo[1])
                                         .build();
                 } else {
                         // 폴백: 커뮤니티 인기 레시피(cooked_count + like_count DESC) 상위 1건 (매칭률 0% 표기)
                         topRecipe = recipeRepository.findTopPopularRecipe()
-                                        .map(r -> BriefingTopRecipeDto.builder()
-                                                        .recipeId(r.getRecipeId())
-                                                        .title(r.getTitle())
-                                                        .thumbnailUrl(r.getThumbnailUrl())
-                                                        .cookingTime(r.getCookingTime())
-                                                        .difficulty(r.getDifficulty())
-                                                        .matchingRate(0)
-                                                        .build())
+                                        .map(r -> {
+                                                String authorNickname = "관리자";
+                                                String authorTag = null;
+                                                if (r.getUserId() != null) {
+                                                        Profile author = profileRepository.findById(r.getUserId()).orElse(null);
+                                                        if (author != null) {
+                                                                authorNickname = author.getNickname();
+                                                                authorTag = author.getUserTag();
+                                                        }
+                                                }
+                                                return BriefingTopRecipeDto.builder()
+                                                                .recipeId(r.getRecipeId())
+                                                                .title(r.getTitle())
+                                                                .thumbnailUrl(r.getThumbnailUrl())
+                                                                .cookingTime(r.getCookingTime())
+                                                                .difficulty(r.getDifficulty())
+                                                                .matchingRate(0)
+                                                                .authorNickname(authorNickname)
+                                                                .authorTag(authorTag)
+                                                                .build();
+                                        })
                                         .orElse(null);
                 }
 
@@ -111,5 +127,26 @@ public class HomeService {
                                 .imminentIngredients(imminentList)
                                 .topRecipe(topRecipe)
                                 .build();
+        }
+
+        /**
+         * 레시피 ID 기반 작성자 프로필 정보 (닉네임, 태그) 조회 (탈퇴 회원일 경우 '관리자', null)
+         */
+        private String[] resolveAuthorInfo(Long recipeId) {
+                String authorNickname = "관리자";
+                String authorTag = null;
+                if (recipeId != null) {
+                        UUID authorId = recipeRepository.findById(recipeId)
+                                        .map(com.dduktak.domain.recipe.entity.Recipe::getUserId)
+                                        .orElse(null);
+                        if (authorId != null) {
+                                Profile author = profileRepository.findById(authorId).orElse(null);
+                                if (author != null) {
+                                        authorNickname = author.getNickname();
+                                        authorTag = author.getUserTag();
+                                }
+                        }
+                }
+                return new String[]{authorNickname, authorTag};
         }
 }

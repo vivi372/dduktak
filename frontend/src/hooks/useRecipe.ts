@@ -71,7 +71,8 @@ export function useRecipes(
       return await getRecipes(params);
     },
     enabled: options?.enabled ?? true,
-    staleTime: 1000 * 60, // 1분 캐싱
+    placeholderData: (previousData) => previousData,
+    staleTime: 1000 * 60 * 5, // 5분 캐싱 유지 (뒤로가기 시 깜빡임 없이 즉시 렌더링)
   });
 }
 
@@ -87,7 +88,7 @@ export function useRecipeDetail(recipeId: number) {
       return await getRecipeDetail(recipeId);
     },
     enabled: Boolean(recipeId && recipeId > 0),
-    staleTime: 1000 * 60 * 2, // 2분 캐싱
+    staleTime: 1000 * 60 * 5, // 5분 캐싱 (상세 재방문 시 즉시 렌더링)
   });
 }
 

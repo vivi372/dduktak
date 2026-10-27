@@ -13,10 +13,11 @@ interface RecipeCardProps {
 }
 
 function MatchBadge({ rate }: { rate: number }) {
+  const displayRate = typeof rate === 'number' && !isNaN(rate) ? rate : 0;
   return (
     <span className="inline-flex items-center gap-1 rounded-full bg-mint-500 px-2.5 py-1 text-[11px] font-black text-slate-950 dark:bg-mint-400 dark:text-slate-950 shadow-sm">
       <Sparkles className="h-3 w-3 stroke-[2.5]" />
-      <span>{rate}% 뚝딱 매칭</span>
+      <span>{displayRate}% 뚝딱 매칭</span>
     </span>
   );
 }
@@ -46,6 +47,14 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
     </div>
   );
 
+  const isAnonymous =
+    !recipe.authorNickname ||
+    recipe.authorNickname === '(알 수 없음)' ||
+    recipe.authorNickname.trim() === '';
+  const authorDisplay = isAnonymous
+    ? '관리자'
+    : `${recipe.authorNickname}${recipe.authorTag ? `#${recipe.authorTag}` : ''}`;
+
   if (variant === 'carousel') {
     return (
       <Link
@@ -62,11 +71,16 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          {matchingRate !== undefined && <div className="absolute left-2 top-2"><MatchBadge rate={matchingRate} /></div>}
+          {typeof matchingRate === 'number' && matchingRate > 0 && (
+            <div className="absolute left-2 top-2">
+              <MatchBadge rate={matchingRate} />
+            </div>
+          )}
         </div>
         <div className="space-y-1.5 p-3">
           <p className="text-[11px] font-semibold text-brand-600 dark:text-brand-300">{recipe.categoryName}</p>
           <h3 className="line-clamp-1 text-[15px] font-bold">{recipe.title}</h3>
+          <p className="text-[11px] text-muted-foreground truncate">{authorDisplay}</p>
           {meta}
         </div>
       </Link>
@@ -90,14 +104,12 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
             <span className="text-[11px] font-bold text-brand-600 dark:text-brand-300 truncate">
               {recipe.categoryName}
             </span>
-            {matchingRate !== undefined && <MatchBadge rate={matchingRate} />}
+            {typeof matchingRate === 'number' && matchingRate > 0 && <MatchBadge rate={matchingRate} />}
           </div>
           <h3 className="line-clamp-1 text-sm sm:text-[15px] font-bold text-foreground group-hover:text-brand-600 transition-colors">
             {recipe.title}
           </h3>
-          <p className="text-[11px] text-muted-foreground truncate">
-            by {recipe.authorNickname}#{recipe.authorTag}
-          </p>
+          <p className="text-[11px] text-muted-foreground truncate">{authorDisplay}</p>
         </div>
         {meta}
       </div>

@@ -111,7 +111,7 @@
             r.difficulty,
             r.like_count,
             r.cooked_count,
-            COALESCE(p.nickname, '(알 수 없음)') AS author_nickname,
+            COALESCE(p.nickname, '관리자') AS author_nickname,
             p.user_tag AS author_tag
         FROM public.recipe r
         JOIN public.recipe_category rc ON r.recipe_category_id = rc.recipe_category_id

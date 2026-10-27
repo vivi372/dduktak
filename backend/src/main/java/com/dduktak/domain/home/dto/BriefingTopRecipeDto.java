@@ -43,4 +43,14 @@ public class BriefingTopRecipeDto {
      * 매칭 점수 (0 ~ 100%, 폴백 인기 레시피의 경우 0%)
      */
     private Integer matchingRate;
+
+    /**
+     * 레시피 작성자 닉네임 (탈퇴 회원 시 '관리자')
+     */
+    private String authorNickname;
+
+    /**
+     * 레시피 작성자 태그 (예: 1024, 탈퇴 회원 시 null)
+     */
+    private String authorTag;
 }

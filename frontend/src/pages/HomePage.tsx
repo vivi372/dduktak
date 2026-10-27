@@ -65,8 +65,8 @@ export default function HomePage() {
         difficulty: normalizeDifficulty(briefing.topRecipe.difficulty),
         likeCount: 0,
         cookedCount: 0,
-        authorNickname: '뚝딱 셰프',
-        authorTag: '1024',
+        authorNickname: briefing.topRecipe.authorNickname || '관리자',
+        authorTag: briefing.topRecipe.authorTag,
       }
     : null;
 

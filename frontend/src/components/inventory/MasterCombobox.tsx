@@ -131,7 +131,7 @@ export function MasterCombobox({
       {/* 2. 드롭다운 팝오버 */}
       {isOpen && (
         <div
-          className="absolute left-0 top-[calc(100%+6px)] z-50 flex max-h-80 w-full flex-col overflow-hidden rounded-2xl border border-border bg-card bg-popover text-popover-foreground shadow-2xl animate-in fade-in-0 zoom-in-95"
+          className="absolute left-0 top-[calc(100%+6px)] z-50 flex max-h-[380px] w-full flex-col overflow-hidden rounded-2xl border border-border bg-card bg-popover text-popover-foreground shadow-2xl animate-in fade-in-0 zoom-in-95"
           role="listbox"
         >
           {/* 2-1. 검색창 */}
@@ -156,16 +156,16 @@ export function MasterCombobox({
             )}
           </div>
 
-          {/* 2-2. 카테고리 필터 칩 */}
-          <div className="flex gap-1 overflow-x-auto border-b border-border/60 bg-muted/10 p-2 scrollbar-none">
+          {/* 2-2. 카테고리 필터 칩 (가로 스크롤 없이 한눈에 들어오는 랩핑 구조) */}
+          <div className="flex flex-wrap gap-1.5 border-b border-border/60 bg-muted/20 p-2">
             <button
               type="button"
               onClick={() => setSelectedCategory('ALL')}
               className={cn(
-                'whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-semibold transition-all shrink-0',
+                'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all',
                 selectedCategory === 'ALL'
-                  ? 'bg-brand-500 text-white shadow-xs'
-                  : 'bg-card text-muted-foreground hover:bg-accent',
+                  ? 'bg-brand-500 text-white shadow-xs font-bold'
+                  : 'bg-card text-muted-foreground hover:bg-accent border border-border/40',
               )}
             >
               전체
@@ -176,10 +176,10 @@ export function MasterCombobox({
                 type="button"
                 onClick={() => setSelectedCategory(cat.categoryId)}
                 className={cn(
-                  'whitespace-nowrap rounded-lg px-2.5 py-1 text-xs font-semibold transition-all shrink-0',
+                  'rounded-lg px-2.5 py-1 text-xs font-semibold transition-all',
                   selectedCategory === cat.categoryId
-                    ? 'bg-brand-500 text-white shadow-xs'
-                    : 'bg-card text-muted-foreground hover:bg-accent',
+                    ? 'bg-brand-500 text-white shadow-xs font-bold'
+                    : 'bg-card text-muted-foreground hover:bg-accent border border-border/40',
                 )}
               >
                 {cat.categoryName}

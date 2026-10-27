@@ -31,7 +31,13 @@ describe('RecipeCard 컴포넌트 단위 테스트', () => {
 
   it('기본(list) 모드에서 작성자 닉네임과 태그가 표시되어야 한다', () => {
     renderWithRouter(<RecipeCard recipe={mockRecipe} variant="list" />);
-    expect(screen.getByText(/by 뚝딱요리사#1234/)).toBeInTheDocument();
+    expect(screen.getByText('뚝딱요리사#1234')).toBeInTheDocument();
+  });
+
+  it('작성자가 null일 때 관리자로 표시되어야 한다', () => {
+    const anonymousRecipe = { ...mockRecipe, authorNickname: null, authorTag: null };
+    renderWithRouter(<RecipeCard recipe={anonymousRecipe} variant="list" />);
+    expect(screen.getByText('관리자')).toBeInTheDocument();
   });
 
   it('조리 시간, 난이도, 좋아요/요리완료 수가 표시되어야 한다', () => {

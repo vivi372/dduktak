@@ -220,11 +220,11 @@ export default function RecipeFormPage() {
 
     try {
       setUploadingStepIndex(index);
-      toast.info(`Step ${index + 1} 사진을 업로드하고 있어요... 📷`);
+      toast.info(`${index + 1}단계 조리 사진을 업로드하고 있어요... 📷`);
       const publicUrl = await uploadRecipeImage(file, 'steps');
       const currentStep = stepFields[index];
       updateStep(index, { ...currentStep, imageUrl: publicUrl });
-      toast.success(`Step ${index + 1} 사진이 등록되었어요!`);
+      toast.success(`${index + 1}단계 사진이 등록되었어요!`);
     } catch (err) {
       const msg = err instanceof Error ? err.message : '이미지 업로드에 실패했습니다.';
       toast.error(msg);
@@ -312,7 +312,16 @@ export default function RecipeFormPage() {
   const isSaving = isSubmitting || createMutation.isPending || updateMutation.isPending;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8 pb-24">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      onKeyDown={(e) => {
+        // textarea가 아닌 일반 input에서 엔터 키 입력 시 폼이 의도치 않게 새로고침되는 것 방지
+        if (e.key === 'Enter' && (e.target as HTMLElement).tagName !== 'TEXTAREA') {
+          e.preventDefault();
+        }
+      }}
+      className="space-y-8 pb-24"
+    >
       {/* 화면 타이틀 */}
       <div>
         <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
@@ -636,32 +645,32 @@ export default function RecipeFormPage() {
                       type="number"
                       min="0.01"
                       step="0.1"
-                      value={ing?.quantity || 1}
-                      onChange={(e) =>
-                        updateIngredient(idx, {
-                          ...ing,
-                          quantity: parseFloat(e.target.value) || 1,
-                        })
-                      }
+                      value={ing?.quantity ?? ''}
+                      onChange={(e) => {
+                        const val = e.target.value === '' ? ('' as unknown as number) : parseFloat(e.target.value);
+                        setValue(`ingredients.${idx}.quantity`, val, { shouldValidate: true });
+                      }}
+                      onBlur={(e) => {
+                        const num = parseFloat(e.target.value);
+                        if (isNaN(num) || num <= 0) {
+                          setValue(`ingredients.${idx}.quantity`, 1, { shouldValidate: true });
+                        }
+                      }}
                       className="w-full rounded-xl border border-border/80 bg-card px-3 py-2 text-xs sm:text-sm font-bold text-foreground focus:border-brand-500 focus:outline-none"
                     />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-bold text-muted-foreground mb-1">
-                      단위
+                      단위 <span className="text-[10px] text-muted-foreground/80">(표준단위 자동반영)</span>
                     </label>
                     <input
                       type="text"
-                      value={ing?.unit || ''}
-                      onChange={(e) =>
-                        updateIngredient(idx, {
-                          ...ing,
-                          unit: e.target.value,
-                        })
-                      }
-                      placeholder="개, g, ml 등"
-                      className="w-full rounded-xl border border-border/80 bg-card px-3 py-2 text-xs sm:text-sm font-bold text-foreground focus:border-brand-500 focus:outline-none"
+                      readOnly
+                      tabIndex={-1}
+                      value={ing?.unit || '개'}
+                      placeholder="표준단위"
+                      className="w-full rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-xs sm:text-sm font-bold text-muted-foreground cursor-not-allowed select-none focus:outline-none"
                     />
                   </div>
                 </div>
@@ -723,7 +732,7 @@ export default function RecipeFormPage() {
         </div>
       </section>
 
-      {/* ===================== 3. 조리 순서(Step) 작성 섹션 ===================== */}
+      {/* ===================== 3. 조리 순서(단계) 작성 섹션 ===================== */}
       <section className="space-y-4 rounded-3xl border border-border/80 bg-card p-4 sm:p-5 shadow-card dark:border-white/10">
         <div className="flex items-center justify-between border-b pb-2.5">
           <h2 className="text-sm sm:text-base font-extrabold text-foreground">
@@ -757,7 +766,7 @@ export default function RecipeFormPage() {
                       type="button"
                       onClick={() => moveStep(idx, idx - 1)}
                       disabled={idx === 0}
-                      aria-label="스텝 위로 이동"
+                      aria-label="순서 위로 이동"
                       className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent disabled:opacity-20"
                     >
                       <MoveUp className="h-3.5 w-3.5" />
@@ -766,7 +775,7 @@ export default function RecipeFormPage() {
                       type="button"
                       onClick={() => moveStep(idx, idx + 1)}
                       disabled={idx === stepFields.length - 1}
-                      aria-label="스텝 아래로 이동"
+                      aria-label="순서 아래로 이동"
                       className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent disabled:opacity-20"
                     >
                       <MoveDown className="h-3.5 w-3.5" />
@@ -780,7 +789,7 @@ export default function RecipeFormPage() {
                         }
                         removeStep(idx);
                       }}
-                      aria-label="스텝 삭제"
+                      aria-label="순서 삭제"
                       className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:text-rose-500 hover:bg-rose-50"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
@@ -791,19 +800,12 @@ export default function RecipeFormPage() {
                 {/* 조리 설명 textarea */}
                 <textarea
                   rows={2}
-                  value={step?.description || ''}
-                  onChange={(e) =>
-                    updateStep(idx, {
-                      ...step,
-                      stepNo: idx + 1,
-                      description: e.target.value,
-                    })
-                  }
-                  placeholder={`Step ${idx + 1} 조리 과정을 자세히 적어주세요.`}
+                  {...register(`steps.${idx}.description`)}
+                  placeholder={`${idx + 1}단계 조리 과정을 자세히 적어주세요.`}
                   className="w-full rounded-xl border border-border/80 bg-card p-3 text-xs sm:text-sm text-foreground placeholder:text-muted-foreground/60 focus:border-brand-500 focus:outline-none"
                 />
 
-                {/* Step 사진 첨부 미리보기 */}
+                {/* 과정 사진 첨부 미리보기 */}
                 <div className="flex items-center gap-3">
                   <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs font-bold text-foreground hover:bg-accent active:scale-95 transition-all">
                     {isUploading ? (
@@ -825,7 +827,7 @@ export default function RecipeFormPage() {
                     <div className="flex items-center gap-2">
                       <img
                         src={step.imageUrl}
-                        alt="스텝 사진 미리보기"
+                        alt="조리 과정 사진 미리보기"
                         className="h-8 w-12 rounded object-cover border"
                       />
                       <button
@@ -843,14 +845,14 @@ export default function RecipeFormPage() {
           })}
         </div>
 
-        {/* 스텝 추가 버튼 */}
+        {/* 단계 추가 버튼 */}
         <button
           type="button"
           onClick={handleAddStep}
           className="flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border bg-background/50 text-xs sm:text-sm font-bold text-foreground hover:bg-accent active:scale-98 transition-all"
         >
           <Plus className="h-4 w-4" />
-          <span>조리 순서(Step) 추가하기</span>
+          <span>조리 순서(단계) 추가하기</span>
         </button>
       </section>
 

@@ -32,7 +32,7 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
 
   const [selectedMaster, setSelectedMaster] = useState<MasterIngredient | null>(initialMaster ?? null);
   const [storageType, setStorageType] = useState<StorageType>(initialMaster?.defaultStorageType ?? 'REFRIGERATED');
-  const [quantity, setQuantity] = useState<number>(1);
+  const [quantity, setQuantity] = useState<number | ''>(1);
   const [expireDate, setExpireDate] = useState<string>(
     format(addDays(new Date(), initialMaster?.defaultShelfDays ?? 7), 'yyyy-MM-dd'),
   );
@@ -78,12 +78,14 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
     e.preventDefault();
     if (!selectedMaster) return;
 
+    const currentQuantityNum = typeof quantity === 'number' && quantity > 0 ? quantity : 1;
+
     onAdd({
       masterIngredientId: selectedMaster.masterIngredientId,
       categoryId: selectedMaster.categoryId,
       name: selectedMaster.name,
       storageType,
-      quantity,
+      quantity: currentQuantityNum,
       unit: selectedMaster.defaultUnit,
       expireDate,
       dDay: currentDDay,
@@ -179,8 +181,13 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
               <div className="flex items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
-                  disabled={quantity <= 1}
+                  onClick={() =>
+                    setQuantity((prev) => {
+                      const curr = typeof prev === 'number' ? prev : 1;
+                      return Math.max(1, curr - 1);
+                    })
+                  }
+                  disabled={typeof quantity === 'number' && quantity <= 1}
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95 disabled:opacity-40"
                   aria-label="1개 감소"
                 >
@@ -194,7 +201,22 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
                     min={1}
                     required
                     value={quantity}
-                    onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setQuantity('');
+                      } else {
+                        const num = Number(val);
+                        if (!isNaN(num)) {
+                          setQuantity(num);
+                        }
+                      }
+                    }}
+                    onBlur={() => {
+                      if (quantity === '' || quantity <= 0) {
+                        setQuantity(1);
+                      }
+                    }}
                     className="h-11 w-full rounded-xl border bg-background px-3 pr-16 text-center text-base font-bold tabular-nums text-foreground focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
                   <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2">
@@ -205,7 +227,12 @@ export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAd
                 </div>
                 <button
                   type="button"
-                  onClick={() => setQuantity((prev) => prev + 1)}
+                  onClick={() =>
+                    setQuantity((prev) => {
+                      const curr = typeof prev === 'number' ? prev : 0;
+                      return curr + 1;
+                    })
+                  }
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-foreground transition-all hover:bg-accent active:scale-95"
                   aria-label="1개 증가"
                 >
