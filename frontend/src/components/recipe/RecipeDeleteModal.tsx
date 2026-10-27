@@ -25,23 +25,33 @@ export function RecipeDeleteModal({
 }: RecipeDeleteModalProps) {
   useBodyScrollLock(isOpen);
 
-  if (!isOpen) return null;
-
   return (
     <AnimatePresence>
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="recipe-delete-title"
-      >
+      {isOpen && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
-          className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl dark:border-white/10"
+          key="recipe-delete-modal"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="recipe-delete-title"
         >
+          {/* 배경 딤 (backdrop-blur-sm 제거) */}
+          <div
+            className="fixed inset-0 bg-black/60"
+            onClick={onClose}
+            aria-hidden="true"
+          />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+            transition={{ duration: 0.15 }}
+            className="relative w-full max-w-sm overflow-hidden rounded-3xl border border-border/80 bg-card p-6 shadow-2xl dark:border-white/10"
+          >
           <div className="flex flex-col items-center text-center">
             {/* 위험 경고 아이콘 */}
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400">
@@ -107,7 +117,8 @@ export function RecipeDeleteModal({
             </div>
           </div>
         </motion.div>
-      </div>
-    </AnimatePresence>
-  );
+      </motion.div>
+    )}
+  </AnimatePresence>
+);
 }

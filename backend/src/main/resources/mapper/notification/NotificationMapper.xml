@@ -145,7 +145,6 @@
         FROM public.user_ingredient ui
         JOIN public.profiles p ON p.id = ui.user_id
         WHERE ui.status = 'STORED'
-          AND p.is_expire_warn_enabled = TRUE
           AND (ui.expire_date - (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Seoul')::date) BETWEEN 0 AND 3
         ORDER BY ui.user_id, d_day ASC, ui.ingredient_id ASC
     </select>

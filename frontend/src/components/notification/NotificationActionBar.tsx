@@ -71,17 +71,21 @@ export function NotificationActionBar({
       {/* 전체 삭제 2차 확인 모달 (framer-motion 애니메이션 & useBodyScrollLock) */}
       <AnimatePresence>
         {showDeleteConfirm && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          <motion.div
+            key="delete-all-confirm-modal"
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 font-sans"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
             role="dialog"
             aria-modal="true"
           >
-            <motion.div
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+            {/* 배경 딤 (backdrop-blur-sm 제거하여 브라우저/웹뷰 플리커 원천 차단) */}
+            <div
+              className="fixed inset-0 bg-black/60"
               onClick={() => setShowDeleteConfirm(false)}
+              aria-hidden="true"
             />
             <motion.div
               className="relative w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-2xl"
@@ -116,7 +120,7 @@ export function NotificationActionBar({
                 </Button>
               </div>
             </motion.div>
-          </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

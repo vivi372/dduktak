@@ -51,6 +51,12 @@ export async function signUpWithEmail(email: string, password: string, nickname:
     },
   });
   if (error) throw error;
+
+  // Supabase 보안 정책에 따라 이미 등록된 이메일인 경우 identities가 빈 배열([])로 반환될 수 있음
+  if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+    throw new Error('User already registered');
+  }
+
   return data;
 }
 

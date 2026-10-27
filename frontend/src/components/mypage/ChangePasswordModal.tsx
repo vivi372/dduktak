@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useBodyScrollLock } from '@/hooks';
 import * as authApi from '@/services/authApi';
+import { getFriendlyAuthErrorMessage } from '@/utils/authError';
 
 interface ChangePasswordModalProps {
   open: boolean;
@@ -67,9 +68,9 @@ export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps)
       toast.success('비밀번호가 성공적으로 변경되었습니다.');
       onClose();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : '비밀번호 변경에 실패했습니다.';
+      const msg = getFriendlyAuthErrorMessage(err);
       setErrorMessage(msg);
-      toast.error('비밀번호 변경 실패: ' + msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

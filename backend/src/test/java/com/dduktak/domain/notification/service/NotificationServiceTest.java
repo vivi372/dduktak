@@ -221,8 +221,8 @@ class NotificationServiceTest {
                 }
 
                 @Test
-                @DisplayName("소셜 알림 수신 거부(isReactionNoticeEnabled=false) 유저에게는 알림 미생성")
-                void disabledSocialNoticeSkipped() {
+                @DisplayName("소셜 알림 푸시 거부(isReactionNoticeEnabled=false) 유저라도 인앱 알림은 DB에 정상 보관되고 FCM 푸시만 차단")
+                void disabledSocialNoticeStillSavesInAppNotification() {
                         // given
                         UUID authorId = UUID.randomUUID();
                         UUID actorId = UUID.randomUUID();
@@ -238,8 +238,8 @@ class NotificationServiceTest {
                         notificationService.sendSocialNotification(
                                         authorId, actorId, NotificationType.COOKED_NOTICE, 30L, "계란볶음밥", "요리왕");
 
-                        // then
-                        verify(notificationRepository, never()).save(any());
+                        // then: 인앱 알림은 DB에 정상 저장되고, FCM 푸시만 스킵
+                        verify(notificationRepository, times(1)).save(any(Notification.class));
                         verify(fcmService, never()).sendPushAsync(any(), any(), any(), any());
                 }
 

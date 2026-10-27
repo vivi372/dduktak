@@ -126,10 +126,14 @@ export default function LoginPage() {
       toast.error('모든 필수 정보를 입력해 주세요.');
       return;
     }
-    if (password.length < 8) {
-      toast.error('비밀번호는 최소 8자 이상이어야 합니다.');
+
+    // 비밀번호 복잡도 클라이언트 사전 검증 (영문 대/소문자, 숫자, 특수문자 조합 8자 이상)
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+~`\-={}[\]:;"'<>,.?/]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      toast.error('비밀번호는 8자 이상이며, 영문 대/소문자, 숫자, 특수문자를 각각 1자 이상 포함해야 합니다.');
       return;
     }
+
     if (!agreeTerms || !agreeRecipeAnonymize) {
       toast.error('서비스 이용 및 탈퇴 시 레시피 보존 정책 약관에 모두 동의해 주세요.');
       return;
@@ -150,7 +154,7 @@ export default function LoginPage() {
         switchMode('login');
       }
     } catch (err: any) {
-      toast.error(getFriendlyAuthErrorMessage(err));
+      toast.error(getFriendlyAuthErrorMessage(err, 'signup'));
     }
   };
 
@@ -166,7 +170,14 @@ export default function LoginPage() {
       toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
       switchMode('login');
     } catch (err: any) {
-      toast.error(getFriendlyAuthErrorMessage(err));
+      // 보안상 등록되지 않은 계정이라도 외부에서 유저 가입 여부를 열거/추측할 수 없도록 성공과 동일 처리
+      const msg = getFriendlyAuthErrorMessage(err, 'reset-password');
+      if (msg.includes('등록되지 않은')) {
+        toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
+        switchMode('login');
+      } else {
+        toast.error(msg);
+      }
     }
   };
 

@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { useBodyScrollLock } from '@/hooks';
 import { updateUserEmail } from '@/services/authApi';
+import { getFriendlyAuthErrorMessage } from '@/utils/authError';
 import type { UserProfile } from '@/types/user';
 
 interface ChangeEmailModalProps {
@@ -70,8 +71,7 @@ export function ChangeEmailModal({
       onEmailChanged(trimmed);
       toast.success('인증 확인 메일이 발송되었습니다! 메일함을 확인해 주세요. ✉️');
     } catch (err: unknown) {
-      const errorMsg =
-        err instanceof Error ? err.message : '이메일 변경 인증 메일 발송에 실패했습니다.';
+      const errorMsg = getFriendlyAuthErrorMessage(err, 'change-email');
       setErrorMessage(errorMsg);
       toast.error(errorMsg);
     } finally {

@@ -178,14 +178,7 @@ public class NotificationService {
             return;
         }
 
-        // 2. 수신자 설정 확인
-        Profile recipient = profileRepository.findById(recipientId).orElse(null);
-        if (recipient == null || !Boolean.TRUE.equals(recipient.getIsReactionNoticeEnabled())) {
-            log.debug("[Social Notification Skip] 수신자가 소셜 알림을 비활성화했습니다: recipient={}", recipientId);
-            return;
-        }
-
-        // 3. 메시지 타이틀 및 본문 빌드
+        // 2. 메시지 타이틀 및 본문 빌드
         String title;
         String content;
         String cleanNickname = (actorNickname != null && !actorNickname.trim().isEmpty()) ? actorNickname : "어떤 요리사";
@@ -202,7 +195,7 @@ public class NotificationService {
             content = String.format("%s님이 회원님의 '%s' 콘텐츠와 상호작용했습니다.", cleanNickname, cleanTitle);
         }
 
-        // 4. 인앱 알림 DB 우선 저장 (트랜잭션 보장)
+        // 3. 인앱 알림 DB 우선 저장 (기획 원칙: 앱 내 알림 센터와 모바일 푸시 팝업의 역할 분리)
         Notification notification = Notification.builder()
                 .userId(recipientId)
                 .type(type)
@@ -213,7 +206,13 @@ public class NotificationService {
                 .build();
         notificationRepository.save(notification);
 
-        // 5. 야간 방해금지 시간 검증 후 FCM 비동기 푸시 발송
+        // 4. 외부 모바일 푸시(FCM) 검증 (소셜 반응 알림 푸시 토글 OFF 또는 야간 방해금지 시간대에는 외부 푸시 팝업만 차단)
+        Profile recipient = profileRepository.findById(recipientId).orElse(null);
+        if (recipient == null || !Boolean.TRUE.equals(recipient.getIsReactionNoticeEnabled())) {
+            log.info("[FCM Push Blocked] 수신자가 소셜 알림 푸시를 비활성화했습니다 (인앱 알림만 유지): recipient={}", recipientId);
+            return;
+        }
+
         boolean isQuiet = isQuietTime(LocalTime.now(), recipient.getQuietTimeStart(), recipient.getQuietTimeEnd());
         if (isQuiet) {
             log.info("[FCM Push Blocked] 야간 방해금지 시간대로 인해 푸시 발송이 차단되었습니다 (인앱 알림만 유지): recipient={}", recipientId);
@@ -288,11 +287,15 @@ public class NotificationService {
             notificationRepository.save(notification);
             createdCount++;
 
-            // 푸시 발송 (09:00 배치는 기본 방해금지 시간(21:00~08:00) 밖)
-            Map<String, String> data = new LinkedHashMap<>();
-            data.put("type", NotificationType.EXPIRE_WARN.name());
-            data.put("targetId", String.valueOf(targetId));
-            fcmService.sendPushAsync(userId, title, content, data);
+            // 푸시 발송 (09:00 배치는 기본 방해금지 시간(21:00~08:00) 밖, 소비기한 임박 푸시가 활성화된 경우에만 FCM 발송)
+            if (Boolean.TRUE.equals(topIngredient.getIsExpireWarnEnabled())) {
+                Map<String, String> data = new LinkedHashMap<>();
+                data.put("type", NotificationType.EXPIRE_WARN.name());
+                data.put("targetId", String.valueOf(targetId));
+                fcmService.sendPushAsync(userId, title, content, data);
+            } else {
+                log.info("[FCM Push Blocked] 소비기한 임박 푸시 알림 비활성화 유저이므로 푸시 발송을 건너뜁니다 (인앱 알림만 유지): userId={}", userId);
+            }
         }
 
         log.info("[Batch Completed] 소비기한 임박 알림 일괄 생성 완료: 총 {}명의 유저에게 알림 생성", createdCount);
