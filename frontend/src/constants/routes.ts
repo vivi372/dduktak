@@ -11,5 +11,6 @@ export const ROUTES = {
   MYPAGE: '/mypage',
   NOTIFICATIONS: '/notifications',
   RESET_PASSWORD: '/reset-password',
+  AUTH_CALLBACK: '/auth/callback',
 } as const;
 

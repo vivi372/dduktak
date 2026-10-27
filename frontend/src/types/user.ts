@@ -1,5 +1,5 @@
 /** 로그인 제공자 (이메일 vs 소셜) */
-export type LoginProvider = 'email' | 'kakao' | 'google';
+export type LoginProvider = 'email' | 'google';
 
 /** 회원 프로필 (05_API_SPECIFICATION 3.1 GET /api/v1/auth/me) */
 export interface UserProfile {

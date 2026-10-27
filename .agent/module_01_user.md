@@ -16,7 +16,7 @@
 *  검증 후 JWT 토큰(Access/Refresh) 발급 및 세션 생성.
 *  로그인 불가 시 '비밀번호 찾기' 버튼을 클릭 해 이메일 입력 후 비밀변호 변경 이메일 전송.
 ###### 2.2. 소셜 간편 로그인 (AUTH-02)
-*   **AUTH-02-1 [소셜 연동]**  : Kakao 및 Google OAuth 2.0 소셜 로그인 제공.
+*   **AUTH-02-1 [소셜 연동]**  : Google OAuth 2.0 소셜 로그인 제공.
 *   **AUTH-02-2 [자동 가입 메타데이터 수집 및 첫 로그인 프로필 생성]**  :
 *  소셜 OAuth 인증 성공 시 Supabase Auth가 소셜 기본 프로필(이메일, 닉네임, 프로필 이미지 URL)을 raw_user_meta_data에 자동 저장.
 *  백엔드가 첫 로그인 시점에 public.profiles 미존재를 감지하여 이메일 가입과 동일한 지연 프로필 생성(Lazy Profile Creation) 로직을 통해 4자리 유저태그 부여 및 프로필 등록을 일관되게 완료함.

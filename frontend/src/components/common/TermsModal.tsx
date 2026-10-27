@@ -193,7 +193,7 @@ export function TermsModal({ open, initialTab = 'terms', onClose }: TermsModalPr
                     <h3 className="font-bold text-foreground text-xs mb-1">1. 수집하는 개인정보 항목</h3>
                     <ul className="list-disc pl-4 space-y-1">
                       <li><strong>이메일 회원가입 시</strong>: 이메일 주소, 비밀번호(일방향 암호화), 닉네임, 프로필 이미지(선택)</li>
-                      <li><strong>소셜 계정 로그인 시 (카카오/Google)</strong>: 소셜 플랫폼 고유 식별자, 이메일 주소, 닉네임, 프로필 이미지</li>
+                      <li><strong>소셜 계정 로그인 시 (Google)</strong>: 소셜 플랫폼 고유 식별자, 이메일 주소, 닉네임, 프로필 이미지</li>
                       <li><strong>서비스 이용 과정에서 생성되는 정보</strong>: 냉장고 식재료 등록 내역, 스크랩 및 좋아요 기록, 알림 환경설정 값</li>
                     </ul>
                   </div>

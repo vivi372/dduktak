@@ -10,6 +10,7 @@ import MyPage from '@/pages/MyPage';
 import NotificationPage from '@/pages/NotificationPage';
 import LoginPage from '@/pages/LoginPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
+import AuthCallbackPage from '@/pages/AuthCallbackPage';
 import OnboardingPage from '@/pages/OnboardingPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { ROUTES } from '@/constants/routes';
@@ -91,6 +92,11 @@ export const router = createBrowserRouter([
         path: ROUTES.RESET_PASSWORD,
         element: <ResetPasswordPage />,
         handle: h({ title: '비밀번호 재설정', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
+      },
+      {
+        path: ROUTES.AUTH_CALLBACK,
+        element: <AuthCallbackPage />,
+        handle: h({ title: '이메일 인증 확인', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
       },
       {
         path: ROUTES.ONBOARDING,

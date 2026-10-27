@@ -9,16 +9,6 @@ import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import { getFriendlyAuthErrorMessage } from '@/utils/authError';
 import logo from '@/assets/logo.png';
 
-/**
- * 카카오 심볼 아이콘 SVG
- */
-function KakaoIcon() {
-  return (
-    <svg className="h-5 w-5 shrink-0" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 3C6.477 3 2 6.477 2 10.768c0 2.766 1.874 5.187 4.708 6.551-.208.777-.753 2.812-.862 3.245-.136.541.198.534.417.388.172-.114 2.723-1.854 3.829-2.607.625.088 1.267.135 1.908.135 5.523 0 10-3.477 10-7.768C22 6.477 17.523 3 12 3z" />
-    </svg>
-  );
-}
 
 /**
  * 구글 심볼 아이콘 SVG
@@ -46,7 +36,7 @@ function GoogleIcon() {
   );
 }
 
-type AuthMode = 'social' | 'login' | 'signup' | 'forgot-password';
+type AuthMode = 'social' | 'login' | 'signup' | 'forgot-password' | 'verify-reset-otp';
 
 /**
  * 모듈 1: 통합 인증 화면 (AUTH-01 이메일 가입/로그인 & AUTH-02 소셜 간편 로그인 & 비밀번호 찾기)
@@ -58,18 +48,21 @@ export default function LoginPage() {
     signupWithEmail,
     loginWithOAuth,
     sendPasswordReset,
+    verifyPasswordResetOtp,
     isLoggingIn,
     isSigningUp,
     isSendingReset,
+    isVerifyingResetOtp,
   } = useAuth();
 
-  // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정)
+  // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정) / verify-reset-otp (인증번호 입력)
   const [mode, setMode] = useState<AuthMode>('social');
 
   // 폼 입력 상태
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
+  const [resetToken, setResetToken] = useState('');
   const [showPassword, setShowPassword] = useState(false);
 
   // 약관 동의 및 모달 제어 상태
@@ -80,7 +73,10 @@ export default function LoginPage() {
 
   /** 폼 모드 전환 시 이전 폼 입력값 및 체크박스 초기화 */
   const switchMode = (nextMode: AuthMode) => {
-    setEmail('');
+    if (nextMode !== 'verify-reset-otp') {
+      setEmail('');
+    }
+    setResetToken('');
     setPassword('');
     setNickname('');
     setShowPassword(false);
@@ -94,8 +90,8 @@ export default function LoginPage() {
     setTermsModalOpen(true);
   };
 
-  /** 소셜 간편 로그인 (AUTH-02-1) */
-  const handleSocialLogin = async (provider: 'kakao' | 'google') => {
+  /** 구글 소셜 간편 로그인 (AUTH-02-1) */
+  const handleSocialLogin = async (provider: 'google') => {
     try {
       await loginWithOAuth(provider);
     } catch (err: any) {
@@ -158,26 +154,46 @@ export default function LoginPage() {
     }
   };
 
-  /** 비밀번호 찾기 링크 발송 제출 핸들러 */
-  const handleSendResetLink = async (e: FormEvent) => {
-    e.preventDefault();
+  /** 비밀번호 찾기 OTP 인증코드 발송 제출 핸들러 */
+  const handleSendResetOtp = async (e?: FormEvent) => {
+    if (e) e.preventDefault();
     if (!email.trim()) {
       toast.error('비밀번호를 재설정할 이메일 주소를 입력해 주세요.');
       return;
     }
     try {
       await sendPasswordReset(email.trim());
-      toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
-      switchMode('login');
+      toast.success(`${email} 주소로 인증번호를 발송했습니다! 메일함을 확인해 주세요.`, {
+        duration: 5000,
+      });
+      setMode('verify-reset-otp');
     } catch (err: any) {
       // 보안상 등록되지 않은 계정이라도 외부에서 유저 가입 여부를 열거/추측할 수 없도록 성공과 동일 처리
       const msg = getFriendlyAuthErrorMessage(err, 'reset-password');
       if (msg.includes('등록되지 않은')) {
-        toast.success(`${email} 주소로 비밀번호 재설정 링크를 발송했습니다!`);
-        switchMode('login');
+        toast.success(`${email} 주소로 인증번호를 발송했습니다! 메일함을 확인해 주세요.`, {
+          duration: 5000,
+        });
+        setMode('verify-reset-otp');
       } else {
         toast.error(msg);
       }
+    }
+  };
+
+  /** 비밀번호 재설정 OTP 인증코드 검증 핸들러 */
+  const handleVerifyResetOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!resetToken.trim() || resetToken.trim().length < 6) {
+      toast.error('전송받으신 인증번호를 정확히 입력해 주세요.');
+      return;
+    }
+    try {
+      await verifyPasswordResetOtp({ email: email.trim(), token: resetToken.trim() });
+      toast.success('인증이 완료되었습니다! 새로운 비밀번호를 설정해 주세요.');
+      navigate(ROUTES.RESET_PASSWORD);
+    } catch (err: any) {
+      toast.error(getFriendlyAuthErrorMessage(err, 'reset-password'));
     }
   };
 
@@ -190,11 +206,21 @@ export default function LoginPage() {
           <div className="w-full flex justify-start mb-2">
             <button
               type="button"
-              onClick={() => switchMode(mode === 'forgot-password' ? 'login' : 'social')}
+              onClick={() => {
+                if (mode === 'verify-reset-otp') switchMode('forgot-password');
+                else if (mode === 'forgot-password') switchMode('login');
+                else switchMode('social');
+              }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground active:scale-95 transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
-              <span>{mode === 'forgot-password' ? '로그인으로 돌아가기' : '간편 로그인으로'}</span>
+              <span>
+                {mode === 'verify-reset-otp'
+                  ? '이메일 다시 입력하기'
+                  : mode === 'forgot-password'
+                  ? '로그인으로 돌아가기'
+                  : '간편 로그인으로'}
+              </span>
             </button>
           </div>
         )}
@@ -245,15 +271,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* 카카오 간편 로그인 */}
-            <button
-              type="button"
-              onClick={() => handleSocialLogin('kakao')}
-              className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-[#FEE500] px-4 py-3 text-sm font-bold text-[#191919] shadow-sm transition-all hover:bg-[#FEE500]/90 active:scale-[0.98]"
-            >
-              <KakaoIcon />
-              <span>카카오로 3초 만에 시작하기</span>
-            </button>
 
             {/* 구글 간편 로그인 */}
             <button
@@ -316,8 +333,8 @@ export default function LoginPage() {
           /* 2. 일반 이메일 인증 뷰 (로그인 ↔ 회원가입 탭)                */
           /* ============================================================ */
           <div className="rounded-3xl border border-border/80 bg-card p-5 shadow-card dark:border-white/10">
-            {/* 로그인 / 회원가입 탭 (Segmented Control - 비밀번호 찾기 모드가 아닐 때만 노출) */}
-            {mode !== 'forgot-password' && (
+            {/* 로그인 / 회원가입 탭 (Segmented Control - 비밀번호 찾기 및 인증 모드가 아닐 때만 노출) */}
+            {mode !== 'forgot-password' && mode !== 'verify-reset-otp' && (
               <div className="grid grid-cols-2 rounded-xl bg-muted p-1 mb-5">
                 <button
                   type="button"
@@ -344,18 +361,77 @@ export default function LoginPage() {
               </div>
             )}
 
-            {mode === 'forgot-password' ? (
+            {mode === 'verify-reset-otp' ? (
               /* ============================================================ */
-              /* 비밀번호 재설정 폼 (비밀번호 입력창 없이 오직 이메일만 입력)   */
+              /* 비밀번호 재설정 OTP 인증코드 입력 폼                           */
               /* ============================================================ */
-              <form onSubmit={handleSendResetLink} className="space-y-4">
+              <form onSubmit={handleVerifyResetOtp} className="space-y-4">
+                <div className="text-left mb-2">
+                  <h2 className="text-base font-extrabold text-foreground flex items-center gap-1.5">
+                    <Lock className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                    <span>인증번호 입력</span>
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed break-keep">
+                    <strong className="text-foreground">{email}</strong> 주소로 전송된 인증번호를 입력해 주세요.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-foreground mb-1.5">인증번호 (6~8자리)</label>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    autoComplete="one-time-code"
+                    maxLength={8}
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value.replace(/[^0-9]/g, ''))}
+                    placeholder="인증번호 입력"
+                    className="w-full text-center tracking-[0.25em] font-mono text-xl font-bold rounded-xl border border-input bg-background py-3 px-4 text-foreground outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="lg"
+                  className="w-full font-bold shadow-soft"
+                  disabled={isVerifyingResetOtp || resetToken.length < 6}
+                >
+                  {isVerifyingResetOtp ? '인증 확인 중...' : '인증 확인 및 새 비밀번호 설정'}
+                </Button>
+
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('forgot-password')}
+                    className="font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    이메일 재입력
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSendResetOtp()}
+                    className="font-semibold text-brand-600 dark:text-brand-400 hover:underline"
+                    disabled={isSendingReset}
+                  >
+                    {isSendingReset ? '재발송 중...' : '인증번호 재전송'}
+                  </button>
+                </div>
+              </form>
+            ) : mode === 'forgot-password' ? (
+              /* ============================================================ */
+              /* 비밀번호 재설정 이메일 입력 폼                                */
+              /* ============================================================ */
+              <form onSubmit={handleSendResetOtp} className="space-y-4">
                 <div className="text-left mb-2">
                   <h2 className="text-base font-extrabold text-foreground flex items-center gap-1.5">
                     <Lock className="h-4 w-4 text-brand-600 dark:text-brand-400" />
                     <span>비밀번호 찾기</span>
                   </h2>
-                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-                    가입하신 이메일 주소를 입력해 주시면 비밀번호를 다시 설정할 수 있는 링크를 보내드립니다.
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed break-keep">
+                    가입하신 이메일 주소를 입력해 주시면 비밀번호를 다시 설정할 수 있는 인증번호를 보내드립니다.
                   </p>
                 </div>
 
@@ -381,7 +457,7 @@ export default function LoginPage() {
                   className="w-full font-bold shadow-soft"
                   disabled={isSendingReset}
                 >
-                  {isSendingReset ? '발송 중...' : '재설정 링크 발송하기'}
+                  {isSendingReset ? '발송 중...' : '인증번호 받기'}
                 </Button>
 
                 <div className="pt-1 text-center">

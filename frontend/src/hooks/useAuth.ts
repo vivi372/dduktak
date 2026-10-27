@@ -71,7 +71,7 @@ export function useAuth() {
   });
 
   // 4. 소셜 OAuth 로그인
-  const loginWithOAuth = async (provider: 'kakao' | 'google') => {
+  const loginWithOAuth = async (provider: 'google') => {
     return authApi.signInWithOAuth(provider);
   };
 
@@ -79,6 +79,13 @@ export function useAuth() {
   const sendPasswordResetMutation = useMutation({
     mutationFn: async (email: string) => {
       return authApi.sendPasswordResetEmail(email);
+    },
+  });
+
+  // 5-1. 비밀번호 재설정 6자리 OTP 인증코드 검증
+  const verifyPasswordResetOtpMutation = useMutation({
+    mutationFn: async ({ email, token }: { email: string; token: string }) => {
+      return authApi.verifyPasswordResetOtp(email, token);
     },
   });
 
@@ -201,6 +208,9 @@ export function useAuth() {
 
     sendPasswordReset: sendPasswordResetMutation.mutateAsync,
     isSendingReset: sendPasswordResetMutation.isPending,
+
+    verifyPasswordResetOtp: verifyPasswordResetOtpMutation.mutateAsync,
+    isVerifyingResetOtp: verifyPasswordResetOtpMutation.isPending,
 
     logout: logoutMutation.mutateAsync,
     isLoggingOut: logoutMutation.isPending,

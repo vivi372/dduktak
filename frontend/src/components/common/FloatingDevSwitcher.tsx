@@ -53,7 +53,7 @@ export function FloatingDevSwitcher() {
       navigate(ROUTES.LOGIN);
       toast.info('로그아웃 되었습니다. (로그인 화면으로 이동)');
     } else {
-      login('kakao');
+      login('google');
       navigate(ROUTES.HOME);
       toast.success('로그인 되었습니다! (온보딩 웰컴 모달 호출)');
     }

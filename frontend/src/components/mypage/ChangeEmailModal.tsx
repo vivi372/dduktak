@@ -28,7 +28,7 @@ export function ChangeEmailModal({
 }: ChangeEmailModalProps) {
   useBodyScrollLock(open);
 
-  const isSocialUser = user.loginProvider === 'kakao' || user.loginProvider === 'google';
+  const isSocialUser = user.loginProvider === 'google';
   const [newEmail, setNewEmail] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [isSent, setIsSent] = useState(false);
@@ -133,8 +133,7 @@ export function ChangeEmailModal({
                     <div>
                       <p className="font-bold text-sm">소셜 연동 계정 안내</p>
                       <p className="mt-1 text-muted-foreground">
-                        소셜 로그인은 해당 플랫폼(
-                        {user.loginProvider === 'kakao' ? '카카오' : '구글'})에서 이메일을 변경해 주세요.
+                        소셜 로그인은 해당 플랫폼(구글)에서 이메일을 변경해 주세요.
                       </p>
                     </div>
                   </div>

@@ -36,13 +36,13 @@ describe('LoginPage 통합 인증 화면 단위 테스트', () => {
     queryClient.clear();
   });
 
-  it('기본 모드에서 브랜드 로고와 소셜 로그인 버튼 2종을 렌더링해야 한다', () => {
+  it('기본 모드에서 브랜드 로고와 Google 소셜 로그인 버튼을 렌더링해야 한다', () => {
     renderLoginPage();
 
     expect(screen.getByRole('heading', { level: 1, name: '오늘의 뚝딱' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /카카오로 3초 만에 시작하기/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Google 계정으로 시작하기/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /이메일로 로그인 \/ 회원가입/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /카카오/ })).not.toBeInTheDocument();
   });
 
   it('이메일 버튼 클릭 시 이메일 로그인 폼으로 전환되어야 한다', async () => {
@@ -79,7 +79,7 @@ describe('LoginPage 통합 인증 화면 단위 테스트', () => {
     await user.click(screen.getByRole('button', { name: /이메일로 로그인 \/ 회원가입/ }));
     await user.click(screen.getByRole('button', { name: '간편 로그인으로' }));
 
-    expect(screen.getByRole('button', { name: /카카오로 3초 만에 시작하기/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Google 계정으로 시작하기/ })).toBeInTheDocument();
   });
 
   it('"비밀번호를 잊으셨나요?" 클릭 시 비밀번호 입력 필드가 사라지고 비밀번호 찾기 폼이 나타나야 한다', async () => {
@@ -96,9 +96,9 @@ describe('LoginPage 통합 인증 화면 단위 테스트', () => {
     // 비밀번호 입력창(placeholder: ••••••••)이 DOM에서 완전히 사라져야 함
     expect(screen.queryByPlaceholderText('••••••••')).not.toBeInTheDocument();
 
-    // 비밀번호 찾기 타이틀과 재설정 링크 발송 버튼 노출 확인
+    // 비밀번호 찾기 타이틀과 인증번호 받기 버튼 노출 확인
     expect(screen.getByRole('heading', { level: 2, name: '비밀번호 찾기' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '재설정 링크 발송하기' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '인증번호 받기' })).toBeInTheDocument();
 
     // "로그인으로 돌아가기" 클릭 시 다시 로그인 폼으로 복귀
     await user.click(screen.getByRole('button', { name: '← 로그인으로 돌아가기' }));

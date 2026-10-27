@@ -208,10 +208,10 @@ export default function MyPage() {
   };
 
   // 실제 로그인 유저 데이터 또는 기본 폴백
-  const resolvedProvider: 'email' | 'kakao' | 'google' =
-    user?.loginProvider === 'google' || user?.loginProvider === 'kakao'
+  const resolvedProvider: 'email' | 'google' =
+    user?.loginProvider === 'google'
       ? user.loginProvider
-      : loginProvider === 'google' || loginProvider === 'kakao'
+      : loginProvider === 'google'
         ? loginProvider
         : 'email';
 
@@ -257,11 +257,7 @@ export default function MyPage() {
                   구글 연동
                 </span>
               )}
-              {displayUser.loginProvider === 'kakao' && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
-                  카카오 연동
-                </span>
-              )}
+
               {displayUser.loginProvider === 'email' && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-bold text-muted-foreground border border-border/80">
                   이메일 계정
@@ -396,7 +392,7 @@ export default function MyPage() {
                   label="연동된 소셜 계정"
                   right={
                     <span className="rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-                      {displayUser.loginProvider === 'kakao' ? '카카오 로그인' : '구글 로그인'}
+                      구글 로그인
                     </span>
                   }
                 />

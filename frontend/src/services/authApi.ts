@@ -48,6 +48,7 @@ export async function signUpWithEmail(email: string, password: string, nickname:
       data: {
         nickname: nickname.trim(),
       },
+      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
     },
   });
   if (error) throw error;
@@ -61,9 +62,9 @@ export async function signUpWithEmail(email: string, password: string, nickname:
 }
 
 /**
- * 카카오 / 구글 소셜 간편 로그인 (AUTH-02-1)
+ * 구글 소셜 간편 로그인 (AUTH-02-1)
  */
-export async function signInWithOAuth(provider: 'kakao' | 'google') {
+export async function signInWithOAuth(provider: 'google') {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
@@ -80,6 +81,20 @@ export async function signInWithOAuth(provider: 'kakao' | 'google') {
 export async function sendPasswordResetEmail(email: string) {
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
     redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * 비밀번호 재설정 6자리 OTP 인증코드 검증
+ * 인증 성공 시 Supabase Auth의 recovery 세션이 활성화되어 /reset-password에서 새 비밀번호 등록 가능
+ */
+export async function verifyPasswordResetOtp(email: string, token: string) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim(),
+    token: token.trim(),
+    type: 'recovery',
   });
   if (error) throw error;
   return data;
@@ -127,7 +142,7 @@ export function onAuthStateChange(callback: (event: AuthChangeEvent, session: Se
 export async function updateUserEmail(newEmail: string) {
   const { data, error } = await supabase.auth.updateUser(
     { email: newEmail },
-    { emailRedirectTo: `${window.location.origin}/mypage` },
+    { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined },
   );
   if (error) throw error;
   return data;

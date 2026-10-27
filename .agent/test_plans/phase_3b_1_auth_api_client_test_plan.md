@@ -114,7 +114,7 @@
 | **TC-3B1-SVC-05** | `withdraw()` | `DELETE /api/v1/auth/withdraw` | 회원 탈퇴 요청 (USER-02) | 레시피 익명 전환 및 개인 데이터 삭제 요청 완료 |
 | **TC-3B1-SVC-06** | `signInWithEmail()` | `supabase.auth.signInWithPassword` | 이메일/비밀번호 로그인 | Supabase 세션 및 유저 객체 획득 |
 | **TC-3B1-SVC-07** | `signUpWithEmail()` | `supabase.auth.signUp` | 닉네임 메타데이터 포함 회원가입 | `options.data.nickname` 전달 및 가입 요청 완료 |
-| **TC-3B1-SVC-08** | `signInWithOAuth()` | `supabase.auth.signInWithOAuth` | 카카오/Google 간편 로그인 | 지정 플랫폼 인증 페이지 리다이렉트 URL 수신 |
+| **TC-3B1-SVC-08** | `signInWithOAuth()` | `supabase.auth.signInWithOAuth` | Google 간편 로그인 | 지정 플랫폼 인증 페이지 리다이렉트 URL 수신 |
 | **TC-3B1-SVC-09** | `signOut()` | `supabase.auth.signOut` | 클라이언트 세션 파기 | Supabase 토큰 무효화 및 로컬 세션 삭제 |
 
 ---
@@ -203,7 +203,7 @@ npm run build
 
 | 단계 | 수행 내용 | 화면 상태 및 인터랙션 | 검증 결과 |
 | :--- | :--- | :--- | :--- |
-| **Step 1** | `http://localhost:5173/login` 진입 | '오늘의 뚝딱' 코랄 로고, 타이틀, 카카오/구글/이메일 버튼 노출 | **PASS** (정상 렌더링) |
+| **Step 1** | `http://localhost:5173/login` 진입 | '오늘의 뚝딱' 코랄 로고, 타이틀, 구글/이메일 버튼 노출 | **PASS** (정상 렌더링) |
 | **Step 2** | '이메일로 로그인 / 회원가입' 클릭 | 로그인/회원가입 탭 폼으로 전환 | **PASS** (폼 전환) |
 | **Step 3** | '회원가입' 탭 클릭 | 닉네임 입력란 및 필수 약관 2종 체크박스 노출 | **PASS** (회원가입 폼 로드) |
 | **Step 4** | 폼 데이터 입력 및 체크박스 활성화 | `ym970825@naver.com`, `뚝딱테스터`, `Password123!` 입력 및 필수 약관 2개 체크 | **PASS** (유효성 통과) |

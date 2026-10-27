@@ -171,8 +171,8 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
       ...prev,
       user: {
         ...prev.user!,
-        loginProvider: 'kakao',
-        email: 'kakao_user@kakao.com',
+        loginProvider: 'google',
+        email: 'google_user@gmail.com',
       },
     }));
 
@@ -181,7 +181,7 @@ describe('MyPage 마이페이지 및 설정 단위 테스트', () => {
     expect(screen.queryByRole('button', { name: /이메일 변경/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /비밀번호 변경/ })).not.toBeInTheDocument();
     expect(screen.getByText('연동된 소셜 계정')).toBeInTheDocument();
-    expect(screen.getByText('카카오 로그인')).toBeInTheDocument();
+    expect(screen.getByText('구글 로그인')).toBeInTheDocument();
   });
 
   it('이메일 로그인 유저는 비밀번호 변경 모달을 열어 새 비밀번호를 설정할 수 있어야 한다', async () => {

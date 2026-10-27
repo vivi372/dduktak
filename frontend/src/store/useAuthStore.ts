@@ -40,23 +40,22 @@ interface AuthState {
   closeWelcomeModal: () => void;
 }
 
-/** Supabase 세션 또는 기존 프로필에서 OAuth 제공자(google, kakao) 또는 email 추출 */
+/** Supabase 세션 또는 기존 프로필에서 OAuth 제공자(google) 또는 email 추출 */
 export function resolveLoginProvider(
   session: Session | null,
   userLoginProvider?: string,
-): 'email' | 'kakao' | 'google' {
-  if (userLoginProvider === 'google' || userLoginProvider === 'kakao') return userLoginProvider;
+): 'email' | 'google' {
+  if (userLoginProvider === 'google') return userLoginProvider;
   if (!session?.user) return 'email';
   const appProvider = session.user.app_metadata?.provider;
-  if (appProvider === 'google' || appProvider === 'kakao') return appProvider;
+  if (appProvider === 'google') return appProvider;
 
   const identityProvider = session.user.identities?.[0]?.provider;
-  if (identityProvider === 'google' || identityProvider === 'kakao') return identityProvider;
+  if (identityProvider === 'google') return identityProvider;
 
   const providers = session.user.app_metadata?.providers;
   if (Array.isArray(providers)) {
     if (providers.includes('google')) return 'google';
-    if (providers.includes('kakao')) return 'kakao';
   }
   return 'email';
 }
@@ -79,6 +78,37 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     if (typeof window !== 'undefined') {
       window.addEventListener('dduktak:unauthorized', handleUnauthorizedEvent);
+    }
+
+    // 1-1. 다른 탭(브릿지 페이지)의 이메일 인증 완료 브로드캐스트 이벤트 수신
+    let authChannel: BroadcastChannel | null = null;
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        authChannel = new BroadcastChannel('dduktak_auth_channel');
+        authChannel.onmessage = async (e) => {
+          if (e.data?.type === 'AUTH_VERIFIED') {
+            const currentSession = await authApi.getSession();
+            if (currentSession) {
+              await get().syncProfile();
+            }
+          }
+        };
+      } catch {
+        // BroadcastChannel 미지원 환경 예외 무시
+      }
+    }
+
+    const handleStorageEvent = async (e: StorageEvent) => {
+      if (e.key === 'dduktak_auth_event') {
+        const currentSession = await authApi.getSession();
+        if (currentSession) {
+          await get().syncProfile();
+        }
+      }
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', handleStorageEvent);
     }
 
     // 2. Supabase Auth 상태 변화 리스너 등록
@@ -135,7 +165,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     return () => {
       if (typeof window !== 'undefined') {
         window.removeEventListener('dduktak:unauthorized', handleUnauthorizedEvent);
+        window.removeEventListener('storage', handleStorageEvent);
       }
+      authChannel?.close();
       authListener?.subscription?.unsubscribe();
     };
   },

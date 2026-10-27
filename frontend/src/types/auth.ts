@@ -6,7 +6,7 @@
 import type { Session, User } from '@supabase/supabase-js';
 
 /** 로그인 프로바이더 (이메일 및 소셜) */
-export type LoginProvider = 'email' | 'kakao' | 'google';
+export type LoginProvider = 'email' | 'google';
 
 /** 백엔드 에러 코드 UX 태그 분류 (02_ARCHITECTURE_AND_CONVENTIONS.md 5.4절) */
 export type ErrorUxTag =

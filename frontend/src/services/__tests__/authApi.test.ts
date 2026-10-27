@@ -152,21 +152,22 @@ describe('authApi 서비스 단위 테스트 (05_API_SPECIFICATION.md 3.1절)', 
           data: {
             nickname: '신규유저',
           },
+          emailRedirectTo: expect.stringContaining('/auth/callback'),
         },
       });
     });
 
-    it('signInWithOAuth는 카카오 및 구글 프로바이더로 리다이렉트 옵션과 함께 호출해야 한다', async () => {
+    it('signInWithOAuth는 구글 프로바이더로 리다이렉트 옵션과 함께 호출해야 한다', async () => {
       vi.mocked(supabase.auth.signInWithOAuth).mockResolvedValue({
-        data: { provider: 'kakao', url: 'https://auth.url' },
+        data: { provider: 'google', url: 'https://auth.url' },
         error: null,
       });
 
-      await authApi.signInWithOAuth('kakao');
+      await authApi.signInWithOAuth('google');
 
       expect(supabase.auth.signInWithOAuth).toHaveBeenCalledWith(
         expect.objectContaining({
-          provider: 'kakao',
+          provider: 'google',
         }),
       );
     });

@@ -24,8 +24,8 @@ interface MockAuthState {
   /** 온보딩 웰컴 팝업 모달 노출 여부 */
   showWelcomeModal: boolean;
 
-  /** 카카오/구글 소셜 간편 로그인 (목업 동작: 로그인 후 웰컴 모달 오픈) */
-  login: (provider: 'kakao' | 'google') => void;
+  /** 구글 소셜 간편 로그인 (목업 동작: 로그인 후 웰컴 모달 오픈) */
+  login: (provider: 'google') => void;
   /** 일반 이메일 로그인 */
   loginWithEmail: (email: string) => void;
   /** 일반 이메일 회원가입 (입력된 닉네임과 함께 가입 후 웰컴 모달 오픈) */
@@ -43,7 +43,7 @@ interface MockAuthState {
   /** 계정 이메일 변경 (이메일 인증 승인 완료 시뮬레이션) */
   changeEmail: (newEmail: string) => void;
   /** 로그인 프로바이더 변경 (소셜 vs 이메일 검수 시뮬레이터용) */
-  setLoginProvider: (provider: 'email' | 'kakao' | 'google') => void;
+  setLoginProvider: (provider: 'email' | 'google') => void;
   /** 웰컴 모달 열기 */
   openWelcomeModal: () => void;
   /** 웰컴 모달 닫기 */
@@ -67,7 +67,7 @@ export const useMockAuthStore = create<MockAuthState>((set) => ({
       user: {
         ...state.user,
         loginProvider: provider,
-        email: provider === 'kakao' ? 'kakao_user@kakao.com' : 'google_user@gmail.com',
+        email: 'google_user@gmail.com',
       },
     }));
   },
