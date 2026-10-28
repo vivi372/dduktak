@@ -222,6 +222,11 @@ public class NotificationService {
         Map<String, String> data = new LinkedHashMap<>();
         data.put("type", type.name());
         data.put("targetId", targetId != null ? String.valueOf(targetId) : "");
+        if (targetId != null && (type == NotificationType.LIKE_NOTICE || type == NotificationType.COOKED_NOTICE)) {
+            data.put("route", "/recipes/" + targetId);
+        } else {
+            data.put("route", "/notifications");
+        }
         fcmService.sendPushAsync(recipientId, title, content, data);
     }
 
@@ -292,6 +297,7 @@ public class NotificationService {
                 Map<String, String> data = new LinkedHashMap<>();
                 data.put("type", NotificationType.EXPIRE_WARN.name());
                 data.put("targetId", String.valueOf(targetId));
+                data.put("route", "/notifications");
                 fcmService.sendPushAsync(userId, title, content, data);
             } else {
                 log.info("[FCM Push Blocked] 소비기한 임박 푸시 알림 비활성화 유저이므로 푸시 발송을 건너뜁니다 (인앱 알림만 유지): userId={}", userId);

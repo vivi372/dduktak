@@ -158,7 +158,7 @@ export function QuietTimeModal({
   onSave,
   isSaving = false,
 }: QuietTimeModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const [start, setStart] = useState('21:00');
   const [end, setEnd] = useState('08:00');

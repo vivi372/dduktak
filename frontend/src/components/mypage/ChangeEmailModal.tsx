@@ -26,7 +26,7 @@ export function ChangeEmailModal({
   onClose,
   onEmailChanged,
 }: ChangeEmailModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const isSocialUser = user.loginProvider === 'google';
   const [newEmail, setNewEmail] = useState('');

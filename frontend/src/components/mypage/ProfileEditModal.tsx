@@ -34,7 +34,7 @@ export function ProfileEditModal({
   onOpenChangeEmail,
   isSaving = false,
 }: ProfileEditModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const initialAvatar = user.profileImage || DEFAULT_AVATAR_URL;
   const [nickname, setNickname] = useState(user.nickname);

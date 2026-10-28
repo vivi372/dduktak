@@ -28,7 +28,7 @@ const STORAGE_OPTIONS: StorageType[] = ['REFRIGERATED', 'FROZEN', 'ROOM_TEMP'];
  * - 수량(numeric), 보관장소 라디오, 퀵 프리셋 DatePicker, 30자 메모 입력
  */
 export function ManualAddModal({ open, onClose, onAdd, initialMaster }: ManualAddModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const [selectedMaster, setSelectedMaster] = useState<MasterIngredient | null>(initialMaster ?? null);
   const [storageType, setStorageType] = useState<StorageType>(initialMaster?.defaultStorageType ?? 'REFRIGERATED');

@@ -3,6 +3,9 @@ package com.dduktak.domain.matching.dto;
 import jakarta.validation.constraints.Min;
 import lombok.*;
 
+import java.math.BigDecimal;
+import java.util.Map;
+
 /**
  * 뚝딱 요리 완료 요청 DTO
  */
@@ -25,4 +28,10 @@ public class CookRequestDto {
     @Builder.Default
     @Min(value = 1, message = "인분 수는 1 이상이어야 합니다.")
     private Integer servings = 1;
+
+    /**
+     * 사용자가 2단계 차감 검수 모달에서 수동으로 미세 조정한 식재료별 차감 수량 맵
+     * (Key: masterIngredientId, Value: 차감할 수량)
+     */
+    private Map<Long, BigDecimal> customDeductions;
 }

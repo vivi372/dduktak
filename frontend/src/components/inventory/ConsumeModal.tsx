@@ -21,7 +21,7 @@ interface ConsumeModalProps {
  * - 초과 입력 시 제출 버튼 비활성화 및 경고 문구 안내
  */
 export function ConsumeModal({ item, onClose, onConfirm }: ConsumeModalProps) {
-  useBodyScrollLock(!!item);
+  useBodyScrollLock(!!item, onClose);
 
   // 기본 차감 수량 (초기 입력 및 백스페이스 허용을 위해 number | '' 지원)
   const [quantity, setQuantity] = useState<number | ''>(1);

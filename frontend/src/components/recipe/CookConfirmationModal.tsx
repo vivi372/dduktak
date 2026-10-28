@@ -44,7 +44,7 @@ export function CookConfirmationModal({
   onConfirmCook,
   initialServings = 1,
 }: CookConfirmationModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   // 단계 상태: 1 = 모드 선택, 2 = FIFO 차감 상세 검수
   const [step, setStep] = useState<1 | 2>(1);
@@ -118,10 +118,22 @@ export function CookConfirmationModal({
 
   // 2단계 최종 확정 핸들러 (냉장고 선입선출 자동 차감)
   const handleFinalConfirm = () => {
+    // [DEF-01 보완] 양념류를 제외한 최종 검수 차감 수량 맵 구성 (유저가 미세 조정한 customQuantities 포함)
+    const finalCustomDeductions: Record<number, number> = {};
+    deductionItems.forEach((item) => {
+      if (!item.isSauceExcluded) {
+        finalCustomDeductions[item.masterIngredientId] = item.toDeductQuantity;
+      }
+    });
+
     cookMutation.mutate(
       {
         recipeId: recipe.recipeId,
-        dto: { deductInventory: true, servings },
+        dto: {
+          deductInventory: true,
+          servings,
+          customDeductions: finalCustomDeductions,
+        },
       },
       {
         onSuccess: () => {
@@ -131,7 +143,6 @@ export function CookConfirmationModal({
       },
     );
   };
-
 
   const resetState = () => {
     setStep(1);
@@ -144,6 +155,18 @@ export function CookConfirmationModal({
     onClose();
     resetState();
   };
+
+  // ESC 키 및 안드로이드 물리 뒤로가기 연동
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        handleClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [open]);
 
   return (
     <AnimatePresence>

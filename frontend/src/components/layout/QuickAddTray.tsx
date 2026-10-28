@@ -21,7 +21,7 @@ export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProp
   const navigate = useNavigate();
 
   // 바텀시트 오픈 시 뒷배경 스크롤 방지
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   // ESC 키로 닫기
   useEffect(() => {

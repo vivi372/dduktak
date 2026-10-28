@@ -20,7 +20,7 @@ interface ChangePasswordModalProps {
  * - supabase.auth.updateUser({ password }) 연동
  */
 export function ChangePasswordModal({ open, onClose }: ChangePasswordModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');

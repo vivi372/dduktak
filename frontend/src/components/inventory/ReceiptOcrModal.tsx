@@ -44,7 +44,7 @@ export function ReceiptOcrModal({
   initialStep = 'UPLOAD',
   initialItems = EMPTY_INITIAL_ITEMS,
 }: ReceiptOcrModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const [step, setStep] = useState<ReceiptOcrStep>(initialStep);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);

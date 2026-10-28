@@ -25,7 +25,7 @@ export function WithdrawModal({
   onWithdraw,
   isWithdrawing = false,
 }: WithdrawModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
   const [agree, setAgree] = useState(false);
   const navigate = useNavigate();
 

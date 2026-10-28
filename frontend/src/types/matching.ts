@@ -94,6 +94,8 @@ export interface CookRequestDto {
   deductInventory?: boolean;
   /** 조리 인분 수 (기본값 1) */
   servings?: number;
+  /** 사용자가 2단계 검수 모달에서 직접 조정한 식재료별 차감 수량 (Key: masterIngredientId, Value: 차감 수량) */
+  customDeductions?: Record<number, number>;
 }
 
 /** 요리 완료 시 차감된 식재료 정보 DTO */

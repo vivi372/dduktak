@@ -25,7 +25,7 @@ export function GlobalErrorModal() {
     closeModal,
   } = useErrorModalStore();
 
-  useBodyScrollLock(isOpen);
+  useBodyScrollLock(isOpen, closeModal);
 
   if (!isOpen) return null;
 

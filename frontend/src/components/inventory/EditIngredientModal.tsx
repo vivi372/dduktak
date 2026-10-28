@@ -23,7 +23,7 @@ const STORAGE_OPTIONS: StorageType[] = ['REFRIGERATED', 'FROZEN', 'ROOM_TEMP'];
  * - 표준 식재료 및 단위는 요리 차감 호환을 위해 고정
  */
 export function EditIngredientModal({ item, onClose, onSave }: EditIngredientModalProps) {
-  useBodyScrollLock(!!item);
+  useBodyScrollLock(!!item, onClose);
 
   const [quantity, setQuantity] = useState<number | ''>(item?.quantity ?? 1);
   const [storageType, setStorageType] = useState<StorageType>(item?.storageType ?? 'REFRIGERATED');

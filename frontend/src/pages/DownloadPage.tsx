@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Download, Smartphone, Wifi, CheckCircle2, Copy, Check, FileText } from 'lucide-react';
+import { Download, Smartphone, Wifi, CheckCircle2, Copy, Check, FileText, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import logoIcon from '@/assets/logo-icon.png';
 
@@ -13,7 +13,9 @@ export const DownloadPage: React.FC = () => {
 
   // 현재 브라우저 URL 또는 로컬 네트워크 IP 기준 다운로드 주소
   const currentUrl = typeof window !== 'undefined' ? window.location.href : 'http://192.168.219.101:5173/download';
-  const apkDownloadPath = '/downloads/dduktak-app.apk';
+  const appVersion = 'v1.1.0';
+  const apkFileName = `dduktak-app-${appVersion}.apk`;
+  const apkDownloadPath = `/downloads/${apkFileName}?v=1.1.0`;
   const apiServerUrl = import.meta.env.VITE_API_BASE_URL || 'http://192.168.219.101:8080';
 
   /** 스마트폰 접속 주소 클립보드 복사 */
@@ -45,7 +47,7 @@ export const DownloadPage: React.FC = () => {
 
           <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
             <CheckCircle2 className="h-3.5 w-3.5" />
-            <span>실기기 테스트용 디버그 빌드 (v1.0.0)</span>
+            <span>실기기 테스트용 디버그 빌드 ({appVersion} · Build #2)</span>
           </div>
         </div>
 
@@ -53,26 +55,39 @@ export const DownloadPage: React.FC = () => {
         <div className="mt-6 overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
           <div className="flex items-center justify-between border-b border-gray-100 pb-3">
             <div>
-              <p className="text-xs font-medium text-gray-400">설치 파일</p>
-              <p className="text-sm font-bold text-gray-800">dduktak-app.apk</p>
+              <p className="text-xs font-medium text-gray-400">설치 파일 ({appVersion})</p>
+              <p className="text-sm font-bold text-gray-800">{apkFileName}</p>
             </div>
-            <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
-              Capacitor 6.x
+            <span className="rounded-md bg-brand-50 px-2 py-1 text-xs font-bold text-brand-600 ring-1 ring-inset ring-brand-500/20">
+              {appVersion} 최신
             </span>
           </div>
 
           <div className="mt-4">
             <a
               href={apkDownloadPath}
-              download="dduktak-app.apk"
+              download={apkFileName}
               className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 py-3.5 text-base font-black text-white shadow-soft transition-all hover:opacity-95 active:scale-[0.98]"
             >
               <Download className="h-5 w-5 text-white stroke-[2.5]" />
-              <span className="text-white font-black tracking-wide">최신 APK 다운로드</span>
+              <span className="text-white font-black tracking-wide">최신 APK 다운로드 ({appVersion})</span>
             </a>
             <p className="mt-2 text-center text-[11px] text-gray-400">
-              * 스마트폰 브라우저(Chrome/삼성 인터넷)에서 다운로드 후 바로 설치하세요.
+              * 스마트폰 다운로드 폴더에 <strong>{apkFileName}</strong> 이름으로 저장됩니다.
             </p>
+          </div>
+
+          {/* v1.1.0 패치 노트 요약 배너 */}
+          <div className="mt-3 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5 text-[11px] text-emerald-900">
+            <span className="flex items-center gap-1 font-bold text-emerald-800">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-600" />
+              {appVersion} 업데이트 내역 (Cycle 2 패치 반영)
+            </span>
+            <ul className="mt-1 list-disc space-y-0.5 pl-4 text-emerald-800">
+              <li>소셜 푸시 알림(좋아요/요리완료) 탭 시 해당 레시피 상세 화면 딥링크 이동</li>
+              <li>모든 모달/바텀시트 오픈 시 안드로이드 물리 뒤로가기 버튼으로 닫기 지원</li>
+              <li>레시피 요리 완료 시 수동 조절한 식재료 차감 수량 서버 정확 반영</li>
+            </ul>
           </div>
 
           {/* .zip 다운로드 시 대처 팁 배너 */}
@@ -157,7 +172,7 @@ export const DownloadPage: React.FC = () => {
               <div className="text-xs text-gray-600">
                 <p className="font-semibold text-gray-800">설치 완료 및 앱 실행</p>
                 <p className="mt-0.5 text-gray-500">
-                  <span className="font-semibold text-gray-700">[설치]</span>를 누르면 앱이 스마트폰에 설치됩니다. 설치 후 <span className="font-semibold text-brand-600">[열기]</span>를 눌러 네이티브 테스트를 시작하세요!
+                  기존 앱이 설치되어 있다면 <span className="font-semibold text-gray-700">[업데이트]</span>를 눌러 덮어쓰기 설치하세요. 설치 후 <span className="font-semibold text-brand-600">[열기]</span>를 눌러 테스트를 시작하세요!
                 </p>
               </div>
             </div>
@@ -169,8 +184,8 @@ export const DownloadPage: React.FC = () => {
           <p className="font-semibold text-gray-600">📌 디버그 환경 정보</p>
           <div className="mt-1.5 space-y-1">
             <div className="flex justify-between">
-              <span>패키지명:</span>
-              <span className="font-mono text-gray-700">com.dduktak.app</span>
+              <span>패키지명 / 버전:</span>
+              <span className="font-mono text-gray-700">com.dduktak.app ({appVersion} / versionCode 2)</span>
             </div>
             <div className="flex justify-between">
               <span>API 엔드포인트:</span>

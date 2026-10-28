@@ -29,7 +29,7 @@ export function ProfileCropModal({
   onCropComplete,
   onSelectAnother,
 }: ProfileCropModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
 
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });

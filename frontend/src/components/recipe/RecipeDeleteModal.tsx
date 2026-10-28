@@ -23,7 +23,7 @@ export function RecipeDeleteModal({
   isDeleting = false,
   recipeTitle,
 }: RecipeDeleteModalProps) {
-  useBodyScrollLock(isOpen);
+  useBodyScrollLock(isOpen, onClose);
 
   return (
     <AnimatePresence>

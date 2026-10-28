@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -290,5 +291,60 @@ class MatchingServiceTest {
         verify(recipeIngredientRepository, never()).findByRecipeId(recipeId);
         verify(userIngredientRepository, never()).findActiveByUserIdAndMasterId(any(), any());
         verify(recipeRepository).incrementCookedCount(recipeId);
+    }
+
+    @Test
+    @DisplayName("TC-MATCH-05 (DEF-01 보완): 2단계 검수 모달에서 사용자가 수동 조정한 customDeductions 수량대로 FIFO 차감")
+    void cookRecipe_customDeductions_overridesDefaultQuantity() {
+        // given: 기본 레시피 정량은 돼지고기 300g이나, 사용자가 검수 모달에서 200g으로 수동 조절하여 요청
+        Long recipeId = 30L;
+        Recipe recipe = Recipe.builder().recipeId(recipeId).servings(1).cookedCount(0).build();
+        given(recipeRepository.findById(recipeId)).willReturn(Optional.of(recipe));
+
+        RecipeIngredient riPork = RecipeIngredient.builder()
+                .recipeId(recipeId)
+                .masterIngredientId(27L)
+                .name("돼지고기")
+                .quantity(new BigDecimal("300.00"))
+                .isSauce(false)
+                .build();
+        given(recipeIngredientRepository.findByRecipeId(recipeId)).willReturn(List.of(riPork));
+
+        // FIFO: 임박 배치 100g + 넉넉한 배치 300g
+        UserIngredient porkUrgent = UserIngredient.builder()
+                .ingredientId(201L)
+                .userId(userId)
+                .masterIngredientId(27L)
+                .quantity(new BigDecimal("100.00"))
+                .status("ACTIVE")
+                .build();
+        UserIngredient porkPlenty = UserIngredient.builder()
+                .ingredientId(202L)
+                .userId(userId)
+                .masterIngredientId(27L)
+                .quantity(new BigDecimal("300.00"))
+                .status("ACTIVE")
+                .build();
+        given(userIngredientRepository.findActiveByUserIdAndMasterId(userId, 27L))
+                .willReturn(List.of(porkUrgent, porkPlenty));
+        given(userIngredientRepository.findTotalQuantityByUserIdAndMasterId(userId, 27L))
+                .willReturn(new BigDecimal("200.00"));
+
+        CookRequestDto cookRequest = CookRequestDto.builder()
+                .deductInventory(true)
+                .servings(1)
+                .customDeductions(Map.of(27L, new BigDecimal("200.00")))
+                .build();
+
+        // when
+        CookResponseDto response = matchingService.cookRecipe(userId, recipeId, cookRequest);
+
+        // then: 300g이 아닌 커스텀 수량 200g만 차감되어 porkUrgent(100g -> CONSUMED), porkPlenty(300g -> 200g ACTIVE) 처리
+        assertThat(response.getIsDeducted()).isTrue();
+        verify(userIngredientRepository).updateQuantityAndStatus(201L, userId, BigDecimal.ZERO, "CONSUMED");
+        verify(userIngredientRepository).updateQuantityAndStatus(202L, userId, new BigDecimal("200.00"), "ACTIVE");
+        assertThat(response.getDeductedIngredients()).hasSize(1);
+        assertThat(response.getDeductedIngredients().get(0).getDeductedQuantity()).isEqualByComparingTo("200.00");
+        assertThat(response.getDeductedIngredients().get(0).getRemainingQuantity()).isEqualByComparingTo("200.00");
     }
 }

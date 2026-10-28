@@ -177,7 +177,18 @@ public class MatchingService {
                 continue;
             }
 
-            BigDecimal needQty = ri.getQuantity().multiply(servingRatio).setScale(2, RoundingMode.HALF_UP);
+            // [DEF-01 보완] 사용자가 2단계 검수 모달에서 수동 조정한 수량이 전달된 경우 최우선 반영
+            BigDecimal needQty;
+            if (dto.getCustomDeductions() != null
+                    && dto.getCustomDeductions().containsKey(ri.getMasterIngredientId())) {
+                BigDecimal customVal = dto.getCustomDeductions().get(ri.getMasterIngredientId());
+                needQty = (customVal != null)
+                        ? customVal.setScale(2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
+            } else {
+                needQty = ri.getQuantity().multiply(servingRatio).setScale(2, RoundingMode.HALF_UP);
+            }
+
             if (needQty.compareTo(BigDecimal.ZERO) <= 0) {
                 continue;
             }

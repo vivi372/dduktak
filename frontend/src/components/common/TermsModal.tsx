@@ -19,7 +19,7 @@ interface TermsModalProps {
  * - 핵심 서비스 정책: 1인 1냉장고 원칙, 양념류 차감 제외, 회원 탈퇴 시 레시피 익명 전환 보존 필수 정책
  */
 export function TermsModal({ open, initialTab = 'terms', onClose }: TermsModalProps) {
-  useBodyScrollLock(open);
+  useBodyScrollLock(open, onClose);
   const [activeTab, setActiveTab] = useState<TermsTab>(initialTab);
 
   // 모달이 열릴 때마다 전달받은 initialTab으로 동기화

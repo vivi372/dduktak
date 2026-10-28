@@ -17,8 +17,16 @@ export const App = () => {
     const pushTimer = setTimeout(() => {
       try {
         NativePushService.initPushNotifications((data) => {
+          // [DEF-02 보완] 알림 타입 및 route 필드에 따라 레시피 상세 또는 알림함으로 정확히 딥링크 라우팅
           if (data?.route) {
             router.navigate(data.route);
+          } else if (
+            (data?.type === 'LIKE_NOTICE' || data?.type === 'COOKED_NOTICE') &&
+            data?.targetId
+          ) {
+            router.navigate(`/recipes/${data.targetId}`);
+          } else if (data?.type === 'EXPIRE_WARN') {
+            router.navigate(ROUTES.NOTIFICATIONS);
           } else if (data?.targetId) {
             router.navigate(ROUTES.NOTIFICATIONS);
           }
