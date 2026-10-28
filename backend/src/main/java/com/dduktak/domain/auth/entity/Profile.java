@@ -66,6 +66,11 @@ public class Profile {
     private Boolean isReactionNoticeEnabled = true;
 
     /**
+     * 모바일 디바이스 FCM 푸시 토큰
+     */
+    private String fcmToken;
+
+    /**
      * 프로필 생성 일시
      */
     private OffsetDateTime createdAt;

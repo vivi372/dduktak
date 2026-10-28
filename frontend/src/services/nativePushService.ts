@@ -20,7 +20,9 @@ export class NativePushService {
     }
 
     if (this.isInitialized) {
-      return null;
+      // 이미 초기화된 경우 저장된 토큰 백엔드 재동기화 시도
+      NativePushService.sendTokenToBackend().catch(() => {});
+      return localStorage.getItem('dduktak_fcm_token');
     }
 
     try {
@@ -32,6 +34,7 @@ export class NativePushService {
       }
 
       if (permStatus.receive !== 'granted') {
+        console.warn('[FCM] 알림 권한이 거부되었습니다:', permStatus.receive);
         return null;
       }
 
@@ -104,14 +107,18 @@ export class NativePushService {
    */
   public static async sendTokenToBackend(fcmToken?: string | null): Promise<void> {
     const token = fcmToken || localStorage.getItem('dduktak_fcm_token');
-    if (!token) return;
+    if (!token) {
+      console.debug('[FCM] 저장된 디바이스 토큰이 없어 백엔드 전송을 건너뜁니다.');
+      return;
+    }
 
     try {
-      await apiClient.post('/notifications/fcm-token', { token });
-      console.log('[FCM] 디바이스 토큰 백엔드 동기화 성공');
-    } catch (e) {
-      // 비로그인 상태이거나 토큰 만료 시는 다음 로그인 시 자동 재전송되므로 경고만 기록
-      console.warn('[FCM] 디바이스 토큰 백엔드 동기화 보류 (로그인 후 자동 전송):', e);
+      // 올바른 백엔드 엔드포인트: /api/v1/notifications/fcm-token
+      await apiClient.post('/api/v1/notifications/fcm-token', { token });
+      console.log('[FCM] 디바이스 토큰 백엔드(/api/v1/notifications/fcm-token) 동기화 완료!');
+    } catch (e: any) {
+      // 비로그인 상태(401) 또는 일시 네트워크 오류 시 경고 로그만 남김
+      console.warn('[FCM] 디바이스 토큰 백엔드 동기화 보류 (로그인 후 자동 전송):', e?.response?.status || e?.message);
     }
   }
 

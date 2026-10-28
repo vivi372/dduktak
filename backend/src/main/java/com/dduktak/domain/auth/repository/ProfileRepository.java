@@ -80,6 +80,20 @@ public class ProfileRepository {
     }
 
     /**
+     * FCM 디바이스 토큰 갱신
+     */
+    public void updateFcmToken(UUID id, String fcmToken) {
+        profileMapper.updateFcmToken(id, fcmToken);
+    }
+
+    /**
+     * FCM 디바이스 토큰 조회
+     */
+    public Optional<String> findFcmTokenById(UUID id) {
+        return Optional.ofNullable(profileMapper.findFcmTokenById(id));
+    }
+
+    /**
      * 회원 탈퇴 시 레시피 익명화 (user_id = NULL)
      */
     public void anonymizeRecipesByUserId(UUID id) {

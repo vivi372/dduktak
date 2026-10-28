@@ -15,6 +15,7 @@
             quiet_time_end,
             is_expire_warn_enabled,
             is_reaction_notice_enabled,
+            fcm_token,
             created_at,
             updated_at
         FROM public.profiles
@@ -71,23 +72,28 @@
             #{id},
             #{nickname},
             #{userTag},
-            COALESCE(#{profileImage}, 'https://hefryhbaoovrhgzevfad.supabase.co/storage/v1/object/public/profiles/Default%20Profile.png'),
-            COALESCE(#{quietTimeStart}, CAST('21:00:00' AS time)),
-            COALESCE(#{quietTimeEnd}, CAST('08:00:00' AS time)),
-            COALESCE(#{isExpireWarnEnabled}, true),
-            COALESCE(#{isReactionNoticeEnabled}, true),
+            #{profileImage},
+            #{quietTimeStart},
+            #{quietTimeEnd},
+            #{isExpireWarnEnabled},
+            #{isReactionNoticeEnabled},
             NOW(),
             NOW()
         )
-        ON CONFLICT (id) DO NOTHING
     </insert>
 
-    <!-- 프로필 정보(닉네임, 프로필 이미지) 수정 -->
+    <!-- 회원 프로필(닉네임, 프로필 이미지) 수정 -->
     <update id="updateProfile" parameterType="com.dduktak.domain.auth.entity.Profile">
         UPDATE public.profiles
-        SET nickname = #{nickname},
-            profile_image = #{profileImage},
+        <set>
+            <if test="nickname != null and nickname != ''">
+                nickname = #{nickname},
+            </if>
+            <if test="profileImage != null">
+                profileImage = #{profileImage},
+            </if>
             updated_at = NOW()
+        </set>
         WHERE id = #{id}
     </update>
 
@@ -120,6 +126,21 @@
         </set>
         WHERE id = #{id}
     </update>
+
+    <!-- FCM 디바이스 토큰 갱신 -->
+    <update id="updateFcmToken">
+        UPDATE public.profiles
+        SET fcm_token = #{fcmToken},
+            updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- FCM 디바이스 토큰 조회 -->
+    <select id="findFcmTokenById" resultType="string">
+        SELECT fcm_token
+        FROM public.profiles
+        WHERE id = #{id}
+    </select>
 
     <!-- 회원 탈퇴 시 레시피 작성자 ID NULL 익명화 처리 (USER-02) -->
     <update id="anonymizeRecipesByUserId">

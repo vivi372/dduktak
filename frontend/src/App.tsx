@@ -33,7 +33,7 @@ export const App = () => {
     let stateListenerHandle: { remove: () => void } | null = null;
 
     if (Capacitor.isNativePlatform()) {
-      // 2-1. 구글 OAuth 완료 후 앱 복귀 딥링크 (com.dduktak.app://... 또는 dduktak://...)
+      // 2-1. 구글 OAuth 완료 후 앱 복귀 딥링크 (com.dduktak.app://... 또는 dduktak://... 또는 intent://)
       CapApp.addListener('appUrlOpen', async (event) => {
         const urlStr = event.url;
         console.log('[DeepLink] 앱 호출 URL 수신:', urlStr);
@@ -49,6 +49,12 @@ export const App = () => {
               paramsString = urlStr.substring(queryIndex + 1);
             }
 
+            // Android Intent의 #Intent; 뒤쪽 부분 깔끔하게 분리
+            const secondHash = paramsString.indexOf('#');
+            if (secondHash !== -1) {
+              paramsString = paramsString.substring(0, secondHash);
+            }
+
             const params = new URLSearchParams(paramsString);
             const accessToken = params.get('access_token');
             const refreshToken = params.get('refresh_token');
@@ -57,15 +63,15 @@ export const App = () => {
             if (accessToken && refreshToken) {
               console.log('[DeepLink] access_token 획득 ➔ Supabase 세션 설정');
               await supabase.auth.setSession({
-                access_token: accessToken,
-                refresh_token: refreshToken,
+                access_token: decodeURIComponent(accessToken),
+                refresh_token: decodeURIComponent(refreshToken),
               });
               await useAuthStore.getState().initialize();
               NativePushService.sendTokenToBackend().catch(() => {});
               router.navigate(ROUTES.HOME);
             } else if (code) {
               console.log('[DeepLink] auth code 획득 ➔ Supabase 세션 교환');
-              await supabase.auth.exchangeCodeForSession(code);
+              await supabase.auth.exchangeCodeForSession(decodeURIComponent(code));
               await useAuthStore.getState().initialize();
               NativePushService.sendTokenToBackend().catch(() => {});
               router.navigate(ROUTES.HOME);

@@ -1,5 +1,6 @@
 package com.dduktak.domain.notification.service;
 
+import com.dduktak.domain.auth.repository.ProfileRepository;
 import com.google.firebase.messaging.AndroidConfig;
 import com.google.firebase.messaging.AndroidNotification;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -24,10 +25,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FirebaseFcmService implements FcmService {
 
     private final FirebaseMessaging firebaseMessaging;
+    private final ProfileRepository profileRepository;
     private final Map<UUID, String> userTokenMap = new ConcurrentHashMap<>();
 
-    public FirebaseFcmService(@Autowired(required = false) FirebaseMessaging firebaseMessaging) {
+    public FirebaseFcmService(
+            @Autowired(required = false) FirebaseMessaging firebaseMessaging,
+            ProfileRepository profileRepository) {
         this.firebaseMessaging = firebaseMessaging;
+        this.profileRepository = profileRepository;
     }
 
     @Override
@@ -41,7 +46,24 @@ public class FirebaseFcmService implements FcmService {
 
     @Override
     public String getUserToken(UUID userId) {
-        return userId != null ? userTokenMap.get(userId) : null;
+        if (userId == null) {
+            return null;
+        }
+        String token = userTokenMap.get(userId);
+        if (token != null) {
+            return token;
+        }
+
+        // 서버 재시작 등의 사유로 인메모리 캐시가 빈 경우 DB(profiles.fcm_token)에서 복구
+        if (profileRepository != null) {
+            token = profileRepository.findFcmTokenById(userId).orElse(null);
+            if (token != null && !token.trim().isEmpty()) {
+                userTokenMap.put(userId, token.trim());
+                log.info("[FCM Token Recovered] DB로부터 유저 디바이스 토큰 복구 완료: userId={}", userId);
+                return token.trim();
+            }
+        }
+        return null;
     }
 
     @Async

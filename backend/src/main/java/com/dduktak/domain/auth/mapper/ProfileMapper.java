@@ -67,6 +67,16 @@ public interface ProfileMapper {
     );
 
     /**
+     * FCM 디바이스 토큰 갱신
+     */
+    int updateFcmToken(@Param("id") UUID id, @Param("fcmToken") String fcmToken);
+
+    /**
+     * FCM 디바이스 토큰 조회
+     */
+    String findFcmTokenById(@Param("id") UUID id);
+
+    /**
      * 회원 탈퇴 시 작성 레시피의 user_id를 NULL로 익명화 처리 (USER-02)
      */
     int anonymizeRecipesByUserId(@Param("userId") UUID userId);

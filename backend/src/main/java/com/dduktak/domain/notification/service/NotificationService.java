@@ -314,17 +314,20 @@ public class NotificationService {
     }
 
     /**
-     * 야간 방해금지 시간대 여부 판정 유틸
+     * 유저의 FCM 디바이스 토큰 등록 (DB 영속화 및 FCM 서비스 캐싱)
      */
-    /**
-     * 유저의 FCM 디바이스 토큰 등록
-     */
+    @Transactional
     public void registerFcmToken(UUID userId, String token) {
         if (userId != null && token != null && !token.trim().isEmpty()) {
-            fcmService.registerUserToken(userId, token);
+            profileRepository.updateFcmToken(userId, token.trim());
+            fcmService.registerUserToken(userId, token.trim());
+            log.info("[FCM Token Saved] 유저 디바이스 토큰 DB 및 캐시 저장 완료: userId={}", userId);
         }
     }
 
+    /**
+     * 야간 방해금지 시간대 여부 판정 유틸
+     */
     public boolean isQuietTime(LocalTime now, LocalTime start, LocalTime end) {
         if (start == null || end == null) {
             return false;
