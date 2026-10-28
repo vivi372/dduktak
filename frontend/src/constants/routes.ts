@@ -12,5 +12,6 @@ export const ROUTES = {
   NOTIFICATIONS: '/notifications',
   RESET_PASSWORD: '/reset-password',
   AUTH_CALLBACK: '/auth/callback',
+  DOWNLOAD: '/download',
 } as const;
 

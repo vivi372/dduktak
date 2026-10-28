@@ -1,0 +1,182 @@
+import React, { useState } from 'react';
+import { Download, Smartphone, Wifi, CheckCircle2, Copy, Check, FileText } from 'lucide-react';
+import { toast } from 'sonner';
+import logoIcon from '@/assets/logo-icon.png';
+
+/**
+ * 모바일 실기기 테스트용 APK 다운로드 전용 페이지 (/download)
+ * - 사용자가 스마트폰 브라우저로 접속하여 원클릭으로 최신 APK를 다운로드할 수 있도록 지원
+ * - 안드로이드 실기기 설치 안내 가이드 및 동일 Wi-Fi 연결 주의사항 제공
+ */
+export const DownloadPage: React.FC = () => {
+  const [copied, setCopied] = useState(false);
+
+  // 현재 브라우저 URL 또는 로컬 네트워크 IP 기준 다운로드 주소
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : 'http://192.168.219.101:5173/download';
+  const apkDownloadPath = '/downloads/dduktak-app.apk';
+  const apiServerUrl = import.meta.env.VITE_API_BASE_URL || 'http://192.168.219.101:8080';
+
+  /** 스마트폰 접속 주소 클립보드 복사 */
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(currentUrl);
+      setCopied(true);
+      toast.success('다운로드 페이지 링크가 복사되었습니다!');
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      toast.error('링크 복사에 실패했습니다.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-orange-50/50 via-white to-gray-50/80 px-4 py-8 pb-20">
+      <div className="mx-auto max-w-md">
+        {/* 상단 앱 브랜딩 & 로고 */}
+        <div className="flex flex-col items-center text-center">
+          <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-md ring-1 ring-orange-100">
+            <img src={logoIcon} alt="오늘의 뚝딱" className="h-full w-full object-contain" />
+            <span className="absolute -bottom-1 -right-1 rounded-full bg-brand-coral px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+              Android
+            </span>
+          </div>
+
+          <h1 className="text-2xl font-extrabold tracking-tight text-gray-900">오늘의 뚝딱</h1>
+          <p className="mt-1 text-sm text-gray-500">1인 가구를 위한 냉장고 파먹기 & 맞춤 요리 솔루션</p>
+
+          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
+            <CheckCircle2 className="h-3.5 w-3.5" />
+            <span>실기기 테스트용 디버그 빌드 (v1.0.0)</span>
+          </div>
+        </div>
+
+        {/* APK 다운로드 메인 CTA 카드 */}
+        <div className="mt-6 overflow-hidden rounded-2xl bg-white p-5 shadow-sm ring-1 ring-gray-100">
+          <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+            <div>
+              <p className="text-xs font-medium text-gray-400">설치 파일</p>
+              <p className="text-sm font-bold text-gray-800">dduktak-app.apk</p>
+            </div>
+            <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600">
+              Capacitor 6.x
+            </span>
+          </div>
+
+          <div className="mt-4">
+            <a
+              href={apkDownloadPath}
+              download="dduktak-app.apk"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-coral to-[#E5604F] py-3.5 text-base font-bold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.98]"
+            >
+              <Download className="h-5 w-5" />
+              <span>최신 APK 다운로드</span>
+            </a>
+            <p className="mt-2 text-center text-[11px] text-gray-400">
+              * 스마트폰 브라우저(Chrome/삼성 인터넷)에서 다운로드 후 바로 설치하세요.
+            </p>
+          </div>
+
+          {/* 모바일 접속 편의 링크 복사 */}
+          <div className="mt-4 rounded-xl bg-gray-50 p-3">
+            <div className="flex items-center justify-between text-xs text-gray-500">
+              <span className="flex items-center gap-1 font-medium">
+                <Smartphone className="h-3.5 w-3.5 text-gray-400" />
+                스마트폰 브라우저 접속 주소:
+              </span>
+              <button
+                type="button"
+                onClick={handleCopyUrl}
+                className="flex items-center gap-1 rounded bg-white px-2 py-1 text-[11px] font-semibold text-gray-700 shadow-sm ring-1 ring-gray-200 hover:bg-gray-50"
+              >
+                {copied ? <Check className="h-3 w-3 text-emerald-600" /> : <Copy className="h-3 w-3" />}
+                <span>{copied ? '복사됨' : '주소 복사'}</span>
+              </button>
+            </div>
+            <p className="mt-1.5 break-all font-mono text-xs text-gray-700">{currentUrl}</p>
+          </div>
+        </div>
+
+        {/* 동일 Wi-Fi 네트워크 확인 중요 안내 */}
+        <div className="mt-4 rounded-2xl bg-amber-50/80 p-4 ring-1 ring-amber-200/70">
+          <div className="flex gap-3">
+            <Wifi className="h-5 w-5 shrink-0 text-amber-600" />
+            <div className="text-xs text-amber-900">
+              <p className="font-bold">⚠️ 동일 Wi-Fi 네트워크 필수 확인</p>
+              <p className="mt-1 leading-relaxed text-amber-800">
+                스마트폰이 개발용 PC와 <strong>동일한 Wi-Fi 공유기</strong>에 연결되어 있어야 로컬 백엔드 서버
+                (<code className="rounded bg-amber-100 px-1 py-0.5 font-mono font-semibold">{apiServerUrl}</code>)와
+                정상적으로 통신할 수 있습니다.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 3단계 스마트폰 설치 가이드 */}
+        <div className="mt-6">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-gray-800">
+            <FileText className="h-4 w-4 text-brand-coral" />
+            <span>안드로이드 설치 가이드 (3단계)</span>
+          </h2>
+
+          <div className="mt-3 space-y-2.5">
+            <div className="flex items-start gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-coral">
+                1
+              </div>
+              <div className="text-xs text-gray-600">
+                <p className="font-semibold text-gray-800">APK 다운로드 및 확인</p>
+                <p className="mt-0.5 text-gray-500">
+                  위 버튼을 눌러 다운로드 시 <span className="font-semibold text-gray-700">"유해한 파일일 수 있음"</span> 경고가 표시되면 <span className="font-semibold text-brand-coral">"무조건 다운로드"</span>를 선택하세요.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-coral">
+                2
+              </div>
+              <div className="text-xs text-gray-600">
+                <p className="font-semibold text-gray-800">출처를 알 수 없는 앱 허용</p>
+                <p className="mt-0.5 text-gray-500">
+                  다운로드된 파일을 탭할 때 보안 팝업이 뜨면 <span className="font-semibold text-gray-700">[설정]</span> ➔ <span className="font-semibold text-gray-700">[이 출처의 앱 허용]</span> 토글을 켜주세요.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-coral">
+                3
+              </div>
+              <div className="text-xs text-gray-600">
+                <p className="font-semibold text-gray-800">설치 완료 및 앱 실행</p>
+                <p className="mt-0.5 text-gray-500">
+                  <span className="font-semibold text-gray-700">[설치]</span>를 누르면 앱이 스마트폰에 설치됩니다. 설치 후 <span className="font-semibold text-brand-coral">[열기]</span>를 눌러 네이티브 테스트를 시작하세요!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 빌드 환경 정보 */}
+        <div className="mt-6 rounded-xl bg-gray-50 p-3.5 text-[11px] text-gray-500">
+          <p className="font-semibold text-gray-600">📌 디버그 환경 정보</p>
+          <div className="mt-1.5 space-y-1">
+            <div className="flex justify-between">
+              <span>패키지명:</span>
+              <span className="font-mono text-gray-700">com.dduktak.app</span>
+            </div>
+            <div className="flex justify-between">
+              <span>API 엔드포인트:</span>
+              <span className="font-mono text-gray-700">{apiServerUrl}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>카메라/바코드:</span>
+              <span className="font-semibold text-emerald-600">Google ML Kit 활성화</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DownloadPage;

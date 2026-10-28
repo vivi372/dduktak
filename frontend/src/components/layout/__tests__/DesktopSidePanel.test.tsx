@@ -7,11 +7,28 @@ import { DesktopSidePanel } from '@/components/layout/DesktopSidePanel';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useThemeStore } from '@/store/themeStore';
 import * as homeApi from '@/services/homeApi';
+import * as authApi from '@/services/authApi';
 import type { UserProfileResponseDto } from '@/types/auth';
 import type { HomeBriefing } from '@/types/home';
 
 vi.mock('@/services/homeApi', () => ({
   getHomeBriefing: vi.fn(),
+}));
+
+vi.mock('@/services/authApi', () => ({
+  getMyProfile: vi.fn(),
+}));
+
+vi.mock('@/services/notificationApi', () => ({
+  getNotifications: vi.fn().mockResolvedValue({
+    content: [],
+    totalElements: 0,
+    totalPages: 0,
+    page: 0,
+    size: 20,
+    hasUnread: false,
+    unreadCount: 0,
+  }),
 }));
 
 const mockBriefing: HomeBriefing = {
@@ -65,6 +82,7 @@ describe('DesktopSidePanel (데스크톱 좌측 40% Sticky 사이드 패널) 단
       isLoading: false,
       user: { ...mockUser },
     });
+    vi.mocked(authApi.getMyProfile).mockResolvedValue(mockUser);
     vi.mocked(homeApi.getHomeBriefing).mockResolvedValue(mockBriefing);
   });
 

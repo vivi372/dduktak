@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "apk": "npm run build && npx cap sync android && cd android && gradlew.bat assembleDebug && cd .. && powershell -Command \"Copy-Item -Path 'android/app/build/outputs/apk/debug/app-debug.apk' -Destination 'public/downloads/dduktak-app.apk' -Force\""
   },
   "dependencies": {
     "@capacitor-mlkit/barcode-scanning": "^6.2.0",

@@ -35,9 +35,11 @@ out/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-# Sensitive Config
+# Sensitive Config & Binary artifacts
+*.apk
 *.key
 *.pem
+local.properties
 secrets/
 application-secret.yml
 *firebase*.json

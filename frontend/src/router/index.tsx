@@ -12,6 +12,7 @@ import LoginPage from '@/pages/LoginPage';
 import ResetPasswordPage from '@/pages/ResetPasswordPage';
 import AuthCallbackPage from '@/pages/AuthCallbackPage';
 import OnboardingPage from '@/pages/OnboardingPage';
+import DownloadPage from '@/pages/DownloadPage';
 import NotFoundPage from '@/pages/NotFoundPage';
 import { ROUTES } from '@/constants/routes';
 import type { RouteHandle } from './handle';
@@ -102,6 +103,11 @@ export const router = createBrowserRouter([
         path: ROUTES.ONBOARDING,
         element: <OnboardingPage />,
         handle: h({ title: '앱 시작 가이드', hideBottomNav: true, hideHeader: true, hideSidePanel: true }),
+      },
+      {
+        path: ROUTES.DOWNLOAD,
+        element: <DownloadPage />,
+        handle: h({ title: '앱 다운로드', showBack: true, backPath: ROUTES.HOME }),
       },
       { path: '*', element: <NotFoundPage />, handle: h({ title: '길을 잃었어요', brand: true }) },
     ],
