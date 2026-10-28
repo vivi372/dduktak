@@ -1,7 +1,7 @@
 /**
  * 내 재료 관리소(Inventory) 도메인 API 클라이언트 (05_API_SPECIFICATION.md 3.2절)
  *
- * 표준 식재료 마스터 조회, 내 냉장고 CRUD, 수동 소비 차감, 바코드 조회 및 영수증 OCR 스캔 통신을 담당합니다.
+ * 표준 식재료 마스터 조회, 내 냉장고 CRUD, 수동 소비 차감, 영수증 OCR 스캔 통신을 담당합니다.
  */
 
 import { apiClient } from '@/services/apiClient';
@@ -15,7 +15,6 @@ import type {
   IngredientUpdateResponseDto,
   IngredientConsumeRequestDto,
   IngredientConsumeResponseDto,
-  BarcodeIngredientResponseDto,
   OcrIngredientResponseDto,
   InventoryQueryParams,
   MasterIngredientQueryParams,
@@ -115,22 +114,6 @@ export async function consumeIngredient(
   const response = await apiClient.patch<ApiResponseDto<IngredientConsumeResponseDto>>(
     `/api/v1/inventory/${ingredientId}/consume`,
     dto,
-  );
-  return response.data.data;
-}
-
-/**
- * 바코드 번호 기반 표준 식재료 조회 (GET /api/v1/inventory/barcode/{barcodeNo})
- * 미등록 또는 매핑 실패 시 404 Not Found (INV_WARN_BARCODE_NOT_FOUND)를 반환합니다.
- *
- * @param barcodeNo EAN-13 / GTIN-14 바코드 번호
- * @returns 표준 식재료 정보 및 권장 소비기한 DTO
- */
-export async function getIngredientByBarcode(
-  barcodeNo: string,
-): Promise<BarcodeIngredientResponseDto> {
-  const response = await apiClient.get<ApiResponseDto<BarcodeIngredientResponseDto>>(
-    `/api/v1/inventory/barcode/${encodeURIComponent(barcodeNo)}`,
   );
   return response.data.data;
 }

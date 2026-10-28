@@ -74,7 +74,7 @@
 | **TC-UI-3A3-02** | **InventoryAccordion**<br/>(2-Tier 아코디언) | 동일 표준 재료 메인 카드 클릭 시 하위 개별 레코드 Framer Motion 열림/닫힘 | `[ PASS ]` | InventoryAccordionItem 개별 레코드 모션 통과 |
 | **TC-UI-3A3-03** | **ReceiptUploadPreview**<br/>(PC/모바일 영수증 UI) | 모바일(카메라/갤러리 선택) / PC(드래그앤드롭 & 영수증 이미지 실시간 미리보기 Box) | `[ PASS ]` | ReceiptOcrModal 파일 업로드 프리뷰 정상 작동 |
 | **TC-UI-3A3-04** | **OcrReviewModal**<br/>(OCR 수동 검수 팝업) | 인식 품목 체크박스, 표준 매핑 배지, 수량 44px+ 버튼, 소비기한 DatePicker | `[ PASS ]` | OCR 수동 검수 테이블 11개 단위 테스트 전원 통과 |
-| **TC-UI-3A3-05** | **ScanFailSafeModal**<br/>(스캔 실패 예외 UX) | OCR/바코드 실패(빈 배열 `[]`) 시 안내 모달 노출 후 수동 Combobox 화면 전환 | `[ PASS ]` | Fail-safe 빈 결과 복구 및 수동 등록 전환 통과 |
+| **TC-UI-3A3-05** | **ScanFailSafeModal**<br/>(스캔 실패 예외 UX) | 영수증 OCR 실패(빈 배열 `[]`) 시 안내 모달 노출 후 수동 Combobox 화면 전환 | `[ PASS ]` | Fail-safe 빈 결과 복구 및 수동 등록 전환 통과 |
 
 ### 3.4 Step 3A-4: 레시피 커뮤니티 & 스마트 매칭 UI 검수 (모듈 3, 4)
 | TC ID | 검증 컴포넌트 & UX 항목 | 검증 기준 (Acceptance Criteria) | 수행 결과 | 비고 / 소평 |

@@ -34,7 +34,7 @@ describe('OnboardingPage 최초 실행 사용자 가이드 온보딩 단위 테�
     expect(screen.getByRole('button', { name: '건너뛰기' })).toBeInTheDocument();
   });
 
-  it('다음 버튼 클릭 시 2단계(바코드/영수증 AI 스캔) 슬라이드로 전환되어야 한다', () => {
+  it('다음 버튼 클릭 시 2단계(영수증 AI 스캔) 슬라이드로 전환되어야 한다', () => {
     render(
       <MemoryRouter>
         <OnboardingPage />

@@ -114,22 +114,6 @@ export interface IngredientConsumeResponseDto {
   status: 'ACTIVE' | 'CONSUMED';
 }
 
-/** 바코드 조회 응답 DTO (GET /api/v1/inventory/barcode/{barcodeNo}) */
-export interface BarcodeIngredientResponseDto {
-  masterIngredientId: number;
-  name: string;
-  categoryId: number;
-  recommendedUnit: string;
-  recommendedExpireDate: string; // YYYY-MM-DD
-}
-
-/** 바코드 스캔 결과 확장 모델 (클라이언트 편의용) */
-export interface BarcodeLookupResult extends BarcodeIngredientResponseDto {
-  barcodeNo?: string;
-  categoryName?: string;
-  defaultStorageType?: StorageType;
-}
-
 /** 영수증 OCR 스캔 식재료 항목 응답 DTO (POST /api/v1/inventory/scan-ocr) */
 export interface OcrIngredientResponseDto {
   masterIngredientId: number;

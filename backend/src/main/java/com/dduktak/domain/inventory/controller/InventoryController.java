@@ -136,23 +136,7 @@ public class InventoryController {
         return ResponseEntity.ok(ApiResponseDto.success(response, "식재료 소비가 성공적으로 처리되었습니다."));
     }
 
-    /**
-     * 바코드 번호 기반 표준 식재료 조회 (INV-01-3)
-     * 바코드로 상품명을 조회한 뒤 74종 표준 식재료와 유사 매칭을 수행합니다.
-     * 미등록 또는 매핑 불가 시 404 Not Found (INV_WARN_BARCODE_NOT_FOUND)를 반환합니다.
-     *
-     * @param barcodeNo EAN-13 / GTIN-14 바코드 번호
-     * @return 표준 식재료 정보 및 권장 소비기한 DTO
-     */
-    @GetMapping("/barcode/{barcodeNo}")
-    public ResponseEntity<ApiResponseDto<BarcodeIngredientResponseDto>> getIngredientByBarcode(
-            @PathVariable("barcodeNo") String barcodeNo
-    ) {
-        BarcodeIngredientResponseDto response = inventoryService.getIngredientByBarcode(barcodeNo);
-        return ResponseEntity.ok(ApiResponseDto.success(response, "바코드 식재료 조회가 완료되었습니다."));
-    }
-
-    /**
+/**
      * 영수증 OCR 이미지 스캔 및 식재료 일괄 파싱 (INV-01-3)
      * Google AI Studio Gemini Flash REST API를 활용해 영수증 이미지를 JSON 품목 배열로 파싱합니다.
      * 실패하거나 인식되지 않을 경우 500 에러를 방지하고 200 OK 빈 배열(data: [])을 반환합니다.

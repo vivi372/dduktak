@@ -26,7 +26,7 @@
 *   **Framework** : React (Vite 기반)
 *   **Hybrid Mobile App** : **Capacitor 6.x (React 통합형 하이브리드 앱)**
     *  Android / iOS 웹뷰 패키징 및 React 단일 코드베이스 통합
-    *  Google ML Kit 바코드 스캐너 네이티브 카메라 플러그인 연동 (@capacitor/camera, @capacitor-community/barcode-scanner)
+    *  영수증 OCR 스캔 및 카메라 연동 (@capacitor/camera)
     *  FCM (Firebase Cloud Messaging) 네이티브 푸시 수신기 연동 (@capacitor/push-notifications)
     *  앱 딥링크(Deep Link) 라우터 파싱 및 네이티브 앱 상태 제어 (@capacitor/app)
 *   **Language** : TypeScript

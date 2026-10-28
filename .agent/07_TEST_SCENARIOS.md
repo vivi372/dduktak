@@ -119,14 +119,12 @@
   2. 잔여 2개 추가 소비 시 잔여 수량 0개 도달과 동시에 `status = 'CONSUMED'`로 자동 상태 전이.
   3. `Math.max(0, quantity - consumeQuantity)` 방어 로직에 의해 음수 수량 발생이 원천 방지된다.
 
-#### TC-INV-06: 바코드 조회 및 영수증 OCR 외부 연동 예외 방어 (INV-01-3)
-* **API 엔드포인트**: `GET /api/v1/inventory/barcode/{barcodeNo}`, `POST /api/v1/inventory/scan-ocr`
+#### TC-INV-06: 영수증 OCR 외부 연동 예외 방어 (INV-01-3)
+* **API 엔드포인트**: `POST /api/v1/inventory/scan-ocr`
 * **수행 절차**:
-  1. 미등록 바코드 번호("8800000000000") 조회.
-  2. 글씨가 판독 불가능하거나 훼손된 영수증 이미지 OCR 업로드.
+  1. 글씨가 판독 불가능하거나 훼손된 영수증 이미지 OCR 업로드.
 * **검증 기준**:
-  1. 미등록 바코드 조회 시 500 에러 없이 `404 Not Found` (`code: "INV_WARN_BARCODE_NOT_FOUND"`) 표준 에러 반환.
-  2. 영수증 OCR 실패 시 500 에러를 방지하고 `200 OK` 및 빈 배열 `data: []`를 반환하여 클라이언트 충돌을 방지한다.
+  1. 영수증 OCR 실패 시 500 에러를 방지하고 `200 OK` 및 빈 배열 `data: []`를 반환하여 클라이언트 충돌을 방지한다.
 
 ---
 

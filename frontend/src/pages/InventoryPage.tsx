@@ -1,18 +1,16 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Search, Plus, ScanBarcode, Receipt } from 'lucide-react';
+import { Search, Plus, Receipt } from 'lucide-react';
 import { toast } from 'sonner';
 import { INVENTORY_CATEGORIES } from '@/constants/categories';
 import { cn } from '@/utils/cn';
 import { STORAGE_LABEL } from '@/utils/dday';
 import { EmptyState } from '@/components/common/EmptyState';
 import { Skeleton, InventoryCardSkeleton } from '@/components/common/Skeleton';
-import { usePlatformStore } from '@/store/usePlatformStore';
 import {
   InventoryAccordionItem,
   ConsumeModal,
   ManualAddModal,
-  BarcodeScannerModal,
   ReceiptOcrModal,
   ExpiredIngredientsSection,
   EditIngredientModal,
@@ -28,7 +26,6 @@ import type {
   InventoryItem,
   GroupedInventoryItem,
   StorageType,
-  MasterIngredient,
 } from '@/types/inventory';
 
 type StorageFilter = 'ALL' | StorageType;
@@ -45,12 +42,11 @@ const STORAGE_FILTERS: { key: StorageFilter; label: string }[] = [
  * - 2-Tier 아코디언 동일 표준 식재료 묶음 표시 (Framer Motion)
  * - 가장 임박한 D-Day 배지 및 임박순 정렬 (SQL D-Day 연산 연동)
  * - 표준 식재료 검색 Combobox 수동 추가 모달 (독립 레코드 원칙 INV-01-2)
- * - 바코드 카메라 뷰파인더 및 영수증 OCR 품목 검수 팝업 연동
+ * - 영수증 OCR 품목 검수 팝업 연동
  * - 소비기한 만료 영역(dDay < 0) 분리 및 폐기/소비/연장 액션
  */
 export default function InventoryPage() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const { isApp } = usePlatformStore();
 
   // 검색 및 필터 상태
   const [searchQuery, setSearchQuery] = useState('');
@@ -59,13 +55,11 @@ export default function InventoryPage() {
 
   // 모달 팝업 제어 상태
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
-  const [isBarcodeModalOpen, setIsBarcodeModalOpen] = useState(false);
   const [isReceiptModalOpen, setIsReceiptModalOpen] = useState(false);
 
   // 액션 대상 레코드 상태
   const [consumingItem, setConsumingItem] = useState<InventoryItem | null>(null);
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
-  const [barcodePrefillMaster, setBarcodePrefillMaster] = useState<MasterIngredient | null>(null);
 
   // React Query 인벤토리 데이터 및 CRUD 뮤테이션 훅 연동
   const { data: inventoryList = [], isLoading } = useInventoryList();
@@ -74,15 +68,11 @@ export default function InventoryPage() {
   const deleteMutation = useDeleteIngredient();
   const consumeMutation = useConsumeIngredient();
 
-  // 퀵 액션 라우트 파라미터(?action=manual|barcode|receipt) 감지하여 모달 자동 오픈
+  // 퀵 액션 라우트 파라미터(?action=manual|receipt) 감지하여 모달 자동 오픈
   useEffect(() => {
     const action = searchParams.get('action');
     if (action === 'manual') {
       setIsManualModalOpen(true);
-      searchParams.delete('action');
-      setSearchParams(searchParams, { replace: true });
-    } else if (action === 'barcode') {
-      setIsBarcodeModalOpen(true);
       searchParams.delete('action');
       setSearchParams(searchParams, { replace: true });
     } else if (action === 'receipt') {
@@ -186,13 +176,6 @@ export default function InventoryPage() {
     }
   };
 
-  // 바코드 스캔 성공 시 수동 등록 폼으로 연결
-  const handleBarcodeSuccess = (master: MasterIngredient) => {
-    setBarcodePrefillMaster(master);
-    setIsBarcodeModalOpen(false);
-    setIsManualModalOpen(true);
-  };
-
   // 수동 소비 완료 차감 핸들러
   const handleConfirmConsume = async (targetItem: InventoryItem, consumeQuantity: number) => {
     try {
@@ -260,40 +243,25 @@ export default function InventoryPage() {
           </p>
         </div>
 
-        {/* 추가 CTA: 앱 환경에서는 직접 추가/바코드/영수증 3종, 웹 브라우저 환경에서는 직접 추가/영수증 2종 */}
-        <div className={cn('gap-1.5 sm:gap-2 shrink-0 grid', isApp ? 'grid-cols-3' : 'grid-cols-2')}>
+        {/* 추가 CTA: 직접 추가 / 영수증 스캔 2종 */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={() => {
-              setBarcodePrefillMaster(null);
-              setIsManualModalOpen(true);
-            }}
-            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-2 sm:px-3.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
+            onClick={() => setIsManualModalOpen(true)}
+            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl bg-brand-500 px-3.5 text-xs font-bold text-white shadow-soft transition-all hover:bg-brand-600 active:scale-95"
           >
             <Plus className="h-4 w-4 shrink-0" />
-            <span className="truncate">{isApp ? '재료 추가' : '직접 추가'}</span>
+            <span>직접 추가</span>
           </button>
-
-          {isApp && (
-            <button
-              type="button"
-              onClick={() => setIsBarcodeModalOpen(true)}
-              aria-label="바코드 스캔으로 재료 추가"
-              className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95 shadow-xs"
-            >
-              <ScanBarcode className="h-4 w-4 shrink-0 text-brand-500" />
-              <span className="truncate">바코드</span>
-            </button>
-          )}
 
           <button
             type="button"
             onClick={() => setIsReceiptModalOpen(true)}
             aria-label="영수증 스캔으로 재료 추가"
-            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-2 sm:px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95 shadow-xs"
+            className="flex min-h-[42px] items-center justify-center gap-1.5 rounded-xl border border-input bg-card px-3 text-xs font-bold text-foreground transition-all hover:bg-accent active:scale-95 shadow-xs"
           >
             <Receipt className="h-4 w-4 shrink-0 text-mint-600" />
-            <span className="truncate">{isApp ? '영수증' : '영수증 스캔'}</span>
+            <span>영수증 스캔</span>
           </button>
         </div>
       </div>
@@ -412,7 +380,6 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={() => {
-                  setBarcodePrefillMaster(null);
                   setIsManualModalOpen(true);
                 }}
                 className="flex min-h-[46px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-brand-500 font-bold text-sm text-white shadow-soft hover:bg-brand-600 active:scale-95"
@@ -440,23 +407,10 @@ export default function InventoryPage() {
       {/* 수동 재료 등록 모달 */}
       <ManualAddModal
         open={isManualModalOpen}
-        initialMaster={barcodePrefillMaster}
         onClose={() => {
           setIsManualModalOpen(false);
-          setBarcodePrefillMaster(null);
         }}
         onAdd={handleAddManual}
-      />
-
-      {/* 바코드 카메라 스캐너 모달 */}
-      <BarcodeScannerModal
-        open={isBarcodeModalOpen}
-        onClose={() => setIsBarcodeModalOpen(false)}
-        onScanSuccess={handleBarcodeSuccess}
-        onManualSwitch={() => {
-          setIsBarcodeModalOpen(false);
-          setIsManualModalOpen(true);
-        }}
       />
 
       {/* 영수증 OCR 스캔 및 수동 검수 모달 */}

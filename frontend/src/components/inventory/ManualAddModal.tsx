@@ -14,7 +14,7 @@ interface ManualAddModalProps {
   onClose: () => void;
   /** 신규 등록 완료 콜백 */
   onAdd: (newItem: Omit<InventoryItem, 'ingredientId'>) => void;
-  /** 바코드 등에서 프리필할 초기 식재료 (선택) */
+  /** 영수증 OCR 등에서 프리필할 초기 식재료 (선택) */
   initialMaster?: MasterIngredient | null;
 }
 

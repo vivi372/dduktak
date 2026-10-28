@@ -177,8 +177,8 @@ export const DownloadPage: React.FC = () => {
               <span className="font-mono text-gray-700">{apiServerUrl}</span>
             </div>
             <div className="flex justify-between">
-              <span>카메라/바코드:</span>
-              <span className="font-semibold text-emerald-600">Google ML Kit 활성화</span>
+              <span>카메라/영수증:</span>
+              <span className="font-semibold text-emerald-600">Gemini Flash OCR 지원</span>
             </div>
           </div>
         </div>

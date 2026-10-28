@@ -146,25 +146,6 @@ describe('inventoryApi 서비스 단위 테스트 (05_API_SPECIFICATION.md 3.2�
     expect(result.status).toBe('CONSUMED');
   });
 
-  it('getIngredientByBarcode는 GET /api/v1/inventory/barcode/{barcodeNo}를 호출해야 한다', async () => {
-    const mockBarcodeResult = {
-      masterIngredientId: 2,
-      name: '계란',
-      categoryId: 2,
-      recommendedUnit: '개',
-      recommendedExpireDate: '2026-10-31',
-    };
-
-    vi.mocked(apiClient.get).mockResolvedValueOnce({
-      data: { success: true, data: mockBarcodeResult, message: '바코드 조회 완료' },
-    });
-
-    const result = await inventoryApi.getIngredientByBarcode('8801043014859');
-
-    expect(apiClient.get).toHaveBeenCalledWith('/api/v1/inventory/barcode/8801043014859');
-    expect(result.name).toBe('계란');
-  });
-
   it('scanReceiptOcr은 multipart/form-data 헤더로 POST /api/v1/inventory/scan-ocr을 호출해야 한다', async () => {
     const mockFile = new File(['dummy content'], 'receipt.jpg', { type: 'image/jpeg' });
     const mockOcrResult = [

@@ -148,12 +148,11 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     vi.mocked(inventoryApi.getMyIngredients).mockResolvedValue(mockInventory);
   });
 
-  it('타이틀 및 상단 3대 추가 CTA(재료 추가, 바코드, 영수증)를 렌더링해야 한다', () => {
+  it('타이틀 및 상단 2대 추가 CTA(직접 추가, 영수증)를 렌더링해야 한다', () => {
     renderWithProviders(<InventoryPage />);
 
     expect(screen.getByRole('heading', { level: 1, name: '내 냉장고' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '재료 추가' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '바코드 스캔으로 재료 추가' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '직접 추가' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '영수증 스캔으로 재료 추가' })).toBeInTheDocument();
   });
 
@@ -203,17 +202,7 @@ describe('InventoryPage 내 냉장고 화면 통합 단위 테스트', () => {
     await waitFor(() => {
       expect(screen.getByText(/소비기한이 지난 재료 2개/)).toBeInTheDocument();
     });
-  });
 
-  it('바코드 버튼 클릭 시 바코드 스캔 모달이 열려야 한다', async () => {
-    const user = userEvent.setup();
-    renderWithProviders(<InventoryPage />);
-
-    const barcodeBtn = screen.getByRole('button', { name: /바코드 스캔으로 재료 추가/ });
-    await user.click(barcodeBtn);
-
-    expect(screen.getByRole('heading', { name: '바코드 스캔' })).toBeInTheDocument();
-    expect(screen.getByText('바코드를 사각 프레임 안에 맞춰주세요')).toBeInTheDocument();
   });
 
   it('영수증 버튼 클릭 시 영수증 OCR 등록 모달이 열려야 한다', async () => {

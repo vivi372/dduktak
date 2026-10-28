@@ -8,7 +8,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Flame,
-  QrCode,
   Receipt,
   Refrigerator,
   Sparkles,
@@ -31,7 +30,7 @@ interface OnboardingSlide {
 
 /**
  * 앱 최초 실행 사용자 가이드 온보딩 (First-Run Walkthrough)
- * - 3단계 인터랙티브 감성 일러스트 비주얼 슬라이드 (냉장고 관리, 바코드/OCR 스캔, 레시피 매칭)
+ * - 3단계 인터랙티브 감성 일러스트 비주얼 슬라이드 (냉장고 관리, 영수증 OCR 스캔, 레시피 매칭)
  * - 스와이프 제스처 및 인디케이터 닷
  * - 필수 권한(카메라, 푸시 알림) 친화적 사전 안내 다이얼로그
  */
@@ -142,12 +141,12 @@ export default function OnboardingPage() {
       id: 2,
       badge: '1초 만에 쏙! AI 간편 스캔',
       badgeColor: 'bg-mint-100 text-mint-700 dark:bg-mint-950/60 dark:text-mint-300',
-      title: '장보고 온 영수증 한 장,\n바코드 스캔으로 1초 등록',
+      title: '장보고 온 영수증 한 장,\n영수증 스캔으로 1초 등록',
       description:
-        '영수증 사진 한 장만 찰칵 찍거나 바코드를 비추면,\nGoogle ML Kit과 AI 엔진이 자동으로 재료를 채워줘요.',
+        '영수증 사진 한 장만 찰칵 찍으면,\nAI 엔진이 식재료를 자동으로 분석해 채워줘요.',
       visualComponent: (
         <div className="relative flex h-56 w-full items-center justify-center">
-          {/* 바코드 스캐너 뷰파인더 프레임 */}
+          {/* 영수증 스캐너 프레임 */}
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -167,10 +166,10 @@ export default function OnboardingPage() {
               className="absolute h-0.5 w-44 rounded-full bg-gradient-to-r from-transparent via-mint-500 to-transparent shadow-[0_0_8px_#4ECDC4]"
             />
 
-            {/* 영수증 및 바코드 시각 요소 */}
+            {/* 영수증 및 AI 시각 요소 */}
             <div className="flex items-center gap-3">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-mint-50 text-mint-600 shadow-soft dark:bg-mint-950/60 dark:text-mint-400">
-                <QrCode className="h-8 w-8" />
+                <Sparkles className="h-8 w-8" />
               </div>
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 shadow-soft dark:bg-brand-950/60 dark:text-brand-400">
                 <Receipt className="h-8 w-8" />
@@ -412,7 +411,7 @@ export default function OnboardingPage() {
                   <div>
                     <h5 className="text-xs font-bold text-foreground">카메라 (선택)</h5>
                     <p className="text-[11px] text-muted-foreground">
-                      식재료 바코드 스캔 및 영수증 사진 촬영에 사용돼요.
+                      식재료 영수증 사진 촬영에 사용돼요.
                     </p>
                   </div>
                 </div>

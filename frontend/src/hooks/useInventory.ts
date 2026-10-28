@@ -2,7 +2,7 @@
  * 내 재료 관리소(Inventory) 도메인 React Query 커스텀 훅 (02_ARCHITECTURE_AND_CONVENTIONS.md 3.3절)
  *
  * 표준 식재료 마스터 조회, 내 냉장고 목록 조회, 수동 등록/수정/삭제/소비,
- * 그리고 바코드 및 영수증 OCR 스캔 뮤테이션을 제공합니다.
+ * 그리고 영수증 OCR 스캔 뮤테이션을 제공합니다.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -13,7 +13,6 @@ import {
   updateIngredient,
   deleteIngredient,
   consumeIngredient,
-  getIngredientByBarcode,
   scanReceiptOcr,
 } from '@/services/inventoryApi';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,7 +25,6 @@ import type {
   IngredientUpdateResponseDto,
   IngredientConsumeRequestDto,
   IngredientConsumeResponseDto,
-  BarcodeIngredientResponseDto,
   OcrIngredientResponseDto,
   InventoryQueryParams,
   MasterIngredientQueryParams,
@@ -150,17 +148,6 @@ export function useConsumeIngredient() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: INVENTORY_QUERY_KEYS.all });
       queryClient.invalidateQueries({ queryKey: ['home', 'briefing'] });
-    },
-  });
-}
-
-/**
- * 바코드 번호 기반 표준 식재료 조회 뮤테이션 훅 (GET /api/v1/inventory/barcode/{barcodeNo})
- */
-export function useBarcodeLookup() {
-  return useMutation<BarcodeIngredientResponseDto, Error, string>({
-    mutationFn: async (barcodeNo) => {
-      return await getIngredientByBarcode(barcodeNo);
     },
   });
 }

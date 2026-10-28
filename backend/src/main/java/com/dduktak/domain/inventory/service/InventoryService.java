@@ -30,55 +30,10 @@ public class InventoryService {
 
     private final IngredientMasterRepository ingredientMasterRepository;
     private final UserIngredientRepository userIngredientRepository;
-    private final BarcodeProductLookupService barcodeProductLookupService;
     private final IngredientMatcher ingredientMatcher;
     private final GeminiOcrClient geminiOcrClient;
 
-    /**
-     * 바코드 번호 기반 표준 식재료 조회 (INV-01-3)
-     * 바코드 -> 상품명 조회 -> 74종 표준 식재료 유사 매칭 순으로 탐색하며,
-     * 일치하는 표준 식재료가 없을 경우 INV_WARN_BARCODE_NOT_FOUND (404)를 발생시킵니다.
-     *
-     * @param barcodeNo 바코드 번호
-     * @return 매칭된 표준 식재료 정보 및 권장 소비기한 DTO
-     */
-    public BarcodeIngredientResponseDto getIngredientByBarcode(String barcodeNo) {
-        log.info("[InventoryService] 바코드 식재료 조회 요청: '{}'", barcodeNo);
-
-        // 1. 바코드 번호로 유통 상품명 조회 (FoodQR/식품안전나라/로컬 사전)
-        Optional<String> productNameOpt = barcodeProductLookupService.lookupProductName(barcodeNo);
-        if (productNameOpt.isEmpty()) {
-            log.warn("[InventoryService] 바코드 상품명 조회 불가 -> 404 예외 발생: '{}'", barcodeNo);
-            throw new CustomException(ErrorCode.INV_WARN_BARCODE_NOT_FOUND);
-        }
-
-        String productName = productNameOpt.get();
-        log.info("[InventoryService] 조회된 상품명: '{}' (바코드: '{}')", productName, barcodeNo);
-
-        // 2. 74종 표준 마스터 식재료 전체 목록 로드
-        List<IngredientMaster> masterList = ingredientMasterRepository.findAll();
-
-        // 3. 스마트 매칭 엔진을 통한 표준 식재료 유사 매칭
-        Optional<IngredientMaster> matchedMasterOpt = ingredientMatcher.matchToMaster(productName, masterList);
-        if (matchedMasterOpt.isEmpty()) {
-            log.warn("[InventoryService] 상품명 '{}'에 대응하는 표준 식재료 없음 (파채 등 미등록) -> 404 예외 발생", productName);
-            throw new CustomException(ErrorCode.INV_WARN_BARCODE_NOT_FOUND);
-        }
-
-        IngredientMaster master = matchedMasterOpt.get();
-        LocalDate recommendedExpireDate = LocalDate.now().plusDays(master.getDefaultShelfDays() != null ? master.getDefaultShelfDays() : 7);
-
-        log.info("[InventoryService] 바코드 매칭 최종 성공: '{}' -> '{}' (ID: {}, 권장 소비기한: {})",
-                productName, master.getName(), master.getMasterIngredientId(), recommendedExpireDate);
-
-        return BarcodeIngredientResponseDto.builder()
-                .masterIngredientId(master.getMasterIngredientId())
-                .name(master.getName())
-                .categoryId(master.getCategoryId())
-                .recommendedUnit(master.getDefaultUnit())
-                .recommendedExpireDate(recommendedExpireDate)
-                .build();
-    }
+    
 
     /**
      * 영수증 OCR 이미지 스캔 및 표준 식재료 일괄 추출 (INV-01-3)

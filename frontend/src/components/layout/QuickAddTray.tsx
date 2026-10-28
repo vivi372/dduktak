@@ -1,32 +1,24 @@
 import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { PencilLine, Receipt, ScanBarcode, X } from 'lucide-react';
+import { PencilLine, Receipt, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '@/constants/routes';
 import { useBodyScrollLock } from '@/hooks';
-import { usePlatformStore } from '@/store/usePlatformStore';
 
 interface QuickAddTrayProps {
   open: boolean;
   onClose: () => void;
-  onSelectAction?: (key: 'manual' | 'barcode' | 'receipt') => void;
+  onSelectAction?: (key: 'manual' | 'receipt') => void;
 }
 
 const ALL_ACTIONS = [
   { key: 'manual', label: '직접 입력', desc: '재료 이름과 소비기한을 직접 적어요', Icon: PencilLine },
-  { key: 'barcode', label: '바코드 스캔', desc: '카메라로 바코드를 찍으면 자동으로 채워요', Icon: ScanBarcode },
   { key: 'receipt', label: '영수증 스캔', desc: '영수증 사진 한 장으로 한 번에 등록해요', Icon: Receipt },
 ] as const;
 
 /** FAB에서 열리는 재료 퀵 등록 바텀시트 (Thumb Zone) */
 export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProps) {
   const navigate = useNavigate();
-  const { isApp } = usePlatformStore();
-
-  const actions = ALL_ACTIONS.filter((action) => {
-    if (action.key === 'barcode') return isApp;
-    return true;
-  });
 
   // 바텀시트 오픈 시 뒷배경 스크롤 방지
   useBodyScrollLock(open);
@@ -39,7 +31,7 @@ export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProp
     return () => window.removeEventListener('keydown', onKey);
   }, [open, onClose]);
 
-  const handleSelect = (key: 'manual' | 'barcode' | 'receipt') => {
+  const handleSelect = (key: 'manual' | 'receipt') => {
     onClose();
     if (onSelectAction) {
       onSelectAction(key);
@@ -78,29 +70,28 @@ export function QuickAddTray({ open, onClose, onSelectAction }: QuickAddTrayProp
                 aria-label="닫기"
                 className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-accent active:scale-95"
               >
-                <X className="h-5 w-5" />
+                <X className="h-5 w-5 text-muted-foreground" />
               </button>
             </div>
-            <ul className="space-y-2.5 pb-6">
-              {actions.map(({ key, label, desc, Icon }) => (
-                <li key={key}>
-                  <button
-                    type="button"
-                    onClick={() => handleSelect(key)}
-                    className="flex min-h-[68px] w-full items-center gap-4 rounded-2xl border bg-card p-3.5 text-left shadow-card transition-all hover:border-brand-300 active:scale-[0.98]"
-                  >
 
-                    <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-100 text-brand-700 dark:bg-brand-900/40 dark:text-brand-200">
-                      <Icon className="h-5 w-5" />
-                    </span>
-                    <span>
-                      <span className="block text-[15px] font-bold">{label}</span>
-                      <span className="block text-xs text-muted-foreground">{desc}</span>
-                    </span>
-                  </button>
-                </li>
+            <div className="flex flex-col gap-2.5 pb-6">
+              {ALL_ACTIONS.map(({ key, label, desc, Icon }) => (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => handleSelect(key)}
+                  className="flex min-h-[64px] items-center gap-3.5 rounded-2xl border border-border/70 bg-card p-3.5 text-left transition-all hover:border-brand-500/40 hover:bg-brand-500/5 active:scale-[0.99]"
+                >
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500/10 text-brand-500">
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-bold text-foreground">{label}</div>
+                    <div className="truncate text-xs text-muted-foreground">{desc}</div>
+                  </div>
+                </button>
               ))}
-            </ul>
+            </div>
           </motion.div>
         </div>
       )}

@@ -45,8 +45,7 @@
     *  [x] 회원 탈퇴(USER-02) 2중 안전장치(작성 레시피 user_id = NULL 익명화 선제 수행 및 개인 데이터 Cascade 파기) 적용.
     *  [x] 단위/통합 테스트 30종(JwtProviderTest 4종, AuthServiceTest 12종, AuthControllerTest 9종, SecurityConfigTest 4종, UserMapperIntegrationTest 1종) 전원 통과 (DoD 100% 달성).
 *  [x]  **Step 2-2: 모듈 2 (내 재료 관리소)**  (완료일시: 2026-10-21 / 담당자: AI 에이전트)
-    *  [x]  **외부 연동 파이프라인 (바코드 & 영수증 OCR) 구현 완료**  (완료일시: 2026-10-21 / 담당자: AI 에이전트):
-        *  [x] 바코드 식재료 조회 API (GET /api/v1/inventory/barcode/{barcodeNo}): 식품안전나라/푸드QR 및 인메모리 바코드 사전 ➔ IngredientMatcher 스마트 매칭 ➔ ingredient_master(74종) 연계. 미등록 시 404 Not Found (INV_WARN_BARCODE_NOT_FOUND) 반환.
+    *  [x]  **외부 연동 파이프라인 (영수증 OCR) 구현 완료**  (완료일시: 2026-10-21 / 담당자: AI 에이전트):
         *  [x] 영수증 OCR 스캔 API (POST /api/v1/inventory/scan-ocr): Google AI Studio Gemini Flash (gemini-flash-latest) REST API 프록시 연동, Base64 JSON 품목 추출 및 ingredient_master 매핑, 권장 소비기한 D-Day 자동 산출, 장애/미인식 시 Fail-safe 빈 배열 [] (200 OK) 반환.
         *  [x] 표준 식재료 마스터(ingredient_master) MyBatis Mapper 및 Repository 구축 완료 (findAll, findById, findByName, searchByNameLike).
         *  [x] 단위/슬라이스/통합 테스트 23종 전원 통과 (전체 백엔드 72종 100% 성공).
@@ -102,7 +101,7 @@
 * [x] **Step 3A-3: 내 냉장고 관리 화면 UI 퍼블리싱 (모듈 2)** (완료일시: 2026-10-23 01:15 / 담당자: AI 에이전트)
     * [x] 표준 식재료 검색 Combobox (Searchable Select) UI (74종 마스터, 카테고리 탭, 2-Line 가로 확장).
     * [x] 식재료 메인 카드 & **2-Tier 아코디언** 열림/닫힘 프레임 모션 애니메이션 (D-Day 배지, 소비기한 임박순 정렬, 인스턴스/메모 독립 분리).
-    * [x] 바코드 스캔 카메라 프레임 & 영수증 OCR 검수 팝업 UI 퍼블리싱 (모바일 액션시트 vs PC 드래그앤드롭 미리보기, 스켈레톤 로딩, 수동 검수 테이블, Fail-Safe 복구 뷰).
+    * [x] 영수증 OCR 검수 팝업 UI 퍼블리싱 (모바일 액션시트 vs PC 드래그앤드롭 미리보기, 스켈레톤 로딩, 수동 검수 테이블, Fail-Safe 복구 뷰).
     * [x] 소비기한 만료 영역(dDay < 0) 접이식 격리 및 3대 관리 액션(폐기/먹음/연장) 2단 반응형 마크업.
     * [x] 320px 초소형 모바일 반응형 UI/UX 전면 최적화 (CustomDatePicker 인라인 확장, no-scrollbar 스크롤 락 및 모달 배경 스크롤 차단 useBodyScrollLock 연동).
 * [x] **Step 3A-4: 레시피 커뮤니티, 매칭 & 상세/등록 UI 퍼블리싱 (모듈 3, 4)** (완료일시: 2026-10-23 11:05 / 담당자: AI 에이전트)
@@ -141,7 +140,7 @@
     * [x] 식재료 개별 수정(`PUT /api/v1/inventory/{id}`) 및 소프트 삭제(`DELETE /api/v1/inventory/{id}`).
     * [x] 수동 소비 차감(`PATCH /api/v1/inventory/{id}/consume`: Math.max 방어 연산 및 잔여 0 시 CONSUMED 전이).
     * [x] 소비기한 만료 재료(D-Day < 0) 3대 관리 액션(폐기 DELETE, 먹음 PATCH consume, 연장 PUT) 연동.
-    * [x] 바코드 스캔 조회(`GET /api/v1/inventory/barcode/{no}`) & 영수증 Gemini Flash OCR(`POST /api/v1/inventory/scan-ocr`) 연동 및 Fail-Safe 예외 복구 뷰(`ScanFailSafeModal`) 연결.
+    * [x] 영수증 Gemini Flash OCR(`POST /api/v1/inventory/scan-ocr`) 연동 및 수동 검수 뷰 연결.
     * [x] 메인 홈 브리핑(`GET /api/v1/home/briefing`) 선행 연동: 실제 냉장고 임박 식재료 집계 배지 바인딩 및 추천/인기 레시피 0% 폴백 핸들링 반영.
 * [x] **Step 3B-4: 레시피 커뮤니티, 스마트 매칭 & 요리완료 FIFO 연동 (모듈 3, 4)** (완료일시: 2026-10-25 14:30 / 담당자: AI 에이전트)
     * [x] 레시피 8대 카테고리 조회(`GET /api/v1/recipes/categories`), 목록 페이징/검색/필터(`GET /api/v1/recipes`).
@@ -162,10 +161,8 @@
     * [x] 딥링크(`targetId`) 클릭 시 해당 화면(냉장고/레시피) 이동 및 삭제된 콘텐츠(404 에러) 감지 시 Fallback 경고 토스트 노출 및 안전한 화면 유지.
     * [x] 단위 테스트(43개 파일, 224개 테스트 100% PASS) 및 TypeScript 컴파일/Vite 프로덕션 번들 빌드(`npm run build`) 오류 0건 무결점 검증 완료.
 * [x] **Step 3B-6: Capacitor 하이브리드 앱 패키징 & 네이티브 연동 및 앱 온보딩 (모바일 전용)** (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)
-    * [x] **Capacitor 6.x / Android Native 세팅 & Google ML Kit 네이티브 바코드 스캐너 플러그인 연동 (완료일시: 2026-10-25 23:25 / 담당자: AI 에이전트)**:
+    * [x] **Capacitor 6.x / Android Native 세팅 & 네이티브 앱 통합 (완료일시: 2026-10-25 23:25 / 담당자: AI 에이전트)**:
         * Capacitor 6.x 전역 설정(`capacitor.config.ts`), Android 네이티브 Gradle 프로젝트 생성 및 `AndroidManifest.xml` 카메라 권한/ML Kit UI 메타데이터 주입 완료.
-        * `nativeBarcodeService.ts` 추상화 서비스 작성: `Capacitor.isNativePlatform()` 런타임 환경 감지, Google Play 서비스 ML Kit 모듈 자동 다운로드, 카메라 권한 요청 및 바코드 스캔 Activity 연동.
-        * `BarcodeScannerModal.tsx` 하이브리드 분기 연동: 모바일 실기기 카메라 스캔 자동 실행 및 바코드 식재료 조회(`GET /api/v1/inventory/barcode/{barcodeNo}`) 파이프라인 자동 연결 (웹 환경은 뷰파인더 애니메이션 & 모의 바코드 Fallback 100% 정상 유지).
         * 모바일 웹뷰 API 연동을 위한 `.env.example`의 `VITE_API_BASE_URL` 가이드라인 추가.
         * 단위 테스트 5건 신규 작성(전체 40개 파일, 206개 단위 테스트 100% PASS), TypeScript 빌드 무오류 및 `npx cap sync android` 동기화 검증 완료.
     * [x] **앱 실행 인트로 & 스플래시 애니메이션 (App Launch Intro & Splash Animation) (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)**:
@@ -174,7 +171,7 @@
         * `useAppSplashStore.ts` 세션 관리 및 개발자 스위처(`FloatingDevSwitcher.tsx`)에서 언제든 스플래시 인트로 재체험 지원.
     * [x] **최초 실행 사용자 가이드 온보딩 (First-Run Onboarding Walkthrough) 제작 (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)**:
         * 앱 최초 실행 상태 감지(`useOnboardingStore`, `localStorage`) 및 최초 진입 시 온보딩 가이드 화면(`/onboarding`) 자동 분기 라우팅.
-        * "스마트 냉장고 식재료 관리", "영수증·바코드 초간편 등록", "냉장고 속 재료 맞춤 뚝딱 요리 솔루션" 3단계 감성 일러스트/아이콘 비주얼 슬라이드 및 부드러운 인디케이터 닷 구현 (`OnboardingPage.tsx`).
+        * "스마트 냉장고 식재료 관리", "영수증 초간편 등록", "냉장고 속 재료 맞춤 뚝딱 요리 솔루션" 3단계 감성 일러스트/아이콘 비주얼 슬라이드 및 부드러운 인디케이터 닷 구현 (`OnboardingPage.tsx`).
         * 필수 권한(카메라, 알림) 사전 친화적 안내 다이얼로그 및 '시작하기' / '건너뛰기'를 통한 메인 홈 라우팅 연동.
         * 개발자 스위처(`FloatingDevSwitcher.tsx`)에 [앱 온보딩 가이드 다시보기] 버튼 연동으로 원클릭 검수 지원.
     * [x] **FCM 푸시 알림 수신기 연동 & 하드웨어 뒤로가기 버튼(Back Button) 제어 (완료일시: 2026-10-26 13:30 / 담당자: AI 에이전트)**:
