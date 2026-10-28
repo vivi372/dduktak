@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: ${PORT:8080}
   servlet:
     context-path: /
@@ -57,7 +57,7 @@ gemini:
 # 식품의약품안전처 푸드QR / 공공 데이터 연동 설정 (바코드 조회)
 food-qr:
   api-key: ${FOOD_QR_API_KEY:}
-  base-url: ${FOOD_QR_BASE_URL:https://api.foodsafetykorea.go.kr}
+  base-url: ${FOOD_QR_BASE_URL:https://foodqr.kr}
 
 # Firebase Cloud Messaging (FCM 푸시 알림 설정)
 fcm:

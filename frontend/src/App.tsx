@@ -10,16 +10,23 @@ export const App = () => {
   useEffect(() => {
     const unsubscribe = useAuthStore.getState().initialize();
 
-    // 하이브리드 모바일 네이티브 푸시 알림 수신기 초기화 및 딥링크 라우팅
-    NativePushService.initPushNotifications((data) => {
-      if (data?.route) {
-        router.navigate(data.route);
-      } else if (data?.targetId) {
-        router.navigate(ROUTES.NOTIFICATIONS);
+    // 하이브리드 모바일 네이티브 푸시 알림 수신기 초기화 및 딥링크 라우팅 (스플래시 완료 후 비동기 안전 실행)
+    const pushTimer = setTimeout(() => {
+      try {
+        NativePushService.initPushNotifications((data) => {
+          if (data?.route) {
+            router.navigate(data.route);
+          } else if (data?.targetId) {
+            router.navigate(ROUTES.NOTIFICATIONS);
+          }
+        });
+      } catch (e) {
+        console.warn('NativePushService initialization skipped:', e);
       }
-    });
+    }, 1200);
 
     return () => {
+      clearTimeout(pushTimer);
       unsubscribe?.();
       NativePushService.cleanup();
     };

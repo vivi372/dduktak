@@ -21,7 +21,7 @@ public class FoodQrProperties {
     private String apiKey;
 
     /**
-     * 기본 연동 베이스 URL
+     * 기본 연동 베이스 URL (식약처 푸드QR 공식 도메인)
      */
-    private String baseUrl = "https://api.foodsafetykorea.go.kr";
+    private String baseUrl = "https://foodqr.kr";
 }

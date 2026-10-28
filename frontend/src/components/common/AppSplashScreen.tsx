@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Capacitor } from '@capacitor/core';
 import { SplashScreen } from '@capacitor/splash-screen';
@@ -6,6 +6,46 @@ import { RefreshCw, Sparkles, Utensils } from 'lucide-react';
 import { useAppSplashStore } from '@/store/useAppSplashStore';
 import { pingBackend } from '@/services/serverWarmupService';
 import logoHd from '@/assets/logo-hd.png';
+
+/** 로고 및 펄스 링: 150ms 프로그레스 리렌더링에 영향받지 않도록 React.memo로 완전히 격리 */
+const SplashLogoWithRings = React.memo(() => {
+  return (
+    <div className="relative mb-5 flex items-center justify-center">
+      {/* 외부 확산 펄스 링 1: GPU 가속 순수 CSS 애니메이션 (깜박임 원천 차단) */}
+      <div
+        className="pointer-events-none absolute h-56 w-56 rounded-full bg-gradient-to-tr from-brand-400 to-mint-400 blur-xl opacity-40 animate-ping"
+        style={{ animationDuration: '3s' }}
+      />
+
+      {/* 외부 확산 펄스 링 2: 미세 글로우 펄스 */}
+      <div
+        className="pointer-events-none absolute h-52 w-52 rounded-full bg-brand-400/30 blur-lg animate-pulse"
+        style={{ animationDuration: '2s' }}
+      />
+
+      {/* 고해상도 공식 로고 카드 (최초 등장 애니메이션 유지) */}
+      <motion.div
+        initial={{ scale: 0.7, y: 16, opacity: 0 }}
+        animate={{ scale: [0.7, 1.03, 1], y: 0, opacity: 1 }}
+        transition={{
+          type: 'spring',
+          stiffness: 240,
+          damping: 18,
+          duration: 0.8,
+        }}
+        className="relative flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center overflow-hidden rounded-[36px] bg-[#FFFDF7] shadow-2xl ring-4 ring-brand-200/80 dark:ring-brand-800/60"
+      >
+        <img
+          src={logoHd}
+          alt="오늘의 뚝딱 공식 로고"
+          className="h-full w-full object-cover rounded-[36px]"
+        />
+      </motion.div>
+    </div>
+  );
+});
+
+SplashLogoWithRings.displayName = 'SplashLogoWithRings';
 
 interface AppSplashScreenProps {
   /** 브랜드 로고 감상을 위한 최소 노출 시간 (밀리초, 기본값 1500ms) */
@@ -159,51 +199,8 @@ export function AppSplashScreen({ minDuration, duration = 1500 }: AppSplashScree
 
           {/* 중앙 메인 브랜딩 & 공식 로고 애니메이션 컨테이너 */}
           <div className="flex flex-col items-center text-center">
-            {/* 펄스 링 & 고해상도 공식 로고 카드 */}
-            <div className="relative mb-5 flex items-center justify-center">
-              {/* 외부 확산 펄스 링 (코랄 & 민트) */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: [1, 1.35, 1.55], opacity: [0.6, 0.25, 0] }}
-                transition={{
-                  duration: 1.8,
-                  repeat: Infinity,
-                  ease: 'easeOut',
-                }}
-                className="absolute h-56 w-56 rounded-full bg-gradient-to-tr from-brand-400 to-mint-400 blur-xl"
-              />
-
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: [1, 1.2, 1.35], opacity: [0.4, 0.2, 0] }}
-                transition={{
-                  duration: 1.8,
-                  delay: 0.3,
-                  repeat: Infinity,
-                  ease: 'easeOut',
-                }}
-                className="absolute h-52 w-52 rounded-full bg-brand-400/35 blur-lg"
-              />
-
-              {/* 고해상도 화질개선 공식 로고 카드 */}
-              <motion.div
-                initial={{ scale: 0.7, y: 16, opacity: 0 }}
-                animate={{ scale: [0.7, 1.03, 1], y: 0, opacity: 1 }}
-                transition={{
-                  type: 'spring',
-                  stiffness: 240,
-                  damping: 18,
-                  duration: 0.8,
-                }}
-                className="relative flex h-52 w-52 sm:h-60 sm:w-60 items-center justify-center overflow-hidden rounded-[36px] bg-[#FFFDF7] shadow-2xl ring-4 ring-brand-200/80 dark:ring-brand-800/60"
-              >
-                <img
-                  src={logoHd}
-                  alt="오늘의 뚝딱 공식 로고"
-                  className="h-full w-full object-cover rounded-[36px]"
-                />
-              </motion.div>
-            </div>
+            {/* 펄스 링 & 고해상도 공식 로고 카드 (깜박임 방지 격리 컴포넌트) */}
+            <SplashLogoWithRings />
 
             {/* 브랜드 슬로건 뱃지 */}
             <motion.div

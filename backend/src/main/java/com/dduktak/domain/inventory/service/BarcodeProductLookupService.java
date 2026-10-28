@@ -2,7 +2,6 @@ package com.dduktak.domain.inventory.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.dduktak.global.config.FoodQrProperties;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
@@ -11,22 +10,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-/**
- * 바코드 번호 기반 상품명 조회 서비스
- * 식품의약품안전처 푸드QR 및 식품안전나라 공공데이터 연계와 인메모리 샘플 바코드 사전을 결합하여
- * 바코드 번호에 대응하는 유통 상품명을 조회합니다.
- */
+// 바코드 번호 기반 상품명 조회 서비스
+// 식품의약품안전처 푸드QR (foodqr.kr) e라벨 공공 OpenAPI 및 인메모리 샘플 바코드 사전을 결합하여
+// 바코드 번호에 대응하는 유통 상품명을 조회합니다.
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class BarcodeProductLookupService {
 
     private final FoodQrProperties foodQrProperties;
 
-    /**
-     * 테스트 및 오프라인/Fallback용 사전 등록 바코드-상품명 매핑 사전
-     * (EAN-13 및 GTIN-14 양방향 대응)
-     */
+    // 테스트 및 오프라인/Fallback용 사전 등록 바코드-상품명 매핑 사전 (EAN-13 및 GTIN-14 양방향 대응)
     private static final Map<String, String> BARCODE_DICTIONARY = new ConcurrentHashMap<>();
 
     static {
@@ -34,7 +27,7 @@ public class BarcodeProductLookupService {
         BARCODE_DICTIONARY.put("0246890115701", "국내산 냉장 삼겹살 구이용");
         BARCODE_DICTIONARY.put("246890115701", "국내산 냉장 삼겹살 구이용");
 
-        // [샘플 데이터 바코드] 파채양념 -> 404 미등록 대상
+        // [샘플 데이터 바코드] 파채양념
         BARCODE_DICTIONARY.put("08801045121086", "오늘밥상 바로 무쳐먹는 파채양념");
         BARCODE_DICTIONARY.put("8801045121086", "오늘밥상 바로 무쳐먹는 파채양념");
 
@@ -47,12 +40,11 @@ public class BarcodeProductLookupService {
         BARCODE_DICTIONARY.put("8803694136152", "도드람 직화곱창 600g");
     }
 
-    /**
-     * 바코드 번호로 상품명 조회
-     *
-     * @param barcodeNo 바코드 번호 (문자열)
-     * @return 조회된 상품명 (미조회 시 Optional.empty())
-     */
+    public BarcodeProductLookupService(FoodQrProperties foodQrProperties) {
+        this.foodQrProperties = foodQrProperties;
+    }
+
+    // 바코드 번호로 상품명 조회
     public Optional<String> lookupProductName(String barcodeNo) {
         if (barcodeNo == null || barcodeNo.isBlank()) {
             return Optional.empty();
@@ -68,10 +60,17 @@ public class BarcodeProductLookupService {
             return Optional.of(localMatch);
         }
 
-        // 2. 외부 식품안전나라 / 푸드QR 공공 API 연동 시도 (API 키가 설정된 경우)
+        // 2. 외부 식품의약품안전처 푸드QR OpenAPI (foodqr.kr) 연동 시도
         if (foodQrProperties.getApiKey() != null && !foodQrProperties.getApiKey().isBlank()) {
             try {
+                // 13자리 바코드일 경우 선행 0을 붙인 14자리(GTIN-14)로도 함께 질의
                 Optional<String> externalResult = callExternalFoodApi(normalizedBarcode);
+                if (externalResult.isEmpty() && normalizedBarcode.length() == 13) {
+                    externalResult = callExternalFoodApi("0" + normalizedBarcode);
+                } else if (externalResult.isEmpty() && normalizedBarcode.length() == 14 && normalizedBarcode.startsWith("0")) {
+                    externalResult = callExternalFoodApi(normalizedBarcode.substring(1));
+                }
+
                 if (externalResult.isPresent()) {
                     log.info("[BarcodeLookup] 외부 푸드QR API 조회 성공: '{}' -> '{}'", normalizedBarcode, externalResult.get());
                     return externalResult;
@@ -85,9 +84,7 @@ public class BarcodeProductLookupService {
         return Optional.empty();
     }
 
-    /**
-     * 선행 0 유무를 상호 고려한 사전 조회 (GTIN-14 vs EAN-13 유연 대응)
-     */
+    // 선행 0 유무를 상호 고려한 사전 조회 (GTIN-14 vs EAN-13 유연 대응)
     private String searchInDictionary(String barcode) {
         if (BARCODE_DICTIONARY.containsKey(barcode)) {
             return BARCODE_DICTIONARY.get(barcode);
@@ -107,38 +104,43 @@ public class BarcodeProductLookupService {
         return null;
     }
 
-    /**
-     * 식품의약품안전처 식품안전나라 유통식품 바코드 정보 API 호출 (선택적 외부 연동)
-     */
+    // 식품의약품안전처 푸드QR (foodqr.kr) e라벨 OpenAPI 호출
+    // 주소 형식: https://foodqr.kr/openapi/service/qr1001/F001?accessKey={인증키}&numOfRows=1&pageNo=1&_type=json&brcdNo={바코드}
     private Optional<String> callExternalFoodApi(String barcode) {
         try {
             RestClient restClient = RestClient.builder()
                     .baseUrl(foodQrProperties.getBaseUrl())
                     .build();
 
-            // http://openapi.foodsafetykorea.go.kr/api/{keyId}/C005/json/1/1/BAR_CD={barcode}
-            String url = String.format("/api/%s/C005/json/1/1/BAR_CD=%s",
-                    foodQrProperties.getApiKey(), barcode);
-
             JsonNode response = restClient.get()
-                    .uri(url)
+                    .uri(uriBuilder -> uriBuilder
+                            .path("/openapi/service/qr1001/F001")
+                            .queryParam("accessKey", foodQrProperties.getApiKey())
+                            .queryParam("numOfRows", 1)
+                            .queryParam("pageNo", 1)
+                            .queryParam("_type", "json")
+                            .queryParam("brcdNo", barcode)
+                            .build())
                     .retrieve()
                     .body(JsonNode.class);
 
-            if (response != null && response.has("C005")) {
-                JsonNode rows = response.path("C005").path("row");
-                if (rows.isArray() && !rows.isEmpty()) {
-                    JsonNode first = rows.get(0);
-                    if (first.hasNonNull("PRDLST_NM")) {
-                        String prdlstNm = first.get("PRDLST_NM").asText().trim();
-                        if (!prdlstNm.isBlank()) {
-                            return Optional.of(prdlstNm);
+            if (response != null) {
+                JsonNode body = response.path("response").path("body");
+                int totalCount = body.path("totalCount").asInt(0);
+                if (totalCount > 0) {
+                    JsonNode items = body.path("items").path("item");
+                    // 단건일 경우 객체(Object), 다건일 경우 배열(Array) 대응
+                    JsonNode targetItem = items.isArray() && !items.isEmpty() ? items.get(0) : items;
+                    if (targetItem.hasNonNull("prdctNm")) {
+                        String prdctNm = targetItem.get("prdctNm").asText().trim();
+                        if (!prdctNm.isBlank()) {
+                            return Optional.of(prdctNm);
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            log.debug("[BarcodeLookup] 공공 API 통신 실패: {}", e.getMessage());
+            log.debug("[BarcodeLookup] 푸드QR API 통신 실패: {}", e.getMessage());
         }
         return Optional.empty();
     }

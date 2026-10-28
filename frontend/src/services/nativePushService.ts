@@ -34,22 +34,18 @@ export class NativePushService {
         return null;
       }
 
-      // 2. APNs / FCM 토큰 발급 등록
-      await PushNotifications.register();
-
-      // 3. 토큰 발급 성공 리스너
-      PushNotifications.addListener('registration', (token) => {
+      // 2. 리스너 먼저 등록 (토큰 수신 및 에러 캡처)
+      await PushNotifications.addListener('registration', (token) => {
         // 백엔드 API (POST /api/v1/notifications/fcm-token) 전달용 토큰 저장
         localStorage.setItem('dduktak_fcm_token', token.value);
       });
 
-      // 4. 토큰 발급 에러 리스너
-      PushNotifications.addListener('registrationError', (error) => {
-        console.error('[FCM] 토큰 등록 실패:', error);
+      await PushNotifications.addListener('registrationError', (error) => {
+        console.warn('[FCM] 토큰 등록 실패:', error);
       });
 
-      // 5. 앱이 포그라운드(화면 켜진 상태)일 때 푸시 수신 시 인앱 토스트 노출
-      PushNotifications.addListener(
+      // 3. 앱이 포그라운드(화면 켜진 상태)일 때 푸시 수신 시 인앱 토스트 노출
+      await PushNotifications.addListener(
         'pushNotificationReceived',
         (notification) => {
           toast.info(notification.title || '새 알림', {
@@ -59,8 +55,8 @@ export class NativePushService {
         }
       );
 
-      // 6. 사용자가 시스템 푸시 알림 탭/클릭 시 딥링크 처리
-      PushNotifications.addListener(
+      // 4. 사용자가 시스템 푸시 알림 탭/클릭 시 딥링크 처리
+      await PushNotifications.addListener(
         'pushNotificationActionPerformed',
         (action) => {
           const data = action.notification.data || {};
@@ -70,10 +66,17 @@ export class NativePushService {
         }
       );
 
+      // 5. APNs / FCM 토큰 발급 등록
+      try {
+        await PushNotifications.register();
+      } catch (regError) {
+        console.warn('[FCM] PushNotifications.register() 실패:', regError);
+      }
+
       this.isInitialized = true;
       return localStorage.getItem('dduktak_fcm_token');
     } catch (err) {
-      console.warn('[FCM] 푸시 알림 초기화 중 예외 발생:', err);
+      console.warn('[FCM] 푸시 알림 초기화 중 예외 발생 (앱 구동 계속):', err);
       return null;
     }
   }

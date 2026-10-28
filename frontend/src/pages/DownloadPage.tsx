@@ -35,7 +35,7 @@ export const DownloadPage: React.FC = () => {
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-3 flex h-20 w-20 items-center justify-center rounded-2xl bg-white p-3 shadow-md ring-1 ring-orange-100">
             <img src={logoIcon} alt="오늘의 뚝딱" className="h-full w-full object-contain" />
-            <span className="absolute -bottom-1 -right-1 rounded-full bg-brand-coral px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
+            <span className="absolute -bottom-1 -right-1 rounded-full bg-brand-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-sm">
               Android
             </span>
           </div>
@@ -65,13 +65,21 @@ export const DownloadPage: React.FC = () => {
             <a
               href={apkDownloadPath}
               download="dduktak-app.apk"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-coral to-[#E5604F] py-3.5 text-base font-bold text-white shadow-md transition-all hover:opacity-95 active:scale-[0.98]"
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-brand-500 to-brand-600 py-3.5 text-base font-black text-white shadow-soft transition-all hover:opacity-95 active:scale-[0.98]"
             >
-              <Download className="h-5 w-5" />
-              <span>최신 APK 다운로드</span>
+              <Download className="h-5 w-5 text-white stroke-[2.5]" />
+              <span className="text-white font-black tracking-wide">최신 APK 다운로드</span>
             </a>
             <p className="mt-2 text-center text-[11px] text-gray-400">
               * 스마트폰 브라우저(Chrome/삼성 인터넷)에서 다운로드 후 바로 설치하세요.
+            </p>
+          </div>
+
+          {/* .zip 다운로드 시 대처 팁 배너 */}
+          <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50/70 p-2.5 text-[11px] text-orange-800">
+            <span className="font-bold">💡 혹시 .zip 파일로 다운로드되나요?</span>
+            <p className="mt-0.5 text-orange-700">
+              삼성 인터넷 등 일부 브라우저가 .apk를 .zip으로 바꿀 수 있습니다. 파일 관리자에서 <strong>이름 변경</strong>을 눌러 끝의 <code>.zip</code>을 <code>.apk</code>로 수정하면 바로 설치됩니다.
             </p>
           </div>
 
@@ -113,25 +121,25 @@ export const DownloadPage: React.FC = () => {
         {/* 3단계 스마트폰 설치 가이드 */}
         <div className="mt-6">
           <h2 className="flex items-center gap-2 text-sm font-bold text-gray-800">
-            <FileText className="h-4 w-4 text-brand-coral" />
+            <FileText className="h-4 w-4 text-brand-600" />
             <span>안드로이드 설치 가이드 (3단계)</span>
           </h2>
 
           <div className="mt-3 space-y-2.5">
             <div className="flex items-start gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-coral">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-600">
                 1
               </div>
               <div className="text-xs text-gray-600">
                 <p className="font-semibold text-gray-800">APK 다운로드 및 확인</p>
                 <p className="mt-0.5 text-gray-500">
-                  위 버튼을 눌러 다운로드 시 <span className="font-semibold text-gray-700">"유해한 파일일 수 있음"</span> 경고가 표시되면 <span className="font-semibold text-brand-coral">"무조건 다운로드"</span>를 선택하세요.
+                  위 버튼을 눌러 다운로드 시 <span className="font-semibold text-gray-700">"유해한 파일일 수 있음"</span> 경고가 표시되면 <span className="font-semibold text-brand-600">"무조건 다운로드"</span>를 선택하세요.
                 </p>
               </div>
             </div>
 
             <div className="flex items-start gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-coral">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-600">
                 2
               </div>
               <div className="text-xs text-gray-600">
@@ -143,13 +151,13 @@ export const DownloadPage: React.FC = () => {
             </div>
 
             <div className="flex items-start gap-3 rounded-xl bg-white p-3.5 shadow-sm ring-1 ring-gray-100">
-              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-coral">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-orange-100 text-xs font-bold text-brand-600">
                 3
               </div>
               <div className="text-xs text-gray-600">
                 <p className="font-semibold text-gray-800">설치 완료 및 앱 실행</p>
                 <p className="mt-0.5 text-gray-500">
-                  <span className="font-semibold text-gray-700">[설치]</span>를 누르면 앱이 스마트폰에 설치됩니다. 설치 후 <span className="font-semibold text-brand-coral">[열기]</span>를 눌러 네이티브 테스트를 시작하세요!
+                  <span className="font-semibold text-gray-700">[설치]</span>를 누르면 앱이 스마트폰에 설치됩니다. 설치 후 <span className="font-semibold text-brand-600">[열기]</span>를 눌러 네이티브 테스트를 시작하세요!
                 </p>
               </div>
             </div>

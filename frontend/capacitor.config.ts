@@ -5,6 +5,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * - appId: 안드로이드 패키지 고유 식별자 (com.dduktak.app)
  * - appName: 모바일 홈 화면 노출 앱 이름 ('오늘의 뚝딱')
  * - webDir: Vite 번들 빌드 출력 디렉터리 ('dist')
+ * - androidScheme: 'http'로 설정하여 HTTP 로컬 백엔드 통신 시 웹뷰의 Mixed Content 차단 방지
  * - server.cleartext: 로컬 개발 환경(HTTP) 백엔드 API 통신 허용
  */
 const config: CapacitorConfig = {
@@ -12,7 +13,7 @@ const config: CapacitorConfig = {
   appName: '오늘의 뚝딱',
   webDir: 'dist',
   server: {
-    androidScheme: 'https',
+    androidScheme: 'http',
     cleartext: true,
   },
   plugins: {
