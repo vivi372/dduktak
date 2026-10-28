@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ChefHat, Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
@@ -44,6 +44,7 @@ type AuthMode = 'social' | 'login' | 'signup' | 'forgot-password' | 'verify-rese
 export default function LoginPage() {
   const navigate = useNavigate();
   const {
+    isAuthenticated,
     loginWithEmail,
     signupWithEmail,
     loginWithOAuth,
@@ -54,6 +55,13 @@ export default function LoginPage() {
     isSendingReset,
     isVerifyingResetOtp,
   } = useAuth();
+
+  // 이미 인증된 상태(이메일 인증 완료, 다른 탭 인증 등)인 경우 메인 화면으로 즉시 이동
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(ROUTES.HOME, { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정) / verify-reset-otp (인증번호 입력)
   const [mode, setMode] = useState<AuthMode>('social');

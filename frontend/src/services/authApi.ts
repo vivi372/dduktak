@@ -6,6 +6,7 @@
  * 2. 백엔드 Spring Boot REST API: public.profiles 지연 프로필 생성(POST /init), 프로필 조회/수정(GET, PATCH /me), 회원 탈퇴(DELETE /withdraw)
  */
 
+import { Capacitor } from '@capacitor/core';
 import { supabase } from '@/services/supabaseClient';
 import { apiClient } from '@/services/apiClient';
 import type {
@@ -65,14 +66,18 @@ export async function signUpWithEmail(email: string, password: string, nickname:
  * 구글 소셜 간편 로그인 (AUTH-02-1)
  */
 export async function signInWithOAuth(provider: 'google') {
-  // 모바일 앱 환경 및 웹 환경 모두 Supabase가 허용하는 유효한 웹 브릿지(/auth/callback)로 지정
-  // (모바일 기기에서는 브릿지 페이지에서 Android Intent를 통해 앱으로 100% 자동 복귀)
+  const isNative = Capacitor.isNativePlatform();
   let origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.219.101:5173';
   if (origin.includes('localhost')) {
     origin = 'http://192.168.219.101:5173';
   }
 
-  const redirectTo = `${origin}/auth/callback`;
+  // 웹 브라우저와 모바일 앱 환경을 명확히 구분하여 콜백 처리 (웹: 즉시 홈 이동, 앱: Intent 복귀)
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('dduktak_oauth_from', isNative ? 'app' : 'web');
+  }
+
+  const redirectTo = `${origin}/auth/callback?from=${isNative ? 'app' : 'web'}`;
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
