@@ -5,13 +5,12 @@ import com.dduktak.domain.recipe.entity.Recipe;
 import com.dduktak.domain.recipe.entity.RecipeCategory;
 import com.dduktak.domain.recipe.entity.RecipeIngredient;
 import com.dduktak.domain.recipe.entity.RecipeStep;
-import com.dduktak.global.config.DotenvTestInitializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@ContextConfiguration(initializers = DotenvTestInitializer.class)
 @DisplayName("[통합 테스트] RecipeMapper 및 관련 매퍼 MyBatis SQL 매핑 및 실제 DB 연동 검증")
 class RecipeMapperIntegrationTest {
 

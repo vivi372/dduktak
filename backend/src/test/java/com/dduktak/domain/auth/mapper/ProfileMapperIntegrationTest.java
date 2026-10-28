@@ -2,14 +2,12 @@ package com.dduktak.domain.auth.mapper;
 
 import com.dduktak.domain.auth.dto.UserProfileResponseDto;
 import com.dduktak.domain.auth.entity.Profile;
-import com.dduktak.global.config.DotenvTestInitializer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
@@ -20,7 +18,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@ContextConfiguration(initializers = DotenvTestInitializer.class)
 @DisplayName("[통합 테스트] ProfileMapper MyBatis SQL 매핑 및 DB 연동 검증")
 class ProfileMapperIntegrationTest {
 

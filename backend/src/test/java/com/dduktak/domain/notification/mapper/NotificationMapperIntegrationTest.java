@@ -5,12 +5,10 @@ import com.dduktak.domain.auth.mapper.ProfileMapper;
 import com.dduktak.domain.notification.dto.ExpiringIngredientTargetVo;
 import com.dduktak.domain.notification.entity.Notification;
 import com.dduktak.domain.notification.entity.NotificationType;
-import com.dduktak.global.config.DotenvTestInitializer;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalTime;
@@ -22,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@ContextConfiguration(initializers = DotenvTestInitializer.class)
 @DisplayName("[통합 테스트] NotificationMapper MyBatis SQL 매핑 및 실제 DB 연동 검증")
 class NotificationMapperIntegrationTest {
 

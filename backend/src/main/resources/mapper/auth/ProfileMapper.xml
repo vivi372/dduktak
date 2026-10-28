@@ -90,7 +90,7 @@
                 nickname = #{nickname},
             </if>
             <if test="profileImage != null">
-                profileImage = #{profileImage},
+                profile_image = #{profileImage},
             </if>
             updated_at = NOW()
         </set>

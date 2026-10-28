@@ -1,7 +1,6 @@
 package com.dduktak.domain.inventory.service;
 
 import com.dduktak.domain.inventory.dto.OcrIngredientResponseDto;
-import com.dduktak.global.config.DotenvTestInitializer;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.DisplayName;
@@ -9,7 +8,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -19,7 +17,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Disabled("실데이터 샘플 검증 완료 (샘플 데이터 정리 및 수동 로컬 실행 전용)")
-@ContextConfiguration(initializers = DotenvTestInitializer.class)
 @DisplayName("[실데이터 검증 테스트] test_sample_data 영수증 이미지 기반 Gemini Flash OCR 실호출 검증")
 class GeminiOcrClientLiveTest {
 
