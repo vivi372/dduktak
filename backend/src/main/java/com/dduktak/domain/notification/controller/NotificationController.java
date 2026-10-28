@@ -100,4 +100,17 @@ public class NotificationController {
         NotificationSettingsResponseDto response = notificationService.updateSettings(userId, dto);
         return ResponseEntity.ok(ApiResponseDto.success(response));
     }
+
+    /**
+     * 모바일 디바이스 FCM 토큰 등록 (POST /api/v1/notifications/fcm-token)
+     */
+    @org.springframework.web.bind.annotation.PostMapping("/fcm-token")
+    public ResponseEntity<ApiResponseDto<Void>> registerFcmToken(
+            @RequestBody java.util.Map<String, String> body
+    ) {
+        UUID userId = SecurityUtil.getCurrentUserId();
+        String token = body != null ? body.get("token") : null;
+        notificationService.registerFcmToken(userId, token);
+        return ResponseEntity.ok(ApiResponseDto.success(null));
+    }
 }

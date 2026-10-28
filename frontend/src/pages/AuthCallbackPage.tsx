@@ -68,6 +68,11 @@ export default function AuthCallbackPage() {
         if (isMounted) {
           notifyOtherTabs();
           setStatus('success');
+          if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+            setTimeout(() => {
+              window.location.href = `com.dduktak.app://auth/callback${window.location.search}${window.location.hash}`;
+            }, 300);
+          }
         }
       } catch (err: any) {
         if (isMounted) {
@@ -165,13 +170,22 @@ export default function AuthCallbackPage() {
             </div>
 
             <div className="space-y-2 pt-1">
+              <a
+                href={`com.dduktak.app://auth/callback${typeof window !== 'undefined' ? window.location.search + window.location.hash : ''}`}
+                className="flex w-full items-center justify-center rounded-2xl bg-brand-500 py-3 text-sm font-bold text-white shadow-soft hover:bg-brand-600 active:scale-[0.98] transition-all"
+              >
+                오늘의 뚝딱 앱으로 돌아가기
+                <ArrowRight className="ml-1.5 h-4 w-4" />
+              </a>
+
               <Button
                 type="button"
                 onClick={handleCloseWindow}
-                className="w-full rounded-2xl bg-brand-500 py-3 text-sm font-bold text-white shadow-soft hover:bg-brand-600 active:scale-[0.98] transition-all"
+                variant="outline"
+                className="w-full rounded-2xl border-border py-2.5 text-xs font-bold text-muted-foreground hover:bg-muted active:scale-[0.98] transition-all"
               >
                 <X className="mr-1.5 h-4 w-4" />
-                인증 완료 (현재 창 닫기)
+                현재 창 닫기
               </Button>
 
               <Button

@@ -316,6 +316,15 @@ public class NotificationService {
     /**
      * 야간 방해금지 시간대 여부 판정 유틸
      */
+    /**
+     * 유저의 FCM 디바이스 토큰 등록
+     */
+    public void registerFcmToken(UUID userId, String token) {
+        if (userId != null && token != null && !token.trim().isEmpty()) {
+            fcmService.registerUserToken(userId, token);
+        }
+    }
+
     public boolean isQuietTime(LocalTime now, LocalTime start, LocalTime end) {
         if (start == null || end == null) {
             return false;

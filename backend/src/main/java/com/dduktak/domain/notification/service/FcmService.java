@@ -10,6 +10,16 @@ import java.util.UUID;
 public interface FcmService {
 
     /**
+     * 유저의 FCM 디바이스 토큰 등록/갱신
+     */
+    void registerUserToken(UUID userId, String fcmToken);
+
+    /**
+     * 유저의 등록된 FCM 디바이스 토큰 조회
+     */
+    String getUserToken(UUID userId);
+
+    /**
      * 비동기 푸시 알림 발송 (Fire-and-Forget)
      *
      * @param userId 수신 회원 UUID

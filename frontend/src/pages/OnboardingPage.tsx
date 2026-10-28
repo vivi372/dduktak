@@ -267,8 +267,8 @@ export default function OnboardingPage() {
       </div>
 
       {/* 중앙 메인 슬라이드 콘텐츠 (애니메이션 전환) */}
-      <div className="relative z-10 flex flex-1 flex-col items-center justify-center my-4">
-        <AnimatePresence>
+      <div className="relative z-10 flex flex-1 flex-col items-center justify-center my-4 min-h-[460px] w-full">
+        <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide.id}
             initial={{ opacity: 0, x: 20 }}

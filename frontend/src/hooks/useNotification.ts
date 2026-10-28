@@ -62,7 +62,9 @@ export function useNotifications(page: number = 0, size: number = 20) {
       if (!isAuthenticated) return EMPTY_NOTIFICATION_LIST;
       return undefined;
     },
-    staleTime: 1000 * 60 * 3, // 3분 캐싱 (화면 전환 시 플리커 방지)
+    staleTime: 1000 * 5, // 5초 캐싱
+    refetchInterval: isAuthenticated ? 10000 : false, // 10초마다 자동 폴링 (좋아요 등 실시간 Red Dot 반영)
+    refetchOnWindowFocus: true,
   });
 }
 

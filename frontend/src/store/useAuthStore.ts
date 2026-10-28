@@ -9,6 +9,7 @@ import { create } from 'zustand';
 import type { Session } from '@supabase/supabase-js';
 import type { UserProfileResponseDto } from '@/types/auth';
 import * as authApi from '@/services/authApi';
+import { NativePushService } from '@/services/nativePushService';
 
 interface AuthState {
   /** 현재 로그인된 유저 프로필 (백엔드 public.profiles DTO) */
@@ -139,6 +140,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               isInitialized: true,
               showWelcomeModal: Boolean(initResult?.isNewUser),
             });
+            NativePushService.sendTokenToBackend().catch(() => {});
           } catch {
             // 백엔드 일시 장애 시에도 세션은 유지하고 로딩 해제
             set({ isLoading: false, isInitialized: true });

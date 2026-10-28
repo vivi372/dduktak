@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { toast } from 'sonner';
+import { apiClient } from '@/services/apiClient';
 
 /** FCM 푸시 알림 수신기 및 하이브리드 네이티브 연동 서비스 */
 export class NativePushService {
@@ -34,17 +35,34 @@ export class NativePushService {
         return null;
       }
 
-      // 2. 리스너 먼저 등록 (토큰 수신 및 에러 캡처)
-      await PushNotifications.addListener('registration', (token) => {
-        // 백엔드 API (POST /api/v1/notifications/fcm-token) 전달용 토큰 저장
+      // 2. 안드로이드 8.0+ 필수 Notification Channel 생성 (중요도 HIGH로 시스템 팝업/Heads-up 허용)
+      try {
+        await PushNotifications.createChannel({
+          id: 'dduktak_channel',
+          name: '오늘의 뚝딱 알림',
+          description: '소비기한 임박 및 레시피 소셜 알림',
+          importance: 5, // IMPORTANCE_HIGH (팝업 및 소리)
+          visibility: 1, // VISIBILITY_PUBLIC
+          vibration: true,
+          lights: true,
+        });
+        console.log('[FCM] Notification Channel(dduktak_channel) 생성 완료');
+      } catch (channelErr) {
+        console.warn('[FCM] Notification Channel 생성 경고:', channelErr);
+      }
+
+      // 3. 리스너 먼저 등록 (토큰 수신 및 백엔드 등록)
+      await PushNotifications.addListener('registration', async (token) => {
+        console.log('[FCM] Registration Token 수신 성공:', token.value.substring(0, 10) + '...');
         localStorage.setItem('dduktak_fcm_token', token.value);
+        await NativePushService.sendTokenToBackend(token.value);
       });
 
       await PushNotifications.addListener('registrationError', (error) => {
         console.warn('[FCM] 토큰 등록 실패:', error);
       });
 
-      // 3. 앱이 포그라운드(화면 켜진 상태)일 때 푸시 수신 시 인앱 토스트 노출
+      // 4. 앱이 포그라운드(화면 켜진 상태)일 때 푸시 수신 시 인앱 토스트 노출
       await PushNotifications.addListener(
         'pushNotificationReceived',
         (notification) => {
@@ -55,7 +73,7 @@ export class NativePushService {
         }
       );
 
-      // 4. 사용자가 시스템 푸시 알림 탭/클릭 시 딥링크 처리
+      // 5. 사용자가 시스템 푸시 알림 탭/클릭 시 딥링크 처리
       await PushNotifications.addListener(
         'pushNotificationActionPerformed',
         (action) => {
@@ -66,7 +84,7 @@ export class NativePushService {
         }
       );
 
-      // 5. APNs / FCM 토큰 발급 등록
+      // 6. APNs / FCM 토큰 발급 등록
       try {
         await PushNotifications.register();
       } catch (regError) {
@@ -78,6 +96,22 @@ export class NativePushService {
     } catch (err) {
       console.warn('[FCM] 푸시 알림 초기화 중 예외 발생 (앱 구동 계속):', err);
       return null;
+    }
+  }
+
+  /**
+   * 발급된 FCM 디바이스 토큰을 백엔드 서버(POST /api/v1/notifications/fcm-token)로 전송
+   */
+  public static async sendTokenToBackend(fcmToken?: string | null): Promise<void> {
+    const token = fcmToken || localStorage.getItem('dduktak_fcm_token');
+    if (!token) return;
+
+    try {
+      await apiClient.post('/notifications/fcm-token', { token });
+      console.log('[FCM] 디바이스 토큰 백엔드 동기화 성공');
+    } catch (e) {
+      // 비로그인 상태이거나 토큰 만료 시는 다음 로그인 시 자동 재전송되므로 경고만 기록
+      console.warn('[FCM] 디바이스 토큰 백엔드 동기화 보류 (로그인 후 자동 전송):', e);
     }
   }
 
