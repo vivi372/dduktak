@@ -18,9 +18,13 @@ const apkMimePlugin = () => ({
 });
 
 // https://vitejs.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), apkMimePlugin()],
   envDir: path.resolve(__dirname, '../'),
+  esbuild: {
+    // 프로덕션 빌드 시 콘솔 로그 및 디버거 완전 제거
+    drop: mode === 'production' ? ['console', 'debugger'] : [],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
@@ -45,5 +49,4 @@ export default defineConfig({
     setupFiles: './src/setupTests.ts',
     css: true,
   },
-});
-
+}));

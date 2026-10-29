@@ -10,7 +10,7 @@ import { DesktopSidePanel } from './DesktopSidePanel';
 import { QuickAddTray } from './QuickAddTray';
 import { WelcomeModal } from '@/components/auth/WelcomeModal';
 import { GlobalErrorModal } from '@/components/common/GlobalErrorModal';
-import { FloatingDevSwitcher } from '@/components/common/FloatingDevSwitcher';
+
 import { AppSplashScreen } from '@/components/common/AppSplashScreen';
 import { ScrollToTop } from '@/components/common/ScrollToTop';
 import { useNativeBackButton } from '@/hooks/useNativeBackButton';
@@ -135,8 +135,8 @@ export function AppShell() {
       {/* 백엔드 UX 태그 전역 에러 모달 (_ALERT_, _CONFIRM_, _FATAL_) */}
       <GlobalErrorModal />
 
-      {/* 개발자 검수용 상태 스위처 */}
-      <FloatingDevSwitcher />
+
+
 
       {/* 앱 구동 오프닝 인트로 및 스플래시 애니메이션 */}
       <AppSplashScreen />

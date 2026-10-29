@@ -5,7 +5,9 @@
  *   스플래시 화면 뒤에서 서버가 켜질 때까지 조용히 핑(Ping)을 전송하여 감지합니다.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.PROD ? 'https://dduktak.onrender.com' : '');
 
 export interface HealthCheckResult {
   ok: boolean;
@@ -16,6 +18,7 @@ export interface HealthCheckResult {
 /**
  * 백엔드 초경량 엔드포인트 무음 헬스체크 (GET /api/v1/recipes/categories)
  * - SecurityConfig에서 permitAll 되어 있으며 DB 부하가 거의 없는 정적 카테고리 엔드포인트 활용
+ * - Vercel SPA Rewrite의 200 HTML 응답을 백엔드 성공으로 오인하지 않도록 Content-Type(application/json) 검증 필수
  */
 export async function pingBackend(timeoutMs = 6000): Promise<HealthCheckResult> {
   const startTime = Date.now();
@@ -35,9 +38,12 @@ export async function pingBackend(timeoutMs = 6000): Promise<HealthCheckResult> 
 
     clearTimeout(timer);
     const durationMs = Date.now() - startTime;
+    const contentType = response.headers.get('content-type') || '';
+    const isJson = contentType.includes('application/json');
+    const isSuccess = (response.ok || response.status === 304) && isJson;
 
     return {
-      ok: response.ok || response.status === 304,
+      ok: isSuccess,
       status: response.status,
       durationMs,
     };

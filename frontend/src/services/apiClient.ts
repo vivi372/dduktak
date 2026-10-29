@@ -149,7 +149,8 @@ function notifyUnauthorizedOnce(traceId?: string) {
     typeof window !== 'undefined' &&
     (window.location.pathname.startsWith('/login') ||
       window.location.pathname.startsWith('/reset-password') ||
-      window.location.pathname.startsWith('/onboarding'));
+      window.location.pathname.startsWith('/onboarding') ||
+      window.location.pathname.startsWith('/auth/callback'));
 
   if (!isAuthPage) {
     toast.error('로그인 세션이 만료되었습니다. 다시 로그인해 주세요.', {
@@ -179,7 +180,7 @@ apiClient.interceptors.response.use(
     if (traceId && import.meta.env.DEV) {
       // 개발 환경 콘솔 디버깅
       // eslint-disable-next-line no-console
-      console.debug(`[API 200 OK] [TraceID: ${traceId}] ${response.config.method?.toUpperCase()} ${response.config.url}`);
+      // debug suppressed in production
     }
     return response;
   },
@@ -190,7 +191,18 @@ apiClient.interceptors.response.use(
 
     // 401 Unauthorized 처리 (세션 만료 또는 무효 토큰, EDGE-05)
     if (status === 401) {
-      notifyUnauthorizedOnce(traceId);
+      const headers = error.config?.headers;
+      const hadAuth =
+        !error.config ||
+        Boolean(
+          headers &&
+            ((headers as any).Authorization ||
+              (headers as any).authorization ||
+              (typeof (headers as any).get === 'function' && (headers as any).get('Authorization'))),
+        );
+      if (hadAuth) {
+        notifyUnauthorizedOnce(traceId);
+      }
       return Promise.reject(error);
     }
 

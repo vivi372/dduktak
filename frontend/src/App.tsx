@@ -44,7 +44,7 @@ export const App = () => {
       // 2-1. 구글 OAuth 완료 후 앱 복귀 딥링크 (com.dduktak.app://... 또는 dduktak://... 또는 intent://)
       CapApp.addListener('appUrlOpen', async (event) => {
         const urlStr = event.url;
-        console.log('[DeepLink] 앱 호출 URL 수신:', urlStr);
+
 
         if (urlStr.includes('access_token=') || urlStr.includes('code=')) {
           try {
@@ -69,7 +69,7 @@ export const App = () => {
             const code = params.get('code');
 
             if (accessToken && refreshToken) {
-              console.log('[DeepLink] access_token 획득 ➔ Supabase 세션 설정');
+
               await supabase.auth.setSession({
                 access_token: decodeURIComponent(accessToken),
                 refresh_token: decodeURIComponent(refreshToken),
@@ -78,7 +78,7 @@ export const App = () => {
               NativePushService.sendTokenToBackend().catch(() => {});
               router.navigate(ROUTES.HOME);
             } else if (code) {
-              console.log('[DeepLink] auth code 획득 ➔ Supabase 세션 교환');
+
               await supabase.auth.exchangeCodeForSession(decodeURIComponent(code));
               await useAuthStore.getState().initialize();
               NativePushService.sendTokenToBackend().catch(() => {});
@@ -94,7 +94,7 @@ export const App = () => {
 
       // 2-2. 앱이 백그라운드에서 다시 포그라운드로 복귀 시 알림 및 세션 최신화
       CapApp.addListener('appStateChange', (state) => {
-        if (state.isActive) {
+        if (state.isActive && useAuthStore.getState().isAuthenticated) {
           NativePushService.sendTokenToBackend().catch(() => {});
         }
       }).then((handle) => {
@@ -114,7 +114,7 @@ export const App = () => {
         (fullUrl.includes('access_token=') && !localStorage.getItem('dduktak_oauth_from'));
 
       if (isSignupEmailVerify && window.location.pathname !== ROUTES.AUTH_CALLBACK) {
-        console.log('[Auth] 이메일 인증 링크 유입 감지 ➔ 전용 인증 완료 페이지(/auth/callback)로 포워딩');
+
         router.navigate(`${ROUTES.AUTH_CALLBACK}?type=email_verify${hash ? hash : ''}`, { replace: true });
       }
     }

@@ -60,7 +60,7 @@ interface AppSplashScreenProps {
  * - 완전 불투명(100% Opacity) 화면으로 뒤편의 로딩 스켈레톤이나 에러 화면 노출을 100% 원천 차단
  * - 웹과 모바일 모두 최초 진입 시 브랜드 오프닝 애니메이션과 함께 조용히 백엔드를 깨웁니다.
  */
-export function AppSplashScreen({ minDuration, duration = 1500 }: AppSplashScreenProps) {
+export function AppSplashScreen({ minDuration, duration = 2800 }: AppSplashScreenProps) {
   const effectiveMinDuration = minDuration ?? duration;
   const { isVisible, hideSplash } = useAppSplashStore();
 
@@ -98,7 +98,7 @@ export function AppSplashScreen({ minDuration, duration = 1500 }: AppSplashScree
 
       if (elapsed < effectiveMinDuration) {
         // 0 ~ 1.5초 구간: 15% -> 75% 자연스러운 상승
-        const target = Math.min(75, Math.floor(15 + (elapsed / effectiveMinDuration) * 60));
+        const target = Math.min(80, Math.floor(15 + (elapsed / effectiveMinDuration) * 65));
         setProgress(target);
       } else {
         // 1.5초 초과 (Cold Start 대기 중): 75% -> 90%까지 천천히 슬로우 전진
@@ -108,10 +108,10 @@ export function AppSplashScreen({ minDuration, duration = 1500 }: AppSplashScree
         });
 
         // 2.5초 이상 경과 시 서버 재기동 친절 안내 문구로 전환
-        if (elapsed > 2500 && elapsed <= 15000) {
+        if (elapsed > 2500 && elapsed <= 20000) {
           setIsWarmingUp(true);
           setStatusText('냉장고 서버를 깨우고 있어요! 잠시만 기다려주세요 🍳 (최대 30초 소요)');
-        } else if (elapsed > 15000 && elapsed <= 45000) {
+        } else if (elapsed > 20000 && elapsed <= 45000) {
           setIsWarmingUp(true);
           setStatusText('서버가 기동 중입니다! 거의 다 준비되었어요 ✨');
         } else if (elapsed > 45000) {

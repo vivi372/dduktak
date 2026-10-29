@@ -2,6 +2,7 @@ import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { toast } from 'sonner';
 import { apiClient } from '@/services/apiClient';
+import { supabase } from '@/services/supabaseClient';
 
 /** FCM 푸시 알림 수신기 및 하이브리드 네이티브 연동 서비스 */
 export class NativePushService {
@@ -108,17 +109,20 @@ export class NativePushService {
   public static async sendTokenToBackend(fcmToken?: string | null): Promise<void> {
     const token = fcmToken || localStorage.getItem('dduktak_fcm_token');
     if (!token) {
-      console.debug('[FCM] 저장된 디바이스 토큰이 없어 백엔드 전송을 건너뜁니다.');
+
       return;
     }
 
     try {
-      // 올바른 백엔드 엔드포인트: /api/v1/notifications/fcm-token
+      const sessionRes = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      if (!sessionRes?.data?.session) {
+        return;
+      }
       await apiClient.post('/api/v1/notifications/fcm-token', { token });
-      console.log('[FCM] 디바이스 토큰 백엔드(/api/v1/notifications/fcm-token) 동기화 완료!');
+
     } catch (e: any) {
       // 비로그인 상태(401) 또는 일시 네트워크 오류 시 경고 로그만 남김
-      console.warn('[FCM] 디바이스 토큰 백엔드 동기화 보류 (로그인 후 자동 전송):', e?.response?.status || e?.message);
+      // 비로그인 상태 또는 일시 네트워크 오류 시 조용히 무시
     }
   }
 

@@ -175,10 +175,10 @@ export async function deleteStorageFiles(
   try {
     const { error } = await supabase.storage.from(bucket).remove(targetPaths);
     if (error) {
-      console.warn(`[StorageService] 이미지 삭제 경고 (${bucket}):`, error.message);
+
     }
   } catch (err) {
-    console.warn(`[StorageService] 이미지 삭제 중 예외 발생 (${bucket}):`, err);
+
   }
 }
 
