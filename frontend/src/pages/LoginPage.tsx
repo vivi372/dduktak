@@ -1,6 +1,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChefHat, Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { ChefHat, Sparkles, Mail, Lock, User, Eye, EyeOff, ArrowLeft, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { ROUTES } from '@/constants/routes';
 import { useAuth } from '@/hooks/useAuth';
@@ -8,7 +8,6 @@ import { Button } from '@/components/ui/button';
 import { TermsModal, type TermsTab } from '@/components/common/TermsModal';
 import { getFriendlyAuthErrorMessage } from '@/utils/authError';
 import logo from '@/assets/logo.png';
-
 
 /**
  * 구글 심볼 아이콘 SVG
@@ -36,7 +35,7 @@ function GoogleIcon() {
   );
 }
 
-type AuthMode = 'social' | 'login' | 'signup' | 'forgot-password' | 'verify-reset-otp';
+type AuthMode = 'social' | 'login' | 'signup' | 'forgot-password' | 'verify-reset-otp' | 'awaiting-verification';
 
 /**
  * 모듈 1: 통합 인증 화면 (AUTH-01 이메일 가입/로그인 & AUTH-02 소셜 간편 로그인 & 비밀번호 찾기)
@@ -50,6 +49,8 @@ export default function LoginPage() {
     loginWithOAuth,
     sendPasswordReset,
     verifyPasswordResetOtp,
+    resendSignupEmail,
+    verifySignupOtp,
     isLoggingIn,
     isSigningUp,
     isSendingReset,
@@ -63,7 +64,7 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정) / verify-reset-otp (인증번호 입력)
+  // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정) / verify-reset-otp (인증번호 입력) / awaiting-verification (이메일 링크 확인 대기 및 OTP 입력)
   const [mode, setMode] = useState<AuthMode>('social');
 
   // 폼 입력 상태
@@ -71,7 +72,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [resetToken, setResetToken] = useState('');
+  const [verificationOtp, setVerificationOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isVerifyingSignup, setIsVerifyingSignup] = useState(false);
+  const [isResending, setIsResending] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   // 약관 동의 및 모달 제어 상태
   const [termsModalOpen, setTermsModalOpen] = useState(false);
@@ -81,11 +86,12 @@ export default function LoginPage() {
 
   /** 폼 모드 전환 시 이전 폼 입력값 및 체크박스 초기화 */
   const switchMode = (nextMode: AuthMode) => {
-    if (nextMode !== 'verify-reset-otp') {
+    if (nextMode !== 'verify-reset-otp' && nextMode !== 'awaiting-verification') {
       setEmail('');
+      setPassword('');
     }
     setResetToken('');
-    setPassword('');
+    setVerificationOtp('');
     setNickname('');
     setShowPassword(false);
     setAgreeTerms(false);
@@ -119,6 +125,12 @@ export default function LoginPage() {
       toast.success('로그인되었습니다. 환영합니다!');
       navigate(ROUTES.HOME);
     } catch (err: any) {
+      const msg = err?.message?.toLowerCase() || '';
+      if (msg.includes('email not confirmed') || msg.includes('not confirmed') || msg.includes('email_not_confirmed')) {
+        toast.info('이메일 인증이 아직 완료되지 않았습니다. 인증 대기 화면으로 이동합니다.');
+        setMode('awaiting-verification');
+        return;
+      }
       toast.error(getFriendlyAuthErrorMessage(err));
     }
   };
@@ -152,13 +164,91 @@ export default function LoginPage() {
         toast.success('회원가입이 완료되었습니다! 환영합니다.');
         navigate(ROUTES.HOME);
       } else {
+        // 이메일 인증 대기 모드로 전환 (email/password 유지하여 자동 감지 및 OTP 검증 수행)
+        setMode('awaiting-verification');
+        setResendCooldown(60);
         toast.success('인증 메일이 발송되었습니다! 메일함(받은편지함/스팸함)을 확인해 주세요.', {
           duration: 6000,
         });
-        switchMode('login');
       }
     } catch (err: any) {
       toast.error(getFriendlyAuthErrorMessage(err, 'signup'));
+    }
+  };
+
+  // 이메일 인증 대기 상태: 2.5초마다 백그라운드 로그인 시도 (다른 브라우저/스마트폰/인스턴스에서 링크 클릭 시 자동 감지하여 홈 이동)
+  useEffect(() => {
+    if (mode !== 'awaiting-verification' || !email || !password) return;
+
+    let isCancelled = false;
+    const interval = setInterval(async () => {
+      try {
+        const res = await loginWithEmail({ email: email.trim(), password });
+        if (res?.session && !isCancelled) {
+          clearInterval(interval);
+          toast.success('이메일 인증이 확인되었습니다! 환영합니다.');
+          navigate(ROUTES.HOME);
+        }
+      } catch (err: any) {
+        const msg = err?.message?.toLowerCase() || '';
+        if (msg.includes('email not confirmed') || msg.includes('not confirmed') || msg.includes('email_not_confirmed')) {
+          return;
+        }
+      }
+    }, 2500);
+
+    return () => {
+      isCancelled = true;
+      clearInterval(interval);
+    };
+  }, [mode, email, password, loginWithEmail, navigate]);
+
+  // 인증 메일 재발송 쿨다운 타이머
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  /** 회원가입 OTP 인증코드 검증 핸들러 */
+  const handleVerifySignupOtp = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!verificationOtp.trim() || verificationOtp.trim().length < 6) {
+      toast.error('전송받으신 인증번호를 정확히 입력해 주세요.');
+      return;
+    }
+    try {
+      setIsVerifyingSignup(true);
+      await verifySignupOtp({ email: email.trim(), token: verificationOtp.trim() });
+      toast.success('이메일 인증이 완료되었습니다! 환영합니다.');
+      navigate(ROUTES.HOME);
+    } catch (err: any) {
+      try {
+        await loginWithEmail({ email: email.trim(), password });
+        toast.success('로그인되었습니다! 환영합니다.');
+        navigate(ROUTES.HOME);
+        return;
+      } catch {}
+      toast.error(getFriendlyAuthErrorMessage(err, 'signup'));
+    } finally {
+      setIsVerifyingSignup(false);
+    }
+  };
+
+  /** 회원가입 인증 메일 재발송 핸들러 */
+  const handleResendSignupEmail = async () => {
+    if (resendCooldown > 0 || isResending) return;
+    try {
+      setIsResending(true);
+      await resendSignupEmail(email.trim());
+      setResendCooldown(60);
+      toast.success(`${email} 주소로 인증 메일을 다시 보냈습니다! 메일함을 확인해 주세요.`);
+    } catch (err: any) {
+      toast.error(getFriendlyAuthErrorMessage(err, 'signup'));
+    } finally {
+      setIsResending(false);
     }
   };
 
@@ -176,7 +266,6 @@ export default function LoginPage() {
       });
       setMode('verify-reset-otp');
     } catch (err: any) {
-      // 보안상 등록되지 않은 계정이라도 외부에서 유저 가입 여부를 열거/추측할 수 없도록 성공과 동일 처리
       const msg = getFriendlyAuthErrorMessage(err, 'reset-password');
       if (msg.includes('등록되지 않은')) {
         toast.success(`${email} 주소로 인증번호를 발송했습니다! 메일함을 확인해 주세요.`, {
@@ -217,6 +306,7 @@ export default function LoginPage() {
               onClick={() => {
                 if (mode === 'verify-reset-otp') switchMode('forgot-password');
                 else if (mode === 'forgot-password') switchMode('login');
+                else if (mode === 'awaiting-verification') switchMode('login');
                 else switchMode('social');
               }}
               className="inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground active:scale-95 transition-colors"
@@ -227,6 +317,8 @@ export default function LoginPage() {
                   ? '이메일 다시 입력하기'
                   : mode === 'forgot-password'
                   ? '로그인으로 돌아가기'
+                  : mode === 'awaiting-verification'
+                  ? '로그인 화면으로'
                   : '간편 로그인으로'}
               </span>
             </button>
@@ -258,91 +350,75 @@ export default function LoginPage() {
         </p>
       </div>
 
-      {/* 중앙/하단 인터랙션 영역: mode에 따른 조건부 렌더링 */}
-      <div className="my-auto w-full max-w-[360px] mx-auto pt-6">
+      {/* 중앙: 동적 폼 영역 (소셜 모드 vs 이메일 폼 모드) */}
+      <div className="my-auto w-full max-w-sm mx-auto">
         {mode === 'social' ? (
           /* ============================================================ */
-          /* 1. 기본 뷰: 소셜 간편 로그인 & 이메일 시작 버튼               */
+          /* 1. 기본 소셜 간편 로그인 뷰                                  */
           /* ============================================================ */
-          <div className="space-y-3.5">
-            {/* 핵심 가치 카드 뱃지 */}
-            <div className="grid grid-cols-2 gap-2.5 mb-6">
-              <div className="rounded-2xl border border-border/80 bg-card p-3 text-left shadow-card">
-                <p className="text-lg">🧊</p>
-                <p className="mt-1 text-xs font-bold">소비기한 알림</p>
-                <p className="text-[11px] text-muted-foreground">버리는 재료 없이 알뜰하게</p>
-              </div>
-              <div className="rounded-2xl border border-border/80 bg-card p-3 text-left shadow-card">
-                <p className="text-lg">🍳</p>
-                <p className="mt-1 text-xs font-bold">스마트 레시피</p>
-                <p className="text-[11px] text-muted-foreground">가진 재료로 1초 맞춤 추천</p>
-              </div>
-            </div>
-
-
-            {/* 구글 간편 로그인 */}
-            <button
+          <div className="space-y-3">
+            {/* Google 원클릭 소셜 로그인 */}
+            <Button
               type="button"
+              variant="outline"
+              size="lg"
               onClick={() => handleSocialLogin('google')}
-              className="flex min-h-12 w-full items-center justify-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 text-sm font-bold text-foreground shadow-sm transition-all hover:bg-accent active:scale-[0.98] dark:border-white/10"
+              className="w-full flex items-center justify-center gap-3 py-3.5 bg-white hover:bg-neutral-50 text-neutral-800 border-neutral-200 font-bold shadow-sm dark:bg-card dark:text-foreground dark:border-border"
             >
               <GoogleIcon />
               <span>Google 계정으로 시작하기</span>
-            </button>
+            </Button>
 
             {/* 구분선 */}
-            <div className="relative py-2 text-center text-xs text-muted-foreground">
-              <span className="relative z-10 bg-background px-3 font-medium">또는</span>
-              <div className="absolute inset-0 flex items-center" aria-hidden>
-                <div className="w-full border-t border-border/80 dark:border-white/10" />
-              </div>
+            <div className="relative my-4 flex items-center justify-center">
+              <div className="w-full border-t border-border" />
+              <span className="absolute bg-background px-3 text-[11px] font-semibold text-muted-foreground uppercase">
+                또는
+              </span>
             </div>
 
-            {/* 이메일로 로그인 / 가입 전환 버튼 */}
+            {/* 이메일로 로그인 / 가입 폼 진입 버튼 */}
             <Button
               type="button"
               variant="outline"
               size="lg"
               onClick={() => switchMode('login')}
-              className="w-full font-bold border-brand-300 text-brand-700 hover:bg-brand-50 dark:border-brand-700 dark:text-brand-300 dark:hover:bg-brand-950/40"
+              className="w-full flex items-center justify-center gap-2 py-3.5 font-bold"
             >
-              <Mail className="h-4 w-4" />
+              <Mail className="h-4 w-4 text-muted-foreground" />
               <span>이메일로 로그인 / 회원가입</span>
             </Button>
 
-            {/* 소셜 로그인 시 약관 고지 및 필수 정책 안내 */}
-            <div className="pt-2 text-center text-[11px] text-muted-foreground leading-relaxed">
-              <p>
-                시작 시 오늘의 뚝딱의{' '}
-                <button
-                  type="button"
-                  onClick={() => handleOpenTerms('terms')}
-                  className="font-bold text-foreground underline underline-offset-2 hover:text-brand-600"
-                >
-                  서비스 이용약관
-                </button>
-                과{' '}
-                <button
-                  type="button"
-                  onClick={() => handleOpenTerms('privacy')}
-                  className="font-bold text-foreground underline underline-offset-2 hover:text-brand-600"
-                >
-                  개인정보 처리방침
-                </button>
-                에 동의하게 됩니다.
-              </p>
-              <p className="mt-1 text-[10px] text-muted-foreground/80">
-                💬 회원 탈퇴 시 작성하신 레시피는 커뮤니티 생태계 보존을 위해 익명으로 전환되어 보존됩니다.
-              </p>
-            </div>
+            <p className="text-center text-[11px] text-muted-foreground pt-3">
+              로그인 시{' '}
+              <button
+                type="button"
+                onClick={() => handleOpenTerms('terms')}
+                className="underline underline-offset-2 hover:text-foreground font-semibold"
+              >
+                서비스 이용약관
+              </button>{' '}
+              및{' '}
+              <button
+                type="button"
+                onClick={() => handleOpenTerms('privacy')}
+                className="underline underline-offset-2 hover:text-foreground font-semibold"
+              >
+                개인정보 처리방침
+              </button>
+              에 동의하게 됩니다.
+            </p>
+            <p className="text-center text-[10px] text-muted-foreground/70">
+              * 회원 탈퇴 시 작성하신 레시피는 커뮤니티 생태계 보존을 위해 익명으로 전환되어 보존됩니다.
+            </p>
           </div>
         ) : (
           /* ============================================================ */
           /* 2. 일반 이메일 인증 뷰 (로그인 ↔ 회원가입 탭)                */
           /* ============================================================ */
           <div className="rounded-3xl border border-border/80 bg-card p-5 shadow-card dark:border-white/10">
-            {/* 로그인 / 회원가입 탭 (Segmented Control - 비밀번호 찾기 및 인증 모드가 아닐 때만 노출) */}
-            {mode !== 'forgot-password' && mode !== 'verify-reset-otp' && (
+            {/* 로그인 / 회원가입 탭 (Segmented Control - 비밀번호 찾기, OTP 및 인증 대기 모드가 아닐 때만 노출) */}
+            {mode !== 'forgot-password' && mode !== 'verify-reset-otp' && mode !== 'awaiting-verification' && (
               <div className="grid grid-cols-2 rounded-xl bg-muted p-1 mb-5">
                 <button
                   type="button"
@@ -369,7 +445,85 @@ export default function LoginPage() {
               </div>
             )}
 
-            {mode === 'verify-reset-otp' ? (
+            {mode === 'awaiting-verification' ? (
+              /* ============================================================ */
+              /* 2-0. 이메일 인증 대기 및 크로스 인스턴스 자동 감지 폼         */
+              /* ============================================================ */
+              <div className="space-y-4 text-left">
+                <div className="mb-2">
+                  <h2 className="text-base font-extrabold text-foreground flex items-center gap-1.5">
+                    <Mail className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                    <span>이메일 인증 대기 중</span>
+                  </h2>
+                  <p className="mt-1 text-xs text-muted-foreground leading-relaxed break-keep">
+                    <strong className="text-foreground">{email}</strong> 주소로 인증 메일을 보냈습니다.
+                  </p>
+                </div>
+
+                {/* 다른 브라우저/스마트폰 인증 실시간 감지 안내 배너 */}
+                <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-3.5 text-xs space-y-1.5 dark:border-brand-900/60 dark:bg-brand-950/40">
+                  <div className="flex items-center gap-2 font-bold text-brand-700 dark:text-brand-300">
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>인증 링크 실시간 확인 중...</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed break-keep">
+                    다른 브라우저, 다른 창, 또는 스마트폰 메일 앱에서 <strong>인증 링크</strong>를 클릭하시면 이 화면이 즉시 감지하여 <strong>자동으로 로그인되어 홈 화면으로 이동</strong>합니다.
+                  </p>
+                </div>
+
+                {/* 6~8자리 OTP 번호 직접 입력 폼 */}
+                <form onSubmit={handleVerifySignupOtp} className="space-y-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-foreground mb-1.5">
+                      또는 메일에 적힌 인증번호 직접 입력
+                    </label>
+                    <input
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      maxLength={8}
+                      value={verificationOtp}
+                      onChange={(e) => setVerificationOtp(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder="인증번호 6~8자리"
+                      className="w-full text-center tracking-[0.25em] font-mono text-xl font-bold rounded-xl border border-input bg-background py-3 px-4 text-foreground outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    size="lg"
+                    className="w-full font-bold shadow-soft"
+                    disabled={isVerifyingSignup || verificationOtp.length < 6}
+                  >
+                    {isVerifyingSignup ? '인증 확인 중...' : '인증번호로 즉시 로그인'}
+                  </Button>
+                </form>
+
+                {/* 하단 보조 액션 */}
+                <div className="flex items-center justify-between pt-1 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => switchMode('login')}
+                    className="font-semibold text-muted-foreground hover:text-foreground"
+                  >
+                    로그인으로 돌아가기
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleResendSignupEmail}
+                    disabled={resendCooldown > 0 || isResending}
+                    className="font-semibold text-brand-600 dark:text-brand-400 hover:underline disabled:opacity-50"
+                  >
+                    {isResending
+                      ? '발송 중...'
+                      : resendCooldown > 0
+                      ? `인증 메일 재발송 (${resendCooldown}초)`
+                      : '인증 메일 다시 보내기'}
+                  </button>
+                </div>
+              </div>
+            ) : mode === 'verify-reset-otp' ? (
               /* ============================================================ */
               /* 비밀번호 재설정 OTP 인증코드 입력 폼                           */
               /* ============================================================ */
@@ -430,7 +584,7 @@ export default function LoginPage() {
               </form>
             ) : mode === 'forgot-password' ? (
               /* ============================================================ */
-              /* 비밀번호 재설정 이메일 입력 폼                                */
+              /* 비밀번호 재설정 이메일 입력 폼                                 */
               /* ============================================================ */
               <form onSubmit={handleSendResetOtp} className="space-y-4">
                 <div className="text-left mb-2">
@@ -439,12 +593,12 @@ export default function LoginPage() {
                     <span>비밀번호 찾기</span>
                   </h2>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed break-keep">
-                    가입하신 이메일 주소를 입력해 주시면 비밀번호를 다시 설정할 수 있는 인증번호를 보내드립니다.
+                    가입하신 이메일 주소를 입력하시면 비밀번호를 재설정할 수 있는 인증번호를 발송해 드립니다.
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">가입한 이메일</label>
+                  <label className="block text-xs font-bold text-foreground mb-1.5">이메일 주소</label>
                   <div className="relative">
                     <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
@@ -454,6 +608,7 @@ export default function LoginPage() {
                       placeholder="user@example.com"
                       className="w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                       required
+                      autoFocus
                     />
                   </div>
                 </div>
@@ -465,10 +620,10 @@ export default function LoginPage() {
                   className="w-full font-bold shadow-soft"
                   disabled={isSendingReset}
                 >
-                  {isSendingReset ? '발송 중...' : '인증번호 받기'}
+                  {isSendingReset ? '인증번호 발송 중...' : '인증번호 받기'}
                 </Button>
 
-                <div className="pt-1 text-center">
+                <div className="text-center pt-1">
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
@@ -479,7 +634,9 @@ export default function LoginPage() {
                 </div>
               </form>
             ) : mode === 'login' ? (
-              /* 이메일 로그인 폼 */
+              /* ============================================================ */
+              /* 이메일 로그인 폼                                            */
+              /* ============================================================ */
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-foreground mb-1.5">이메일</label>
@@ -497,7 +654,16 @@ export default function LoginPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-foreground mb-1.5">비밀번호</label>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-bold text-foreground">비밀번호</label>
+                    <button
+                      type="button"
+                      onClick={() => switchMode('forgot-password')}
+                      className="text-[11px] font-semibold text-brand-600 hover:underline dark:text-brand-400"
+                    >
+                      비밀번호를 잊으셨나요?
+                    </button>
+                  </div>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <input
@@ -518,28 +684,20 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end pt-0.5">
-                  <button
-                    type="button"
-                    onClick={() => switchMode('forgot-password')}
-                    className="text-[11px] font-semibold text-muted-foreground hover:text-brand-600 hover:underline"
-                  >
-                    비밀번호를 잊으셨나요?
-                  </button>
-                </div>
-
                 <Button
                   type="submit"
                   variant="primary"
                   size="lg"
-                  className="w-full font-bold shadow-soft"
+                  className="w-full font-bold shadow-soft mt-2"
                   disabled={isLoggingIn}
                 >
                   {isLoggingIn ? '로그인 중...' : '로그인하기'}
                 </Button>
               </form>
             ) : (
-              /* 이메일 회원가입 폼 (AUTH-01-1) */
+              /* ============================================================ */
+              /* 이메일 회원가입 폼                                          */
+              /* ============================================================ */
               <form onSubmit={handleEmailSignup} className="space-y-3.5">
                 <div>
                   <label className="block text-xs font-bold text-foreground mb-1.5">이메일</label>
@@ -567,7 +725,7 @@ export default function LoginPage() {
                       value={nickname}
                       onChange={(e) => setNickname(e.target.value)}
                       placeholder="뚝딱셰프"
-                      maxLength={10}
+                      maxLength={20}
                       className="w-full rounded-xl border border-input bg-background py-2.5 pl-10 pr-4 text-sm text-foreground outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
                       required
                     />
@@ -576,7 +734,10 @@ export default function LoginPage() {
 
                 <div>
                   <label className="block text-xs font-bold text-foreground mb-1.5">
-                    비밀번호 <span className="text-[11px] font-normal text-muted-foreground">(8자 이상)</span>
+                    비밀번호{' '}
+                    <span className="text-[10px] font-normal text-muted-foreground">
+                      (영문 대/소문자, 숫자, 특수문자 8자 이상)
+                    </span>
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -660,11 +821,16 @@ export default function LoginPage() {
         )}
       </div>
 
-      {/* 이용약관 및 개인정보 처리방침 조회 모달 */}
+      {/* 하단: 푸터 카피라이트 */}
+      <div className="text-center text-[11px] text-muted-foreground/70">
+        © 2026 오늘의 뚝딱. All rights reserved.
+      </div>
+
+      {/* 약관 전문 팝업 모달 */}
       <TermsModal
         open={termsModalOpen}
-        initialTab={termsTab}
         onClose={() => setTermsModalOpen(false)}
+        initialTab={termsTab}
       />
     </div>
   );

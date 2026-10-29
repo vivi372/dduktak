@@ -70,6 +70,20 @@ export function useAuth() {
     },
   });
 
+  // 3-1. 회원가입 인증 이메일 재발송
+  const resendSignupEmailMutation = useMutation({
+    mutationFn: async (email: string) => {
+      return authApi.resendSignupEmail(email);
+    },
+  });
+
+  // 3-2. 회원가입 OTP 인증코드 직접 검증
+  const verifySignupOtpMutation = useMutation({
+    mutationFn: async ({ email, token }: { email: string; token: string }) => {
+      return authApi.verifySignupOtp(email, token);
+    },
+  });
+
   // 4. 소셜 OAuth 로그인
   const loginWithOAuth = async (provider: 'google') => {
     return authApi.signInWithOAuth(provider);
@@ -203,6 +217,10 @@ export function useAuth() {
 
     signupWithEmail: signupWithEmailMutation.mutateAsync,
     isSigningUp: signupWithEmailMutation.isPending,
+    resendSignupEmail: resendSignupEmailMutation.mutateAsync,
+    isResendingSignupEmail: resendSignupEmailMutation.isPending,
+    verifySignupOtp: verifySignupOtpMutation.mutateAsync,
+    isVerifyingSignupOtp: verifySignupOtpMutation.isPending,
 
     loginWithOAuth,
 

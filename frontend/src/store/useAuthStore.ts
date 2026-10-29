@@ -90,6 +90,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           if (e.data?.type === 'AUTH_VERIFIED') {
             const currentSession = await authApi.getSession();
             if (currentSession) {
+              set({ session: currentSession, isAuthenticated: true });
               await get().syncProfile();
             }
           }
@@ -103,6 +104,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (e.key === 'dduktak_auth_event') {
         const currentSession = await authApi.getSession();
         if (currentSession) {
+          set({ session: currentSession, isAuthenticated: true });
           await get().syncProfile();
         }
       }

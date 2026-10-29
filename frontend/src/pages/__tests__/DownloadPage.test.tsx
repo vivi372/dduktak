@@ -20,8 +20,8 @@ describe('DownloadPage (실기기 APK 다운로드 페이지) 단위 테스트',
 
     const downloadLink = screen.getByRole('link', { name: /최신 APK 다운로드/ });
     expect(downloadLink).toBeInTheDocument();
-    expect(downloadLink).toHaveAttribute('href', '/downloads/dduktak-app.apk');
-    expect(downloadLink).toHaveAttribute('download', 'dduktak-app.apk');
+    expect(downloadLink).toHaveAttribute('href', '/downloads/dduktak-app-v1.1.0.apk?v=1.1.0');
+    expect(downloadLink).toHaveAttribute('download', 'dduktak-app-v1.1.0.apk');
   });
 
   it('안드로이드 3단계 설치 가이드와 동일 Wi-Fi 주의사항을 렌더링해야 한다', () => {

@@ -115,6 +115,34 @@ export async function verifyPasswordResetOtp(email: string, token: string) {
 }
 
 /**
+ * 회원가입 인증 이메일 재발송
+ */
+export async function resendSignupEmail(email: string) {
+  const { data, error } = await supabase.auth.resend({
+    type: 'signup',
+    email: email.trim(),
+    options: {
+      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+    },
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
+ * 회원가입 6~8자리 OTP 인증코드 직접 검증
+ */
+export async function verifySignupOtp(email: string, token: string) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email: email.trim(),
+    token: token.trim(),
+    type: 'signup',
+  });
+  if (error) throw error;
+  return data;
+}
+
+/**
  * 비밀번호 재설정 완료 (새 비밀번호로 갱신)
  */
 export async function updatePassword(newPassword: string) {

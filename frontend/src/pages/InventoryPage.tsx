@@ -71,14 +71,17 @@ export default function InventoryPage() {
   // 퀵 액션 라우트 파라미터(?action=manual|receipt) 감지하여 모달 자동 오픈
   useEffect(() => {
     const action = searchParams.get('action');
+    if (!action) return;
     if (action === 'manual') {
       setIsManualModalOpen(true);
-      searchParams.delete('action');
-      setSearchParams(searchParams, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('action');
+      setSearchParams(nextParams, { replace: true });
     } else if (action === 'receipt') {
       setIsReceiptModalOpen(true);
-      searchParams.delete('action');
-      setSearchParams(searchParams, { replace: true });
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('action');
+      setSearchParams(nextParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
 
