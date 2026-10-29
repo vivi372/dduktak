@@ -92,6 +92,13 @@ describe('AppSplashScreen 컴포넌트 단위 테스트', () => {
       screen.getByText(/냉장고 서버를 깨우고 있어요! 잠시만 기다려주세요/i),
     ).toBeInTheDocument();
     expect(useAppSplashStore.getState().isVisible).toBe(true);
+
+    // 80초 초과 지연 시 비상 탈출 버튼 (새로고침, 앱 둘러보기) 노출
+    act(() => {
+      vi.advanceTimersByTime(80000);
+    });
+    expect(screen.getByRole('button', { name: '새로고침' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '앱 둘러보기' })).toBeInTheDocument();
   });
 
   it('isVisible이 false일 때는 스플래시 화면이 렌더링되지 않아야 한다', () => {

@@ -107,16 +107,19 @@ export function AppSplashScreen({ minDuration, duration = 2800 }: AppSplashScree
           return prev;
         });
 
-        // 2.5초 이상 경과 시 서버 재기동 친절 안내 문구로 전환
+        // 2.5초 이상 경과 시 서버 재기동 친절 안내 문구로 전환 (Render Cold Start 대비 단계별 안내)
         if (elapsed > 2500 && elapsed <= 20000) {
           setIsWarmingUp(true);
-          setStatusText('냉장고 서버를 깨우고 있어요! 잠시만 기다려주세요 🍳 (최대 30초 소요)');
+          setStatusText('냉장고 서버를 깨우고 있어요! 잠시만 기다려주세요 🍳');
         } else if (elapsed > 20000 && elapsed <= 45000) {
           setIsWarmingUp(true);
-          setStatusText('서버가 기동 중입니다! 거의 다 준비되었어요 ✨');
-        } else if (elapsed > 45000) {
+          setStatusText('서버가 부팅되고 있어요! 거의 다 준비되었어요 ✨');
+        } else if (elapsed > 45000 && elapsed <= 80000) {
+          setIsWarmingUp(true);
+          setStatusText('인스턴스 안전 연결을 마무리하고 있어요 🍲');
+        } else if (elapsed > 80000) {
           setIsTimedOut(true);
-          setStatusText('서버 연결이 지연되고 있어요. 네트워크를 확인해 주세요.');
+          setStatusText('서버 응답이 많이 지연되고 있어요. 네트워크를 확인해 주세요.');
         }
       }
     }, 150);
@@ -147,9 +150,9 @@ export function AppSplashScreen({ minDuration, duration = 2800 }: AppSplashScree
           }, 350);
         }, remainMinTime);
       } else {
-        // 서버가 아직 슬립 상태거나 부팅 중: 2.5초 후 재시도
+        // 서버가 아직 슬립 상태거나 부팅 중: Render 무료 티어 기동(약 40~70초) 동안 지속 재시도 (최대 100초)
         const elapsed = Date.now() - startTimeRef.current;
-        if (elapsed < 60000) {
+        if (elapsed < 100000) {
           pollTimer = setTimeout(startWarmupCheck, 2500);
         } else {
           setIsTimedOut(true);
@@ -260,7 +263,7 @@ export function AppSplashScreen({ minDuration, duration = 2800 }: AppSplashScree
               </motion.div>
             )}
 
-            {/* 45초 이상 지연 시 나타나는 비상 탈출 버튼 */}
+            {/* 80초 이상 응답 지연 시 나타나는 비상 탈출 버튼 */}
             {isTimedOut && (
               <motion.div
                 initial={{ opacity: 0, y: 6 }}
