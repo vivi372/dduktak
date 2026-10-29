@@ -49,7 +49,7 @@ export async function signUpWithEmail(email: string, password: string, nickname:
       data: {
         nickname: nickname.trim(),
       },
-      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?type=email_verify` : undefined,
     },
   });
   if (error) throw error;
@@ -122,7 +122,7 @@ export async function resendSignupEmail(email: string) {
     type: 'signup',
     email: email.trim(),
     options: {
-      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined,
+      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?type=email_verify` : undefined,
     },
   });
   if (error) throw error;

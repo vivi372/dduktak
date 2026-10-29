@@ -50,7 +50,6 @@ export default function LoginPage() {
     sendPasswordReset,
     verifyPasswordResetOtp,
     resendSignupEmail,
-    verifySignupOtp,
     isLoggingIn,
     isSigningUp,
     isSendingReset,
@@ -64,7 +63,7 @@ export default function LoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정) / verify-reset-otp (인증번호 입력) / awaiting-verification (이메일 링크 확인 대기 및 OTP 입력)
+  // 현재 인증 폼 모드: social (기본 소셜 뷰) / login (이메일 로그인) / signup (이메일 회원가입) / forgot-password (비밀번호 재설정) / verify-reset-otp (인증번호 입력) / awaiting-verification (이메일 링크 확인 대기)
   const [mode, setMode] = useState<AuthMode>('social');
 
   // 폼 입력 상태
@@ -72,9 +71,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [resetToken, setResetToken] = useState('');
-  const [verificationOtp, setVerificationOtp] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [isVerifyingSignup, setIsVerifyingSignup] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
@@ -91,7 +88,6 @@ export default function LoginPage() {
       setPassword('');
     }
     setResetToken('');
-    setVerificationOtp('');
     setNickname('');
     setShowPassword(false);
     setAgreeTerms(false);
@@ -164,7 +160,7 @@ export default function LoginPage() {
         toast.success('회원가입이 완료되었습니다! 환영합니다.');
         navigate(ROUTES.HOME);
       } else {
-        // 이메일 인증 대기 모드로 전환 (email/password 유지하여 자동 감지 및 OTP 검증 수행)
+        // 이메일 인증 대기 모드로 전환 (email/password 유지하여 자동 감지 수행)
         setMode('awaiting-verification');
         setResendCooldown(60);
         toast.success('인증 메일이 발송되었습니다! 메일함(받은편지함/스팸함)을 확인해 주세요.', {
@@ -176,7 +172,7 @@ export default function LoginPage() {
     }
   };
 
-  // 이메일 인증 대기 상태: 2.5초마다 백그라운드 로그인 시도 (다른 브라우저/스마트폰/인스턴스에서 링크 클릭 시 자동 감지하여 홈 이동)
+  // 이메일 인증 대기 상태: 2.5초마다 백그라운드 로그인 시도 (다른 브라우저 창이나 모바일에서 링크 클릭 시 자동 감지하여 홈 이동)
   useEffect(() => {
     if (mode !== 'awaiting-verification' || !email || !password) return;
 
@@ -211,31 +207,6 @@ export default function LoginPage() {
     }, 1000);
     return () => clearInterval(timer);
   }, [resendCooldown]);
-
-  /** 회원가입 OTP 인증코드 검증 핸들러 */
-  const handleVerifySignupOtp = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!verificationOtp.trim() || verificationOtp.trim().length < 6) {
-      toast.error('전송받으신 인증번호를 정확히 입력해 주세요.');
-      return;
-    }
-    try {
-      setIsVerifyingSignup(true);
-      await verifySignupOtp({ email: email.trim(), token: verificationOtp.trim() });
-      toast.success('이메일 인증이 완료되었습니다! 환영합니다.');
-      navigate(ROUTES.HOME);
-    } catch (err: any) {
-      try {
-        await loginWithEmail({ email: email.trim(), password });
-        toast.success('로그인되었습니다! 환영합니다.');
-        navigate(ROUTES.HOME);
-        return;
-      } catch {}
-      toast.error(getFriendlyAuthErrorMessage(err, 'signup'));
-    } finally {
-      setIsVerifyingSignup(false);
-    }
-  };
 
   /** 회원가입 인증 메일 재발송 핸들러 */
   const handleResendSignupEmail = async () => {
@@ -316,7 +287,7 @@ export default function LoginPage() {
                 {mode === 'verify-reset-otp'
                   ? '이메일 다시 입력하기'
                   : mode === 'forgot-password'
-                  ? '로그인으로 돌아가기'
+                  ? '뒤로가기'
                   : mode === 'awaiting-verification'
                   ? '로그인 화면으로'
                   : '간편 로그인으로'}
@@ -453,7 +424,7 @@ export default function LoginPage() {
                 <div className="mb-2">
                   <h2 className="text-base font-extrabold text-foreground flex items-center gap-1.5">
                     <Mail className="h-4 w-4 text-brand-600 dark:text-brand-400" />
-                    <span>이메일 인증 대기 중</span>
+                    <span>인증 메일 확인 대기 중</span>
                   </h2>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed break-keep">
                     <strong className="text-foreground">{email}</strong> 주소로 인증 메일을 보냈습니다.
@@ -461,53 +432,26 @@ export default function LoginPage() {
                 </div>
 
                 {/* 다른 브라우저/스마트폰 인증 실시간 감지 안내 배너 */}
-                <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-3.5 text-xs space-y-1.5 dark:border-brand-900/60 dark:bg-brand-950/40">
+                <div className="rounded-2xl border border-brand-200 bg-brand-50/60 p-4 text-xs space-y-2 dark:border-brand-900/60 dark:bg-brand-950/40">
                   <div className="flex items-center gap-2 font-bold text-brand-700 dark:text-brand-300">
-                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                    <span>인증 링크 실시간 확인 중...</span>
+                    <RefreshCw className="h-4 w-4 animate-spin text-brand-500" />
+                    <span>이메일 인증 링크 확인 실시간 대기 중</span>
                   </div>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed break-keep">
-                    다른 브라우저, 다른 창, 또는 스마트폰 메일 앱에서 <strong>인증 링크</strong>를 클릭하시면 이 화면이 즉시 감지하여 <strong>자동으로 로그인되어 홈 화면으로 이동</strong>합니다.
+                  <p className="text-xs text-muted-foreground leading-relaxed break-keep">
+                    받은편지함(또는 스팸함)에서 <strong>인증 링크</strong>를 클릭해 주세요.
+                    <br />
+                    링크를 확인하시면 <strong>이 화면이 자동으로 로그인되어 홈으로 이동</strong>합니다.
                   </p>
                 </div>
 
-                {/* 6~8자리 OTP 번호 직접 입력 폼 */}
-                <form onSubmit={handleVerifySignupOtp} className="space-y-3 pt-1">
-                  <div>
-                    <label className="block text-xs font-bold text-foreground mb-1.5">
-                      또는 메일에 적힌 인증번호 직접 입력
-                    </label>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      maxLength={8}
-                      value={verificationOtp}
-                      onChange={(e) => setVerificationOtp(e.target.value.replace(/[^0-9]/g, ''))}
-                      placeholder="인증번호 6~8자리"
-                      className="w-full text-center tracking-[0.25em] font-mono text-xl font-bold rounded-xl border border-input bg-background py-3 px-4 text-foreground outline-none transition-colors focus:border-brand-500 focus:ring-1 focus:ring-brand-500"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    variant="primary"
-                    size="lg"
-                    className="w-full font-bold shadow-soft"
-                    disabled={isVerifyingSignup || verificationOtp.length < 6}
-                  >
-                    {isVerifyingSignup ? '인증 확인 중...' : '인증번호로 즉시 로그인'}
-                  </Button>
-                </form>
-
                 {/* 하단 보조 액션 */}
-                <div className="flex items-center justify-between pt-1 text-xs">
+                <div className="flex items-center justify-between pt-2 text-xs border-t border-border/60">
                   <button
                     type="button"
                     onClick={() => switchMode('login')}
                     className="font-semibold text-muted-foreground hover:text-foreground"
                   >
-                    로그인으로 돌아가기
+                    로그인 화면으로
                   </button>
                   <button
                     type="button"
