@@ -102,6 +102,23 @@ export const App = () => {
       });
     }
 
+    // 3. 이메일 인증 링크 유입 시 홈('/')으로 폴백된 경우 자동 감지하여 전용 인증 완료 페이지로 포워딩
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      const fullUrl = hash + search;
+
+      const isSignupEmailVerify =
+        fullUrl.includes('type=signup') ||
+        fullUrl.includes('type=email_verify') ||
+        (fullUrl.includes('access_token=') && !localStorage.getItem('dduktak_oauth_from'));
+
+      if (isSignupEmailVerify && window.location.pathname !== ROUTES.AUTH_CALLBACK) {
+        console.log('[Auth] 이메일 인증 링크 유입 감지 ➔ 전용 인증 완료 페이지(/auth/callback)로 포워딩');
+        router.navigate(`${ROUTES.AUTH_CALLBACK}?type=email_verify${hash ? hash : ''}`, { replace: true });
+      }
+    }
+
     return () => {
       clearTimeout(pushTimer);
       unsubscribe?.();

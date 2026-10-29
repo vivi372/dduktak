@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, LogIn, Plus, Sparkles, ChefHat } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,22 @@ function normalizeDifficulty(diff?: string): RecipeDifficulty {
 export default function HomePage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+
+  // 이메일 인증 링크로 홈('/')에 바로 진입한 경우 전용 인증 완료 뷰로 포워딩
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash || '';
+      const search = window.location.search || '';
+      const full = hash + search;
+      if (
+        full.includes('type=signup') ||
+        full.includes('type=email_verify') ||
+        (full.includes('access_token=') && !localStorage.getItem('dduktak_oauth_from'))
+      ) {
+        navigate(`${ROUTES.AUTH_CALLBACK}?type=email_verify${hash ? hash : ''}`, { replace: true });
+      }
+    }
+  }, [navigate]);
 
   // 실제 메인 홈 브리핑 API 쿼리 훅 연동
   const { data: briefing, isLoading: isBriefingLoading } = useHomeBriefing();
