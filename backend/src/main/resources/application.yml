@@ -46,7 +46,7 @@ jwt:
   expiration: 86400000 # 24 hours (ms)
   refresh-expiration: 604800000 # 7 days (ms)
   supabase-url: ${VITE_SUPABASE_URL:https://hefryhbaoovrhgzevfad.supabase.co}
-  supabase-key: ${VITE_SUPABASE_ANON_KEY:${VITE_SUPABASE_PUBLISHABLE_KEY:}}
+  supabase-key: ${SUPABASE_ANON_KEY:${VITE_SUPABASE_ANON_KEY:${VITE_SUPABASE_PUBLISHABLE_KEY:sb_publishable_jyumLnwM0WbCWqGpi3ugbQ_Ip7tlW8V}}}
 
 # Google AI Studio Gemini API 설정 (영수증 OCR 스캔 연동, GEMINI_MODEL_NAME 및 GEMINI_MODEL 양방향 호환)
 gemini:

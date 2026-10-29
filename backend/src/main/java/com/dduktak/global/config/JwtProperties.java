@@ -38,5 +38,5 @@ public class JwtProperties {
     /**
      * Supabase Publishable / Anon API Key (원격 위임 검증 헤더용)
      */
-    private String supabaseKey;
+    private String supabaseKey = "sb_publishable_jyumLnwM0WbCWqGpi3ugbQ_Ip7tlW8V";
 }
