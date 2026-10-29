@@ -1,4 +1,4 @@
-﻿server:
+server:
   port: ${PORT:8080}
   servlet:
     context-path: /
@@ -14,13 +14,13 @@ spring:
   datasource:
     # log4jdbc driver for detailed SQL & parameter logging
     driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
-    url: jdbc:log4jdbc:postgresql://${DB_HOST:aws-0-ap-northeast-2.pooler.supabase.com}:${DB_PORT:6543}/${DB_NAME:postgres}?sslmode=require&prepareThreshold=0
-    username: ${DB_USER:postgres.hefryhbaoovrhgzevfad}
-    password: ${DB_PASSWORD:}
+    url: ${SPRING_DATASOURCE_URL:jdbc:log4jdbc:postgresql://${DB_HOST:aws-0-ap-northeast-2.pooler.supabase.com}:${DB_PORT:6543}/${DB_NAME:postgres}?sslmode=require&prepareThreshold=0}
+    username: ${SPRING_DATASOURCE_USERNAME:${DB_USER:postgres.hefryhbaoovrhgzevfad}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${DB_PASSWORD:}}
     hikari:
       pool-name: DduktakHikariPool
-      maximum-pool-size: 10
-      minimum-idle: 2
+      maximum-pool-size: 5
+      minimum-idle: 1
       idle-timeout: 300000
       connection-timeout: 20000
       max-lifetime: 600000
@@ -28,8 +28,8 @@ spring:
 
   servlet:
     multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+      max-file-size: 2MB
+      max-request-size: 2MB
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
@@ -40,18 +40,18 @@ mybatis:
     default-fetch-size: 100
     default-statement-timeout: 30
 
-# Supabase / JJWT 토큰 설정 (JwtProperties 매핑)
+# Supabase / JJWT 토큰 설정 (JwtProperties 매핑, 배포 가이드 JWT_SECRET_KEY 및 로컬 JWT_SECRET 양방향 호환)
 jwt:
-  secret: ${JWT_SECRET}
+  secret: ${JWT_SECRET_KEY:${JWT_SECRET:}}
   expiration: 86400000 # 24 hours (ms)
   refresh-expiration: 604800000 # 7 days (ms)
   supabase-url: ${VITE_SUPABASE_URL:https://hefryhbaoovrhgzevfad.supabase.co}
-  supabase-key: ${VITE_SUPABASE_PUBLISHABLE_KEY:}
+  supabase-key: ${VITE_SUPABASE_ANON_KEY:${VITE_SUPABASE_PUBLISHABLE_KEY:}}
 
-# Google AI Studio Gemini API 설정 (영수증 OCR 스캔 연동)
+# Google AI Studio Gemini API 설정 (영수증 OCR 스캔 연동, GEMINI_MODEL_NAME 및 GEMINI_MODEL 양방향 호환)
 gemini:
   api-key: ${GEMINI_API_KEY:}
-  model: ${GEMINI_MODEL:gemini-3.5-flash-lite}
+  model: ${GEMINI_MODEL_NAME:${GEMINI_MODEL:gemini-3.5-flash-lite}}
   base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
 
 # Firebase Cloud Messaging (FCM 푸시 알림 설정)

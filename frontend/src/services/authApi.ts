@@ -21,6 +21,29 @@ import type {
 } from '@/types/auth';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
+/**
+ * 웹(Vercel 배포 도메인 등) 및 모바일 앱(Capacitor WebView) 환경에 맞는 인증 리다이렉트 Origin 반환 헬퍼
+ * - 일반 웹 브라우저: 현재 접속 중인 window.location.origin (예: https://dduktak.vercel.app) 우선 사용
+ * - 안드로이드 네이티브 앱(http://localhost): VITE_SITE_URL(프로덕션 웹 도메인) 또는 로컬 브릿지 주소 사용
+ */
+export function getAuthRedirectOrigin(): string {
+  const configuredSiteUrl = import.meta.env.VITE_SITE_URL?.replace(/\/+$/, '');
+  const isNative = Capacitor.isNativePlatform();
+
+  if (isNative) {
+    return configuredSiteUrl || 'http://192.168.219.101:5173';
+  }
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    if (window.location.origin.includes('localhost') && configuredSiteUrl) {
+      return configuredSiteUrl;
+    }
+    return window.location.origin;
+  }
+
+  return configuredSiteUrl || 'http://192.168.219.101:5173';
+}
+
 // ==============================================================================
 // 1. Supabase Auth Client SDK 함수
 // ==============================================================================
@@ -42,6 +65,7 @@ export async function signInWithEmail(email: string, password: string) {
  * 입력된 닉네임은 raw_user_meta_data에 저장되며, 첫 로그인 시 백엔드가 읽어 지연 생성합니다.
  */
 export async function signUpWithEmail(email: string, password: string, nickname: string) {
+  const origin = getAuthRedirectOrigin();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -49,7 +73,7 @@ export async function signUpWithEmail(email: string, password: string, nickname:
       data: {
         nickname: nickname.trim(),
       },
-      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?type=email_verify` : undefined,
+      emailRedirectTo: `${origin}/auth/callback?type=email_verify`,
     },
   });
   if (error) throw error;
@@ -67,10 +91,7 @@ export async function signUpWithEmail(email: string, password: string, nickname:
  */
 export async function signInWithOAuth(provider: 'google') {
   const isNative = Capacitor.isNativePlatform();
-  let origin = typeof window !== 'undefined' ? window.location.origin : 'http://192.168.219.101:5173';
-  if (origin.includes('localhost')) {
-    origin = 'http://192.168.219.101:5173';
-  }
+  const origin = getAuthRedirectOrigin();
 
   // 웹 브라우저와 모바일 앱 환경을 명확히 구분하여 콜백 처리 (웹: 즉시 홈 이동, 앱: Intent 복귀)
   if (typeof window !== 'undefined') {
@@ -93,8 +114,9 @@ export async function signInWithOAuth(provider: 'google') {
  * 비밀번호 재설정 이메일 발송 (USER-PAGE-01-2)
  */
 export async function sendPasswordResetEmail(email: string) {
+  const origin = getAuthRedirectOrigin();
   const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/reset-password` : undefined,
+    redirectTo: `${origin}/reset-password`,
   });
   if (error) throw error;
   return data;
@@ -118,11 +140,12 @@ export async function verifyPasswordResetOtp(email: string, token: string) {
  * 회원가입 인증 이메일 재발송
  */
 export async function resendSignupEmail(email: string) {
+  const origin = getAuthRedirectOrigin();
   const { data, error } = await supabase.auth.resend({
     type: 'signup',
     email: email.trim(),
     options: {
-      emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback?type=email_verify` : undefined,
+      emailRedirectTo: `${origin}/auth/callback?type=email_verify`,
     },
   });
   if (error) throw error;
@@ -182,9 +205,10 @@ export function onAuthStateChange(callback: (event: AuthChangeEvent, session: Se
  * Supabase 보안 정책(Secure Email Change)에 따라 기존 메일 또는 신규 메일로 확인 링크 전송
  */
 export async function updateUserEmail(newEmail: string) {
+  const origin = getAuthRedirectOrigin();
   const { data, error } = await supabase.auth.updateUser(
     { email: newEmail },
-    { emailRedirectTo: typeof window !== 'undefined' ? `${window.location.origin}/auth/callback` : undefined },
+    { emailRedirectTo: `${origin}/auth/callback?type=email_verify` },
   );
   if (error) throw error;
   return data;
