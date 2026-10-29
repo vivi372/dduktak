@@ -31,7 +31,7 @@ WORKDIR /app
 ENV TZ=Asia/Seoul
 
 # 빌드된 JAR 복사
-COPY --from=builder /app/build/libs/dduktak-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/build/libs/dduktak-backend-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 

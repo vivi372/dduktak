@@ -26,7 +26,7 @@ WORKDIR /app
 
 ENV TZ=Asia/Seoul
 
-COPY --from=builder /app/backend/build/libs/dduktak-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=builder /app/backend/build/libs/dduktak-backend-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8080
 
