@@ -11,7 +11,6 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { CustomDatePicker } from '@/components/common/CustomDatePicker';
-import { DDayBadge } from '@/components/common/DDayBadge';
 import type { OcrParsedItemWithRaw, InventoryItem } from '@/types/inventory';
 import { cn } from '@/utils/cn';
 
@@ -141,67 +140,67 @@ export function ReceiptItemReview({
       </div>
 
       {/* 2. 인식된 식재료 품목 리스트 */}
-      <div className="space-y-3 max-h-[50vh] overflow-y-auto pr-1">
+      <div className="space-y-3 max-h-[58vh] overflow-y-auto pr-1 scrollbar-thin">
         {items.map((item) => (
           <div
             key={item.id}
             className={cn(
-              'rounded-2xl border p-4 transition-all',
+              'rounded-2xl border p-3.5 sm:p-4 transition-all',
               item.selected
                 ? 'border-brand-300 bg-card shadow-xs dark:border-brand-800'
                 : 'border-border/60 bg-muted/20 opacity-60'
             )}
           >
-            {/* 상단: 체크박스 + 품목명 + 수량 증감 버튼 */}
-            <div className="flex items-center justify-between gap-3">
-              {/* 왼쪽: 체크박스 및 품목 정보 */}
+            {/* 상단: 체크박스 + 품목명 & 원문 + 수량 증감 버튼 */}
+            <div className="flex items-start justify-between gap-2.5">
+              {/* 왼쪽: 체크박스 및 품목 정보 (글자 잘림 방지 break-keep 적용) */}
               <button
                 type="button"
                 onClick={() => handleToggleItem(item.id)}
-                className="flex items-start gap-3 text-left flex-1 min-w-0"
+                className="flex items-start gap-2.5 text-left flex-1 min-w-0"
                 aria-checked={item.selected}
                 role="checkbox"
               >
-                <span className="mt-0.5">
+                <span className="mt-0.5 shrink-0">
                   {item.selected ? (
-                    <CheckSquare className="h-5 w-5 shrink-0 text-brand-500" />
+                    <CheckSquare className="h-5 w-5 text-brand-500" />
                   ) : (
-                    <Square className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    <Square className="h-5 w-5 text-muted-foreground" />
                   )}
                 </span>
 
-                <div className="truncate flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-extrabold text-foreground truncate">
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="text-sm font-extrabold text-foreground break-keep leading-snug">
                       {item.name}
                     </span>
                     {/* 자동 분류 완료 배지 */}
-                    <span className="inline-flex items-center gap-1 rounded-md bg-mint-100 px-1.5 py-0.5 text-[10px] font-bold text-mint-700 dark:bg-mint-400/20 dark:text-mint-300 dark:border dark:border-mint-500/30">
+                    <span className="inline-flex shrink-0 items-center gap-1 rounded-md bg-mint-100 px-1.5 py-0.5 text-[10px] font-bold text-mint-700 dark:bg-mint-400/20 dark:text-mint-300 dark:border dark:border-mint-500/30">
                       <Sparkles className="h-2.5 w-2.5" />
                       자동 분류 완료
                     </span>
                   </div>
 
                   {/* 영수증 인식 원문 표기 */}
-                  <span className="block text-[11px] text-muted-foreground truncate mt-0.5">
+                  <span className="block text-[11px] text-muted-foreground break-all line-clamp-1 mt-0.5">
                     영수증 원문: {item.rawText}
                   </span>
                 </div>
               </button>
 
-              {/* 오른쪽: + / - 수량 버튼 (44px+ 터치 타겟 준수) */}
-              <div className="flex items-center gap-1 shrink-0">
+              {/* 오른쪽: + / - 수량 버튼 (모바일 접근성 44px+ 터치 타겟 준수) */}
+              <div className="flex items-center gap-1 shrink-0 pt-0.5">
                 <button
                   type="button"
                   onClick={() => handleQuantityChange(item.id, -1)}
                   disabled={!item.selected || item.quantity <= 1}
-                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border bg-background text-foreground shadow-xs transition-all hover:bg-accent active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border bg-background text-foreground shadow-xs transition-all hover:bg-accent active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label={`${item.name} 수량 감소`}
                 >
                   <Minus className="h-4 w-4" />
                 </button>
 
-                <span className="min-w-[48px] text-center text-xs font-bold tabular-nums">
+                <span className="min-w-[42px] text-center text-xs font-bold tabular-nums">
                   {item.quantity} {item.unit}
                 </span>
 
@@ -209,7 +208,7 @@ export function ReceiptItemReview({
                   type="button"
                   onClick={() => handleQuantityChange(item.id, 1)}
                   disabled={!item.selected}
-                  className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border bg-background text-foreground shadow-xs transition-all hover:bg-accent active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border bg-background text-foreground shadow-xs transition-all hover:bg-accent active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
                   aria-label={`${item.name} 수량 증가`}
                 >
                   <Plus className="h-4 w-4" />
@@ -217,19 +216,22 @@ export function ReceiptItemReview({
               </div>
             </div>
 
-            {/* 하단: 소비기한 DatePicker & D-Day 영역 */}
-            <div className="mt-3.5 flex flex-wrap items-center justify-between gap-2 rounded-xl bg-accent/40 px-3 py-2 text-xs">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="font-semibold text-muted-foreground">권장 소비기한</span>
-                <DDayBadge dDay={item.dDay} />
+            {/* 하단: 소비기한 DatePicker 영역 (전체 폭 배치로 날짜 및 D-Day 잘림 원천 방지) */}
+            <div className="mt-3 space-y-1 rounded-xl bg-accent/30 p-2 text-xs">
+              <div className="flex items-center justify-between px-1 text-[11px] font-semibold text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <Calendar className="h-3 w-3 text-brand-500" />
+                  <span>소비기한 (권장 D-Day 자동적용)</span>
+                </span>
+                <span className="text-[10px] text-muted-foreground/80">날짜를 눌러 변경</span>
               </div>
 
-              {/* 커스텀 데이트피커 컴포넌트 연동 */}
-              <div className="w-[150px]">
+              {/* 커스텀 데이트피커 컴포넌트: 전체 너비 배치로 날짜 텍스트 보존 */}
+              <div className="w-full">
                 <CustomDatePicker
                   value={item.recommendedExpireDate}
                   onChange={(dateStr) => handleDateChange(item.id, dateStr)}
+                  className="w-full"
                 />
               </div>
             </div>

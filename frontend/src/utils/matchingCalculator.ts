@@ -6,7 +6,6 @@
 import type { RecipeDetail, RecipeIngredient } from '@/types/recipe';
 import type {
   IngredientMatchStatus,
-  IngredientStatusType,
   RecipeMatchingScore,
   FifoDeductionItem,
 } from '@/types/matching';
@@ -179,30 +178,62 @@ export function calculateRecipeMatching(
   }
 
   // [규칙 2] 기본 재료 충족 점수 (Base Score - 최대 100점)
-  // 주재료 가중치 70점 / 부재료 가중치 30점
-  let baseScore = 0;
+  // 백엔드 MatchingCalculator.java와 100% 동일한 가중치 및 스코어링 공식 적용
+  let mainWeightTotal = 70.0;
+  let subWeightTotal = 30.0;
 
-  if (mainIngredients.length > 0) {
-    const mainWeight = 70 / mainIngredients.length;
-    mainIngredients.forEach((ing) => {
-      const status = ingredientStatuses.find((s) => s.masterIngredientId === ing.masterIngredientId);
-      const r = getStatusRatio(status?.status, ing.isOptional);
-      baseScore += mainWeight * r;
-    });
-  } else {
-    baseScore += 70; // 주재료 없는 특수 레시피
+  if (mainIngredients.length === 0) {
+    subWeightTotal = 100.0;
+  } else if (subIngredients.length === 0) {
+    mainWeightTotal = 100.0;
   }
 
-  if (subIngredients.length > 0) {
-    const subWeight = 30 / subIngredients.length;
-    subIngredients.forEach((ing) => {
-      const status = ingredientStatuses.find((s) => s.masterIngredientId === ing.masterIngredientId);
-      const r = getStatusRatio(status?.status, ing.isOptional);
-      baseScore += subWeight * r;
-    });
-  } else {
-    baseScore += 30; // 부재료 없는 경우
-  }
+  const mainUnitWeight = mainIngredients.length === 0 ? 0.0 : mainWeightTotal / mainIngredients.length;
+  const subUnitWeight = subIngredients.length === 0 ? 0.0 : subWeightTotal / subIngredients.length;
+
+  let baseScore = 0.0;
+
+  // 2.1 주재료 스코어링
+  mainIngredients.forEach((main) => {
+    const isSauce = main.isSauce || main.categoryId === 6;
+    const { totalQuantity } = getInventoryStatusForIngredient(main.masterIngredientId, inventory);
+
+    if (isSauce) {
+      baseScore += mainUnitWeight * 1.0;
+    } else if (totalQuantity > 0) {
+      baseScore += mainUnitWeight * 1.0;
+    } else if (main.altIngredientId) {
+      const altStatus = getInventoryStatusForIngredient(main.altIngredientId, inventory);
+      if (altStatus.totalQuantity > 0) {
+        baseScore += mainUnitWeight * 0.7;
+      } else if (main.isOptional) {
+        baseScore += mainUnitWeight * 0.5;
+      }
+    } else if (main.isOptional) {
+      baseScore += mainUnitWeight * 0.5;
+    }
+  });
+
+  // 2.2 부재료 스코어링
+  subIngredients.forEach((sub) => {
+    const isSauce = sub.isSauce || sub.categoryId === 6;
+    const { totalQuantity } = getInventoryStatusForIngredient(sub.masterIngredientId, inventory);
+
+    if (isSauce) {
+      baseScore += subUnitWeight * 1.0;
+    } else if (totalQuantity > 0) {
+      baseScore += subUnitWeight * 1.0;
+    } else if (sub.altIngredientId) {
+      const altStatus = getInventoryStatusForIngredient(sub.altIngredientId, inventory);
+      if (altStatus.totalQuantity > 0) {
+        baseScore += subUnitWeight * 0.7;
+      } else if (sub.isOptional) {
+        baseScore += subUnitWeight * 0.5;
+      }
+    } else if (sub.isOptional) {
+      baseScore += subUnitWeight * 0.5;
+    }
+  });
 
   // [규칙 3] 소비기한 임박 가산점 (Bonus Score - 최대 20점)
   // D-0 ~ D-3 임박 주재료 +10점, 임박 부재료 +5점
@@ -239,23 +270,6 @@ export function calculateRecipeMatching(
     urgentIngredients,
     ingredientStatuses,
   };
-}
-
-/** 상태별 점수 반영 비율 R */
-function getStatusRatio(status?: IngredientStatusType, isOptional?: boolean): number {
-  if (!status) return 0.0;
-  switch (status) {
-    case 'SAUCE':
-      return 1.0; // 양념/소스 100% 충족
-    case 'OWNED':
-      return 1.0; // 직접 보유 100%
-    case 'ALTERNATIVE':
-      return 0.7; // 대체 보유 70%
-    case 'DEFICIENT':
-      return isOptional ? 0.5 : 0.0; // 생략 가능 시 50%, 아니면 0%
-    default:
-      return 0.0;
-  }
 }
 
 /**

@@ -173,7 +173,7 @@ export function ReceiptOcrModal({
     <AnimatePresence>
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4"
           role="dialog"
           aria-modal="true"
           aria-labelledby="ocr-modal-title"
@@ -190,14 +190,14 @@ export function ReceiptOcrModal({
 
           {/* 모달 창 (spring 대신 부드러운 easeOut으로 모바일/웹 깜빡임 원천 방지) */}
           <motion.div
-            className="relative z-10 flex max-h-[92vh] w-full max-w-lg flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
+            className="relative z-10 flex max-h-[94vh] w-full max-w-xl flex-col overflow-hidden rounded-3xl border border-border bg-card shadow-2xl"
             initial={{ opacity: 0, scale: 0.95, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
           >
             {/* 모달 상단 헤더 바 */}
-            <div className="flex items-center justify-between border-b border-border/80 px-5 py-3.5 bg-muted/20 shrink-0">
+            <div className="flex items-center justify-between border-b border-border/80 px-4 py-3 sm:px-5 sm:py-3.5 bg-muted/20 shrink-0">
               <div className="flex items-center gap-2">
                 <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-100 text-brand-600 dark:bg-brand-950/60 dark:text-brand-400">
                   <Receipt className="h-5 w-5" />
@@ -226,7 +226,7 @@ export function ReceiptOcrModal({
             </div>
 
             {/* 모달 콘텐츠 본문 (스텝 분기) */}
-            <div className="flex-1 overflow-y-auto p-5 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-3.5 sm:p-5 scrollbar-thin">
               {step === 'UPLOAD' && (
                 <ReceiptImagePicker
                   onSelectImage={handleSelectImage}

@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   Clock,
   Heart,
@@ -45,6 +45,8 @@ import { cn } from '@/utils/cn';
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const passedMatchingRate = (location.state as { matchingRate?: number } | null)?.matchingRate;
   const { user } = useAuth();
   const recipeId = Number(id);
 
@@ -89,8 +91,20 @@ export default function RecipeDetailPage() {
         ingredientStatuses: [],
       };
     }
-    return calculateRecipeMatching(recipe, myIngredients, servings);
-  }, [recipe, myIngredients, servings, recipeId]);
+    const calculated = calculateRecipeMatching(recipe, myIngredients, servings);
+    // 리스트에서 전달된 백엔드 matchingRate가 존재하고, 기본 인분 수일 때는 리스트와 100% 동일한 점수 표시 보장
+    if (
+      servings === recipe.servings &&
+      typeof passedMatchingRate === 'number' &&
+      passedMatchingRate > 0
+    ) {
+      return {
+        ...calculated,
+        finalScore: passedMatchingRate,
+      };
+    }
+    return calculated;
+  }, [recipe, myIngredients, servings, recipeId, passedMatchingRate]);
 
   // 본인 작성 레시피 여부
   const isAuthor = Boolean(user?.userId && recipe?.authorId && user.userId === recipe.authorId);

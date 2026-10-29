@@ -71,6 +71,7 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
     return (
       <Link
         to={`/recipes/${recipe.recipeId}`}
+        state={{ matchingRate }}
         className={cn(
           'group block w-56 shrink-0 snap-start overflow-hidden rounded-2xl border bg-card shadow-card transition-all hover:border-brand-300 active:scale-[0.98] dark:border-white/10 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]',
           className,
@@ -105,6 +106,7 @@ export function RecipeCard({ recipe, matchingRate, variant = 'list', className }
   return (
     <Link
       to={`/recipes/${recipe.recipeId}`}
+      state={{ matchingRate }}
       className={cn(
         'group flex gap-3 overflow-hidden rounded-2xl border bg-card p-2.5 shadow-card transition-all hover:border-brand-300 active:scale-[0.99] dark:border-white/10 dark:shadow-[0_2px_14px_rgba(0,0,0,0.5)]',
         className,
