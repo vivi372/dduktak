@@ -12,11 +12,11 @@ export const DownloadPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   // 현재 브라우저 URL 또는 로컬 네트워크 IP 기준 다운로드 주소
-  const currentUrl = typeof window !== 'undefined' ? window.location.href : 'http://192.168.219.101:5173/download';
+  const currentUrl = typeof window !== 'undefined' ? window.location.href : 'https://dduktak-one.vercel.app/download';
   const appVersion = 'v1.1.0';
   const apkFileName = `dduktak-app-${appVersion}.apk`;
   const apkDownloadPath = `/downloads/${apkFileName}?v=1.1.0`;
-  const apiServerUrl = import.meta.env.VITE_API_BASE_URL || 'http://192.168.219.101:8080';
+  const apiServerUrl = import.meta.env.VITE_API_BASE_URL || 'https://dduktak.onrender.com';
 
   /** 스마트폰 접속 주소 클립보드 복사 */
   const handleCopyUrl = async () => {

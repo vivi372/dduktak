@@ -103,8 +103,8 @@ export function handleUxTaggedError(errorData: ErrorResponseDto, traceId?: strin
  * Axios 인스턴스 생성
  */
 export const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || '',
-  timeout: 15000,
+  baseURL: import.meta.env.VITE_API_BASE_URL || (import.meta.env.PROD ? 'https://dduktak.onrender.com' : ''),
+  timeout: 45000,
   headers: {
     'Content-Type': 'application/json',
   },

@@ -31,7 +31,7 @@ export function getAuthRedirectOrigin(): string {
   const isNative = Capacitor.isNativePlatform();
 
   if (isNative) {
-    return configuredSiteUrl || 'http://192.168.219.101:5173';
+    return configuredSiteUrl || 'https://dduktak-one.vercel.app';
   }
 
   if (typeof window !== 'undefined' && window.location.origin) {
@@ -41,7 +41,7 @@ export function getAuthRedirectOrigin(): string {
     return window.location.origin;
   }
 
-  return configuredSiteUrl || 'http://192.168.219.101:5173';
+  return configuredSiteUrl || 'https://dduktak-one.vercel.app';
 }
 
 // ==============================================================================

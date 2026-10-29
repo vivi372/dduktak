@@ -1,2 +1,3 @@
-# Keep downloads directory in git
+# Keep downloads directory and release APK in git
 *.apk
+!dduktak-app-v1.1.0.apk

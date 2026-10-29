@@ -1,9 +1,23 @@
 {
+  "headers": [
+    {
+      "source": "/downloads/(.*)\\.apk",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/vnd.android.package-archive"
+        },
+        {
+          "key": "Content-Disposition",
+          "value": "attachment; filename=\"dduktak-app-v1.1.0.apk\""
+        }
+      ]
+    }
+  ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!downloads/).*)",
       "destination": "/index.html"
     }
   ]
 }
-

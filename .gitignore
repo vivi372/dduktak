@@ -37,6 +37,7 @@ out/
 
 # Sensitive Config & Binary artifacts
 *.apk
+!frontend/public/downloads/dduktak-app-v1.1.0.apk
 *.key
 *.pem
 local.properties
