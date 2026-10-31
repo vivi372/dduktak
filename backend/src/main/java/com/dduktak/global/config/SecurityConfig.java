@@ -60,6 +60,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // 1. 비인증 공개 허용 엔드포인트
                         .requestMatchers("/error").permitAll()
+                        .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/ping").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/inventory/master-ingredients").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/recipes/categories").permitAll()
                         .requestMatchers(org.springframework.http.HttpMethod.GET, "/api/v1/recipes", "/api/v1/recipes/**").permitAll()
