@@ -1,0 +1,339 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 780" width="100%" height="100%" style="background-color: #fafbfd; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+  <defs>
+    <!-- Grid Pattern -->
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#e2e8f0" stroke-width="0.8" opacity="0.6"/>
+    </pattern>
+
+    <!-- Drop Shadows -->
+    <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#0f172a" flood-opacity="0.06"/>
+    </filter>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="125%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#0f172a" flood-opacity="0.04"/>
+    </filter>
+
+    <!-- Arrow Markers -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-coral" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#E5604F"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#10b981"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#0284c7"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#8b5cf6"/>
+    </marker>
+  </defs>
+
+  <!-- Background Grid -->
+  <rect width="100%" height="100%" fill="#fafbfd"/>
+  <rect width="100%" height="100%" fill="url(#grid)"/>
+
+  <!-- Title & Subtitle -->
+  <text x="50" y="46" font-size="22" font-weight="700" fill="#0f172a">Dduktak System Architecture</text>
+  <text x="50" y="68" font-size="13" font-weight="500" fill="#64748b">Hybrid Client, Backend Cloud, Supabase BaaS, and External AI Pipeline</text>
+
+  <!-- ========================================== -->
+  <!-- 1. CI/CD & SOURCE CODE LAYER (Top Right)   -->
+  <!-- ========================================== -->
+  <g transform="translate(930, 40)">
+    <rect width="300" height="150" rx="14" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.5" filter="url(#softShadow)"/>
+    <text x="20" y="30" font-size="13" font-weight="700" fill="#334155" letter-spacing="0.5">DEV &amp; CI/CD PIPELINE</text>
+    
+    <!-- GitHub Card -->
+    <rect x="20" y="45" width="115" height="85" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- GitHub Icon -->
+    <path d="M 77 60 C 68.7 60 62 66.7 62 75 C 62 81.6 66.3 87.2 72.3 89.2 C 73.1 89.3 73.3 88.8 73.3 88.4 C 73.3 88 73.3 86.8 73.3 85.3 C 69.1 86.2 68.2 83.3 68.2 83.3 C 67.5 81.6 66.5 81.1 66.5 81.1 C 65.2 80.2 66.6 80.2 66.6 80.2 C 68.1 80.3 68.8 81.7 68.8 81.7 C 70.1 83.9 72.2 83.3 73 82.9 C 73.1 82 73.5 81.3 74 80.9 C 70.6 80.5 67.1 79.2 67.1 73.4 C 67.1 71.7 67.7 70.4 68.7 69.3 C 68.5 68.9 68 67.3 68.9 65.2 C 68.9 65.2 70.2 64.8 73.2 66.8 C 74.4 66.5 75.7 66.3 77 66.3 C 78.3 66.3 79.6 66.5 80.8 66.8 C 83.8 64.8 85.1 65.2 85.1 65.2 C 86 67.3 85.5 68.9 85.3 69.3 C 86.3 70.4 86.9 71.7 86.9 73.4 C 86.9 79.2 83.4 80.5 80 80.9 C 80.6 81.4 81.1 82.4 81.1 83.9 C 81.1 86.1 81.1 87.8 81.1 88.4 C 81.1 88.8 81.4 89.3 82.2 89.2 C 88.2 87.2 92.5 81.6 92.5 75 C 92.5 66.7 85.8 60 77 60 Z" fill="#24292f"/>
+    <text x="77" y="106" font-size="12" font-weight="700" fill="#1e293b" text-anchor="middle">GitHub</text>
+    <text x="77" y="120" font-size="10" font-weight="500" fill="#64748b" text-anchor="middle">Repository</text>
+
+    <!-- Vercel Card -->
+    <rect x="160" y="45" width="120" height="85" rx="10" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1"/>
+    <!-- Vercel Icon (Triangle) -->
+    <polygon points="220,62 235,88 205,88" fill="#000000"/>
+    <text x="220" y="106" font-size="12" font-weight="700" fill="#1e293b" text-anchor="middle">Vercel</text>
+    <text x="220" y="120" font-size="10" font-weight="500" fill="#64748b" text-anchor="middle">Frontend CI/CD</text>
+
+    <!-- Connect GitHub to Vercel -->
+    <path d="M 135 88 L 158 88" stroke="#64748b" stroke-width="1.5" marker-end="url(#arrow)"/>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 2. CLIENT LAYER (Left)                     -->
+  <!-- ========================================== -->
+  <g transform="translate(50, 140)">
+    <!-- Main Client Box -->
+    <rect width="250" height="490" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.8" filter="url(#cardShadow)"/>
+    <rect x="0" y="0" width="250" height="42" rx="16" fill="#f8fafc"/>
+    <line x1="0" y1="42" x2="250" y2="42" stroke="#e2e8f0" stroke-width="1.5"/>
+    <text x="125" y="27" font-size="13" font-weight="700" fill="#334155" text-anchor="middle" letter-spacing="0.5">CLIENT LAYER</text>
+
+    <!-- User Node -->
+    <g transform="translate(125, 80)">
+      <circle cx="0" cy="0" r="26" fill="#ffedd5" stroke="#fb923c" stroke-width="1.8"/>
+      <!-- User Icon -->
+      <path d="M -8 -4 A 8 8 0 1 1 8 -4 A 8 8 0 1 1 -8 -4 M -14 16 C -14 9 -6 7 0 7 C 6 7 14 9 14 16" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="0" y="38" font-size="12" font-weight="700" fill="#0f172a" text-anchor="middle">1인 가구 사용자</text>
+      <text x="0" y="52" font-size="10" font-weight="500" fill="#64748b" text-anchor="middle">(User / Client)</text>
+    </g>
+
+    <!-- Flow Arrow to Sub-clients -->
+    <line x1="125" y1="140" x2="125" y2="175" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow)"/>
+
+    <!-- Web Client Card -->
+    <g transform="translate(25, 185)">
+      <rect width="200" height="110" rx="12" fill="#f0f9ff" stroke="#38bdf8" stroke-width="1.5"/>
+      <!-- React Icon -->
+      <ellipse cx="40" cy="35" rx="18" ry="7" fill="none" stroke="#0284c7" stroke-width="1.5" transform="rotate(30 40 35)"/>
+      <ellipse cx="40" cy="35" rx="18" ry="7" fill="none" stroke="#0284c7" stroke-width="1.5" transform="rotate(90 40 35)"/>
+      <ellipse cx="40" cy="35" rx="18" ry="7" fill="none" stroke="#0284c7" stroke-width="1.5" transform="rotate(150 40 35)"/>
+      <circle cx="40" cy="35" r="3" fill="#0284c7"/>
+      
+      <text x="70" y="32" font-size="14" font-weight="700" fill="#0369a1">React 18 (Vite)</text>
+      <text x="70" y="48" font-size="10" font-weight="600" fill="#0284c7">Tailwind CSS + Zustand</text>
+      <text x="25" y="75" font-size="11" font-weight="500" fill="#475569">• TanStack React Query</text>
+      <text x="25" y="93" font-size="11" font-weight="500" fill="#475569">• browser-image-compression</text>
+    </g>
+
+    <!-- Android Client Card -->
+    <g transform="translate(25, 320)">
+      <rect width="200" height="120" rx="12" fill="#ecfdf5" stroke="#34d399" stroke-width="1.5"/>
+      <!-- Android/Capacitor Icon -->
+      <rect x="25" y="22" width="28" height="28" rx="6" fill="#10b981"/>
+      <path d="M 33 34 L 37 40 L 45 28" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      
+      <text x="64" y="32" font-size="14" font-weight="700" fill="#047857">Capacitor 6.x</text>
+      <text x="64" y="48" font-size="10" font-weight="600" fill="#059669">Android Hybrid Webview</text>
+      <text x="25" y="75" font-size="11" font-weight="500" fill="#475569">• @capacitor/camera (스캔)</text>
+      <text x="25" y="92" font-size="11" font-weight="500" fill="#475569">• @capacitor/push-notifications</text>
+      <text x="25" y="108" font-size="11" font-weight="500" fill="#475569">• @capacitor/app (딥링크)</text>
+    </g>
+
+    <text x="125" y="470" font-size="10.5" font-weight="600" fill="#64748b" text-anchor="middle">Single React Codebase</text>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 3. SUPABASE BAAS (Top Center & Right)      -->
+  <!-- ========================================== -->
+  <g transform="translate(360, 40)">
+    <!-- Outer Supabase Box -->
+    <rect width="520" height="180" rx="16" fill="#ffffff" stroke="#3ECF8E" stroke-width="2" stroke-dasharray="6 4" filter="url(#cardShadow)"/>
+    
+    <!-- Header with Supabase Logo -->
+    <g transform="translate(20, 16)">
+      <path d="M 12 0 L 1.5 13.5 C 0.8 14.4 1.4 16 2.6 16 L 11 16 L 9.5 24 L 20 10.5 C 20.7 9.6 20.1 8 18.9 8 L 10.5 8 Z" fill="#3ECF8E"/>
+      <text x="30" y="18" font-size="15" font-weight="700" fill="#065f46">Supabase BaaS</text>
+      <text x="145" y="18" font-size="11" font-weight="500" fill="#047857">(Managed Cloud Infrastructure)</text>
+    </g>
+
+    <!-- Sub Module 1: Auth -->
+    <g transform="translate(20, 52)">
+      <rect width="145" height="108" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
+      <text x="72" y="24" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">Supabase Auth</text>
+      <text x="15" y="48" font-size="10.5" font-weight="500" fill="#334155">• GoTrue Engine</text>
+      <text x="15" y="66" font-size="10.5" font-weight="500" fill="#334155">• Google OAuth 2.0</text>
+      <text x="15" y="84" font-size="10.5" font-weight="500" fill="#334155">• Email Magic Link</text>
+      <text x="15" y="100" font-size="9.5" font-weight="600" fill="#16a34a">JWT Access Token</text>
+    </g>
+
+    <!-- Sub Module 2: Storage Buckets -->
+    <g transform="translate(180, 52)">
+      <rect width="155" height="108" rx="10" fill="#f0fdf4" stroke="#86efac" stroke-width="1.2"/>
+      <text x="77" y="24" font-size="12" font-weight="700" fill="#15803d" text-anchor="middle">Storage Buckets</text>
+      <text x="15" y="48" font-size="10.5" font-weight="500" fill="#334155">• /recipes (썸네일/스텝)</text>
+      <text x="15" y="66" font-size="10.5" font-weight="500" fill="#334155">• /profiles (유저 프로필)</text>
+      <text x="15" y="84" font-size="10.5" font-weight="500" fill="#334155">• Public CDN Read</text>
+      <text x="15" y="100" font-size="9.5" font-weight="600" fill="#16a34a">Direct Client Upload</text>
+    </g>
+
+    <!-- Sub Module 3: PostgreSQL Database -->
+    <g transform="translate(350, 52)">
+      <rect width="150" height="108" rx="10" fill="#eff6ff" stroke="#93c5fd" stroke-width="1.2"/>
+      <text x="75" y="24" font-size="12" font-weight="700" fill="#1d4ed8" text-anchor="middle">PostgreSQL 15</text>
+      <text x="15" y="48" font-size="10.5" font-weight="500" fill="#334155">• 12 Relational Tables</text>
+      <text x="15" y="66" font-size="10.5" font-weight="500" fill="#334155">• profiles (지연 생성)</text>
+      <text x="15" y="84" font-size="10.5" font-weight="500" fill="#334155">• user_ingredient (FIFO)</text>
+      <text x="15" y="100" font-size="9.5" font-weight="600" fill="#2563eb">HikariCP Connection</text>
+    </g>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 4. BACKEND CLOUD (Center)                  -->
+  <!-- ========================================== -->
+  <g transform="translate(360, 260)">
+    <!-- Render Cloud Boundary Box -->
+    <rect width="520" height="370" rx="16" fill="#ffffff" stroke="#6366f1" stroke-width="2.2" stroke-dasharray="7 5" filter="url(#cardShadow)"/>
+    
+    <!-- Render Header -->
+    <g transform="translate(22, 20)">
+      <!-- Render Logo Symbol -->
+      <rect width="20" height="20" rx="4" fill="#4f46e5"/>
+      <path d="M 6 14 L 6 6 L 14 6 C 16 6 16 10 14 10 L 6 10 M 11 10 L 15 14" fill="none" stroke="#ffffff" stroke-width="2"/>
+      <text x="28" y="16" font-size="15" font-weight="700" fill="#312e81">Render Cloud (Free Tier - 512MB RAM)</text>
+    </g>
+
+    <!-- Docker Container Box -->
+    <g transform="translate(20, 48)">
+      <rect width="480" height="300" rx="14" fill="#f8fafc" stroke="#0284c7" stroke-width="1.8" stroke-dasharray="5 3"/>
+      
+      <!-- Docker Header -->
+      <g transform="translate(18, 16)">
+        <!-- Docker Whale Icon -->
+        <rect x="0" y="8" width="5" height="4" fill="#0284c7"/>
+        <rect x="7" y="8" width="5" height="4" fill="#0284c7"/>
+        <rect x="14" y="8" width="5" height="4" fill="#0284c7"/>
+        <rect x="7" y="3" width="5" height="4" fill="#0284c7"/>
+        <path d="M -2 14 C 2 13 22 13 25 18 C 21 21 2 21 -2 14 Z" fill="#0284c7"/>
+        <text x="32" y="16" font-size="13" font-weight="700" fill="#0369a1">Docker Container (JDK 17 + SerialGC -Xmx320m)</text>
+      </g>
+
+      <!-- Core Framework: Spring Boot -->
+      <g transform="translate(18, 48)">
+        <rect width="444" height="64" rx="10" fill="#ffffff" stroke="#86efac" stroke-width="1.5" filter="url(#softShadow)"/>
+        <!-- Spring Logo -->
+        <circle cx="28" cy="32" r="14" fill="#16a34a"/>
+        <path d="M 23 37 C 21 27 33 25 33 25 C 33 25 35 37 25 37" fill="#ffffff"/>
+        
+        <text x="52" y="27" font-size="14" font-weight="700" fill="#14532d">Spring Boot 3.3.x</text>
+        <text x="52" y="45" font-size="11" font-weight="500" fill="#475569">RESTful Web MVC • Spring Security • Jakarta Validation</text>
+        <rect x="340" y="18" width="90" height="28" rx="6" fill="#dcfce7"/>
+        <text x="385" y="36" font-size="10.5" font-weight="700" fill="#15803d" text-anchor="middle">Java 17 (LTS)</text>
+      </g>
+
+      <!-- Middle Layer: AOP & Observability -->
+      <g transform="translate(18, 122)">
+        <rect width="444" height="60" rx="10" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.2" filter="url(#softShadow)"/>
+        <text x="18" y="24" font-size="12" font-weight="700" fill="#1e293b">TraceIdFilter (MDC) &amp; Spring AOP Logging</text>
+        <text x="18" y="42" font-size="10.5" font-weight="500" fill="#64748b">• 6자리 무작위 난수 Trace ID 발급 ➔ HTTP Header X-Trace-Id 주입</text>
+        <text x="18" y="54" font-size="10" font-weight="500" fill="#64748b">• Controller - Service - Mapper 계층별 파라미터/반환값/실행시간(ms) 자동 트레이싱</text>
+      </g>
+
+      <!-- Business Engines -->
+      <g transform="translate(18, 192)">
+        <rect width="216" height="92" rx="10" fill="#fff7ed" stroke="#fdba74" stroke-width="1.2"/>
+        <text x="12" y="22" font-size="12" font-weight="700" fill="#c2410c">FIFO 차감 비즈니스 엔진</text>
+        <text x="12" y="40" font-size="10" font-weight="500" fill="#7c2d12">• 유통기한 빠른 순(FIFO) 정렬</text>
+        <text x="12" y="55" font-size="10" font-weight="500" fill="#7c2d12">• 부분 차감 &amp; 자동 소진 전이</text>
+        <text x="12" y="70" font-size="10" font-weight="500" fill="#7c2d12">• 양념/소스 차감 제외 정책</text>
+        <text x="12" y="84" font-size="9.5" font-weight="700" fill="#ea580c">@Transactional 무결성</text>
+      </g>
+
+      <g transform="translate(246, 192)">
+        <rect width="216" height="92" rx="10" fill="#f5f3ff" stroke="#c4b5fd" stroke-width="1.2"/>
+        <text x="12" y="22" font-size="12" font-weight="700" fill="#6d28d9">스마트 2-Tier 매칭 엔진</text>
+        <text x="12" y="40" font-size="10" font-weight="500" fill="#4c1d95">• 재료 일치율(%) 실시간 산출</text>
+        <text x="12" y="55" font-size="10" font-weight="500" fill="#4c1d95">• 임박 재료 D-Day 가산점 부여</text>
+        <text x="12" y="70" font-size="10" font-weight="500" fill="#4c1d95">• 카테고리/난이도 다차원 정렬</text>
+        <text x="12" y="84" font-size="9.5" font-weight="700" fill="#7c3aed">MyBatis Dynamic XML</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 5. EXTERNAL SERVICES & AI (Right)          -->
+  <!-- ========================================== -->
+  <g transform="translate(930, 220)">
+    <rect width="300" height="410" rx="16" fill="#ffffff" stroke="#cbd5e1" stroke-width="1.5" filter="url(#cardShadow)"/>
+    <text x="20" y="32" font-size="13" font-weight="700" fill="#334155" letter-spacing="0.5">EXTERNAL CLOUD SERVICES</text>
+
+    <!-- Google Gemini AI Card -->
+    <g transform="translate(18, 50)">
+      <rect width="264" height="110" rx="12" fill="#f0fdf4" stroke="#4ade80" stroke-width="1.5"/>
+      <!-- Google Gemini Star Icon -->
+      <circle cx="28" cy="28" r="14" fill="#3b82f6"/>
+      <path d="M 28 18 L 30 26 L 38 28 L 30 30 L 28 38 L 26 30 L 18 28 L 26 26 Z" fill="#ffffff"/>
+      <text x="50" y="26" font-size="13" font-weight="700" fill="#1e3a8a">Gemini 2.5 Flash Lite</text>
+      <text x="50" y="42" font-size="10.5" font-weight="600" fill="#2563eb">Multimodal Vision Engine</text>
+      <text x="14" y="68" font-size="10.5" font-weight="500" fill="#334155">• 비정형 영수증 ➔ JSON 추출</text>
+      <text x="14" y="85" font-size="10.5" font-weight="500" fill="#334155">• 제로샷(Zero-shot) 구조화</text>
+      <text x="14" y="100" font-size="9.5" font-weight="700" fill="#16a34a">백엔드 정규식 파서 복잡도 0%</text>
+    </g>
+
+    <!-- Firebase FCM Card -->
+    <g transform="translate(18, 175)">
+      <rect width="264" height="100" rx="12" fill="#fffbeb" stroke="#fcd34d" stroke-width="1.5"/>
+      <!-- Firebase Icon -->
+      <circle cx="28" cy="28" r="14" fill="#f59e0b"/>
+      <path d="M 24 35 L 21 21 L 26 26 L 31 17 L 33 35 Z" fill="#ffffff"/>
+      <text x="50" y="26" font-size="13" font-weight="700" fill="#92400e">Firebase FCM</text>
+      <text x="50" y="42" font-size="10.5" font-weight="600" fill="#b45309">Push Notification</text>
+      <text x="14" y="68" font-size="10.5" font-weight="500" fill="#334155">• 모바일 네이티브 푸시 전달</text>
+      <text x="14" y="85" font-size="10.5" font-weight="500" fill="#334155">• 소비기한 D-Day 경고 알림</text>
+    </g>
+
+    <!-- cron-job.org Card -->
+    <g transform="translate(18, 290)">
+      <rect width="264" height="100" rx="12" fill="#f8fafc" stroke="#94a3b8" stroke-width="1.2"/>
+      <!-- Clock Icon -->
+      <circle cx="28" cy="28" r="14" fill="#64748b"/>
+      <path d="M 28 20 L 28 28 L 34 28" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round"/>
+      <text x="50" y="26" font-size="13" font-weight="700" fill="#334155">cron-job.org</text>
+      <text x="50" y="42" font-size="10.5" font-weight="600" fill="#64748b">External Scheduler</text>
+      <text x="14" y="68" font-size="10.5" font-weight="500" fill="#334155">• 14분 주기 웜업 핑 (GET /health)</text>
+      <text x="14" y="85" font-size="10.5" font-weight="500" fill="#334155">• 4바이트 PONG 초경량 응답</text>
+    </g>
+  </g>
+
+  <!-- ========================================== -->
+  <!-- 6. INTERCONNECTION ARROWS & DATA FLOWS     -->
+  <!-- ========================================== -->
+
+  <!-- (1) Client ➔ Supabase Storage (Direct Upload) -->
+  <path d="M 240 240 Q 270 120 480 120" fill="none" stroke="#10b981" stroke-width="2.2" marker-end="url(#arrow-green)"/>
+  <rect x="260" y="105" width="165" height="22" rx="4" fill="#ffffff" stroke="#10b981" stroke-width="1"/>
+  <text x="342" y="120" font-size="10" font-weight="700" fill="#047857" text-anchor="middle">(1) Direct Upload (WebP 압축)</text>
+
+  <!-- (2) Client ➔ Supabase Auth (JWT Token) -->
+  <path d="M 270 270 Q 300 170 380 160" fill="none" stroke="#059669" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow-green)"/>
+  <text x="325" y="210" font-size="9.5" font-weight="600" fill="#047857">(2) Auth Token</text>
+
+  <!-- (3) Client ➔ Render Spring Boot (REST API) -->
+  <path d="M 300 420 L 360 420" fill="none" stroke="#E5604F" stroke-width="2.8" marker-end="url(#arrow-coral)"/>
+  <rect x="250" y="430" width="160" height="24" rx="4" fill="#ffffff" stroke="#E5604F" stroke-width="1.2"/>
+  <text x="330" y="446" font-size="10" font-weight="700" fill="#c026d3" text-anchor="middle">(3) REST API + X-Trace-Id</text>
+
+  <!-- (4) Render ➔ Supabase DB (HikariCP / MyBatis) -->
+  <path d="M 750 260 L 750 225" fill="none" stroke="#2563eb" stroke-width="2.2" marker-end="url(#arrow-blue)"/>
+  <text x="758" y="246" font-size="10" font-weight="700" fill="#1d4ed8">SQL / MyBatis</text>
+
+  <!-- (5) Render ➔ Gemini Flash Lite -->
+  <path d="M 880 340 L 945 315" fill="none" stroke="#0284c7" stroke-width="2" marker-end="url(#arrow-blue)"/>
+  <text x="895" y="318" font-size="10" font-weight="700" fill="#0369a1">Receipt OCR</text>
+
+  <!-- (6) Render ➔ Firebase FCM -->
+  <path d="M 880 440 L 945 440" fill="none" stroke="#f59e0b" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="890" y="432" font-size="10" font-weight="700" fill="#b45309">Push Alert</text>
+
+  <!-- (7) cron-job ➔ Render (Health Ping) -->
+  <path d="M 945 550 L 880 550" fill="none" stroke="#64748b" stroke-width="1.8" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="890" y="568" font-size="10" font-weight="600" fill="#475569">14m Warm-up Ping</text>
+
+  <!-- (8) GitHub ➔ Render (Backend CI/CD) -->
+  <path d="M 980 120 Q 880 180 880 260" fill="none" stroke="#24292f" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arrow)"/>
+  <text x="900" y="170" font-size="10" font-weight="600" fill="#334155">Docker Deploy</text>
+
+  <!-- (9) Vercel ➔ Client (Serve Web Bundle) -->
+  <path d="M 1030 140 Q 900 240 300 240" fill="none" stroke="#000000" stroke-width="1.2" stroke-dasharray="3 3"/>
+
+  <!-- Legend Box (Bottom Center) -->
+  <g transform="translate(360, 670)">
+    <rect width="520" height="50" rx="10" fill="#ffffff" stroke="#e2e8f0" stroke-width="1.2"/>
+    <text x="20" y="30" font-size="11" font-weight="700" fill="#334155">Flow Legend:</text>
+    
+    <line x1="100" y1="26" x2="130" y2="26" stroke="#10b981" stroke-width="2.5"/>
+    <text x="136" y="30" font-size="10" font-weight="600" fill="#047857">Direct Storage I/O</text>
+
+    <line x1="240" y1="26" x2="270" y2="26" stroke="#E5604F" stroke-width="2.5"/>
+    <text x="276" y="30" font-size="10" font-weight="600" fill="#E5604F">REST API (X-Trace-Id)</text>
+
+    <line x1="400" y1="26" x2="430" y2="26" stroke="#2563eb" stroke-width="2.5"/>
+    <text x="436" y="30" font-size="10" font-weight="600" fill="#1d4ed8">DB Query &amp; External</text>
+  </g>
+</svg>
+
