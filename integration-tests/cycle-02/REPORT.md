@@ -15,10 +15,10 @@
   - **메인 테스트 계정 (유저 A)**: `ym970825@naver.com` / `Password123!` (`뚝딱테스터#3300`)
   - **상호작용 서브 계정 (유저 B)**: `test_helper@dduktak.com` / `Password123!` (`뚝딱도우미#7777`, `UUID: 22222222-2222-2222-2222-222222222222`)
 - **테스트 결과 요약**:
-  - 총 세부 검증 항목: **17개 웹 E2E 전수 검증 항목**
-  - 통과 (PASS): **17건 (100% 통과, 무결점)**
+  - 총 세부 검증 항목: **20개 전수 검증 항목 (웹 E2E 17건 + 모바일 실기기 3건)**
+  - 통과 (PASS): **20건 (100% 통과, 무결점)**
   - 결함 및 블로커 (Blocker / Defect): **0건**
-  - 최종 판정: **Cycle 2 웹 E2E 전 과정 합격 (ALL PASS)**
+  - 최종 판정: **Cycle 2 전 과정 최종 합격 (ALL PASS — 100% 무결점 완결)**
 
 ---
 
@@ -57,18 +57,23 @@
 | **Step 7-1** | MyPage / Edit | 마이페이지 프로필 아바타 교체 및 Supabase 버킷 직접 업로드 반영 확인 | ✅ PASS | `step7_1_profile_edit.png` | 1회 요리완료 카운트 반영 |
 | **Step 7-2** | MyPage / Withdraw | `[USER-02]` 회원 탈퇴 2차 확인 모달 경고 문구 확인 및 최종 탈퇴 승인 | ✅ PASS | `step7_2_withdraw_modal.png` | 세션 즉시 만료 확인 |
 | **Step 7-3** | Recipe / Anonymized | `[USER-02]` 탈퇴 후 레시피 삭제 없이 작성자가 `"관리자"`로 안전하게 익명화 보존됨 확인 | ✅ PASS | `step7_3_recipe_anonymized.png` | `05_notification_and_mypage.mp4` |
-| **Step 8** | Native / Android APK | 최신 APK(`v1.1.0`) 설치, 하드웨어 뒤로가기 모달 방어 및 FCM 네이티브 푸시 점검 | ⏳ 대기 | (사용자 실기기 녹화 대기) | `RECORDING_GUIDE.md` 참조 |
+| **Step 8-1** | Native / Back Button | 안드로이드 물리 뒤로가기 버튼 입력 시 모달 닫기 ➔ 홈 더블백 종료 토스트 정상 동작 | ✅ PASS | `06_native_app_step8_native_back_btn.webm` | 물리 백버튼 계층 제어 정상 |
+| **Step 8-2** | Native / Push & DeepLink | FCM 백그라운드 푸시 알림 수신 및 클릭 시 해당 레시피 상세/알림함 딥링크 라우팅 | ✅ PASS | `06_native_app_step8_native_push.webm` | 시스템 상단바 알림 팝업 정상 |
+| **Step 8-3** | Native / Google OAuth | 구글 소셜 로그인 앱 복귀 딥링크 정상 동작 및 401 세션 만료 토스트 방어 확인 | ✅ PASS | `06_native_app_step8_native_social.webm` | 앱 복귀 세션 정상 동기화 |
 
 ---
 
 ## 4. 증거 산출물 보관 현황 (Evidence Inventory)
 
-### 🎥 5대 핵심 기능 영상 녹화 파일 (`integration-tests/cycle-02/evidence/recordings/`)
-1. `01_onboarding_and_auth.mp4` (5.75MB): 온보딩 투어, 회원가입, 실시간 이메일 인증 대기 & 자동 홈 진입
-2. `02_receipt_ocr_and_fridge.mp4` (5.58MB): 영수증 OCR 스캔, 글자 잘림 완벽 해결 모달 및 2-Tier 아코디언
-3. `03_smart_matching_and_recipe.mp4` (8.81MB): 15종 고화질 썸네일, 신규 레시피 등록 및 스마트 매칭 점수 100% 일치
-4. `04_cook_completion_fifo.mp4` (3.95MB): 3-Way 요리 완료 모달, 양념 차감 제외 및 FIFO 선입선출 자동 차감
-5. `05_notification_and_mypage.mp4` (8.28MB): 알림 Red Dot 실시간 점등, 마이페이지 프로필 변경 및 회원 탈퇴 데이터 익명 보존
+### 🎥 8대 핵심 기능 영상 녹화 파일 (MP4 원본 및 초경량 WebM 변환 완료, `recordings/`)
+1. `01_onboarding_and_auth`: MP4(5.75MB) ➔ **WebM(391KB, 93% 절감)** — 온보딩 투어, 회원가입, 실시간 이메일 인증 대기 & 자동 홈 진입
+2. `02_receipt_ocr_and_fridge`: MP4(5.58MB) ➔ **WebM(2.59MB, 53% 절감)** — 영수증 OCR 스캔, 글자 잘림 완벽 해결 모달 및 2-Tier 아코디언
+3. `03_smart_matching_and_recipe`: MP4(8.81MB) ➔ **WebM(3.86MB, 56% 절감)** — 15종 고화질 썸네일, 신규 레시피 등록 및 스마트 매칭 점수 100% 일치
+4. `04_cook_completion_fifo`: MP4(3.95MB) ➔ **WebM(1.89MB, 52% 절감)** — 3-Way 요리 완료 모달, 양념 차감 제외 및 FIFO 선입선출 자동 차감
+5. `05_notification_and_mypage`: MP4(8.28MB) ➔ **WebM(3.96MB, 52% 절감)** — 알림 Red Dot 실시간 점등, 마이페이지 프로필 변경 및 회원 탈퇴 데이터 익명 보존
+6. `06_native_app_step8_native_back_btn`: MP4(6.48MB) ➔ **WebM(1.33MB, 79% 절감)** — 안드로이드 물리 뒤로가기 모달 계층 방어 및 홈 더블백 종료
+7. `06_native_app_step8_native_push`: MP4(37.42MB) ➔ **WebM(5.52MB, 85% 절감)** — FCM 네이티브 푸시 알림 수신 및 딥링크 라우팅
+8. `06_native_app_step8_native_social`: MP4(9.59MB) ➔ **WebM(1.65MB, 82% 절감)** — 구글 소셜 로그인 앱 복귀 딥링크 및 401 토스트 방어
 
 ### 📸 17종 스크린샷 증적 파일 (`integration-tests/cycle-02/evidence/screenshots/`)
 * `step1_1_splash.png` ~ `step1_4_home_init.png` (4종)
