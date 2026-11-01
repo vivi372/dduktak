@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![오늘의 뚝딱 로고](./frontend/src/assets/오늘의_뚝딱_로고.png)
+![오늘의 뚝딱 로고](./docs/logo.png)
 
 ### 1인 가구를 위한 냉장고 관리 및 스마트 맞춤 요리 솔루션
 **"냉장고에 뭐가 남았지?" — 잔반 최소화, 식비 절감, 선입선출(FIFO) 기반 스마트 레시피 매칭 플랫폼**
@@ -58,16 +58,16 @@
 
 ## 주요 기능 라이브 데모 (Live Feature Demos)
 
-| 1. 온보딩 및 소셜/이메일 간편 인증 | 2. 냉장고 식재료 직관적 등록 & 관리 |
+| 1. 안드로이드 물리 뒤로가기 모달 계층 제어 | 2. 구글 소셜 로그인 딥링크 복귀 & 401 방어 |
 | :---: | :---: |
-| <img src="./integration-tests/cycle-02/evidence/gifs/demo_01_onboarding.gif" width="380" alt="온보딩 데모"/> | <img src="./integration-tests/cycle-02/evidence/gifs/demo_02_ingredient_mgmt.gif" width="380" alt="재료 관리 데모"/> |
-| **BaaS 인증 기반 원자적 세션 동기화**<br/>Supabase Auth와 지연 프로필 생성을 결합한 안전한 로그인 | **보관 상태별(냉장/냉동/실온) 분류 및 소비기한 D-Day 계산**<br/>직관적인 아코디언 UI와 원클릭 수량 제어 |
-| **3. 영수증 OCR 스캔 & AI 제로샷 추출** | **4. 스마트 2-Tier 레시피 추천 & 필터링** |
-| <img src="./integration-tests/cycle-02/evidence/gifs/demo_03_ocr_scan.gif" width="380" alt="영수증 OCR 데모"/> | <img src="./integration-tests/cycle-02/evidence/gifs/demo_04_recipe_match.gif" width="380" alt="레시피 매칭 데모"/> |
-| **Gemini 2.5 Flash Lite Vision 파이프라인**<br/>비정형 영수증에서 유효 식품 품목만 추출하여 일괄 냉장고 입고 | **냉장고 보유 재료 기반 매칭률(%) 실시간 산출**<br/>소비기한 임박 재료 가산점 및 카테고리별 필터링 |
-| **5. 조리 완료 및 선입선출(FIFO) 자동 차감** | **6. 커뮤니티 레시피 작성 & 이미지 직업로드** |
-| <img src="./integration-tests/cycle-02/evidence/gifs/demo_05_cooking_fifo.gif" width="380" alt="조리 및 FIFO 차감 데모"/> | <img src="./integration-tests/cycle-02/evidence/gifs/demo_06_recipe_write.gif" width="380" alt="레시피 작성 데모"/> |
-| **트랜잭션 무결성 기반 FIFO 차감 엔진**<br/>유통기한 빠른 재료부터 자동 소진 (양념/소스 제외 정책) | **Supabase Storage Direct Upload 연동**<br/>단계별 조리 과정 입력 및 썸네일 브라우저 압축 업로드 |
+| <img src="./integration-tests/cycle-02/evidence/gifs/01_demo_native_back_btn.gif" width="380" alt="안드로이드 물리 뒤로가기 제어 데모"/> | <img src="./integration-tests/cycle-02/evidence/gifs/02_demo_native_social.gif" width="380" alt="구글 소셜 로그인 딥링크 데모"/> |
+| **LIFO CloseStack & 이중 방어**<br/>모달/바텀시트 오픈 시 뒤로가기 키 입력으로 최상단 모달만 우선 닫히며, 홈 화면 이중 입력 시 안전 종료 | **딥링크 복귀 시 세션 동기화**<br/>구글 OAuth 인앱 브라우저에서 복귀 시 세션 복구 전 불필요한 401 만료 토스트 차단 및 자동 로그인 |
+| **3. FCM 네이티브 백그라운드 푸시 & 딥링크** | **4. 영수증 OCR 스캔 & 글자 안 잘리는 검수 모달** |
+| <img src="./integration-tests/cycle-02/evidence/gifs/03_demo_native_push.gif" width="380" alt="FCM 푸시 및 딥링크 데모"/> | <img src="./integration-tests/cycle-02/evidence/gifs/04_demo_receipt_ocr_modal.gif" width="380" alt="영수증 OCR 스캔 데모"/> |
+| **Heads-up 시스템 알림 & 스마트 라우팅**<br/>소비기한 임박 알림 팝업 터치 시 백엔드 페이로드(`route`)를 파싱하여 해당 화면으로 직행 | **Gemini AI 제로샷 추출 & UI 사용성**<br/>영수증 분석 후 날짜/수량 자동 매핑 및 모바일 뷰포트에서도 소비기한 날짜가 잘리지 않게 표출 |
+| **5. 스마트 매칭 추천 피드 & 점수 100% 일치** | **6. 3-Way 요리완료 & FIFO 선입선출 자동 차감** |
+| <img src="./integration-tests/cycle-02/evidence/gifs/05_demo_smart_matching.gif" width="380" alt="스마트 매칭 점수 일치 데모"/> | <img src="./integration-tests/cycle-02/evidence/gifs/06_demo_cook_fifo.gif" width="380" alt="요리완료 FIFO 차감 데모"/> |
+| **실시간 2-Tier 매칭률 산출**<br/>내 냉장고 보유 재료 기반 매칭률 계산 및 리스트-상세 페이지 간 점수 오차 0% 완벽 동기화 | **트랜잭션 무결성 기반 FIFO 차감**<br/>유통기한 빠른 주재료부터 자동 소진되며 양념/조미료류는 차감 대상에서 원천 배제 |
 
 ---
 
