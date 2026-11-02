@@ -1,4 +1,4 @@
-# 오늘의 뚝딱 (Dduktak) REST API 명세서
+# 오늘의 뚝딱 REST API 명세서
 
 > **1인 가구를 위한 냉장고 관리 및 맞춤 요리 솔루션 서비스**  
 > 본 문서는 '오늘의 뚝딱' 프로젝트의 HTTP RESTful API 엔드포인트, DTO 규격, 비즈니스 예외 규칙 및 트레이싱 규격을 정의합니다.
@@ -12,7 +12,7 @@
    - [공통 응답 헤더](#12-공통-응답-헤더-response-headers)
    - [표준 응답 DTO 규격](#13-표준-응답-dto-규격)
 2. [전역 비즈니스 규칙 및 UX 에러 태그 체계](#2-전역-비즈니스-규칙-및-ux-에러-태그-체계)
-   - [선입선출(FIFO) 차감 및 양념류 제외 규칙](#21-선입선출fifo-차감-및-양념류-제외-규칙)
+   - [선입선출 차감 및 양념류 제외 규칙](#21-선입선출-차감-및-양념류-제외-규칙)
    - [UX 에러 태그 기반 프론트엔드 연동 수칙](#22-ux-에러-태그-기반-프론트엔드-연동-수칙)
 3. [도메인별 상세 API 명세](#3-도메인별-상세-api-명세)
    - [모듈 1. 회원 및 인증 API (`/api/v1/auth`)](#모듈-1-회원-및-인증-api-apiv1auth)
@@ -30,9 +30,9 @@
 
 | 구분 | URL | 비고 |
 | :--- | :--- | :--- |
-| **운영 서버 (Production)** | `https://dduktak-backend.onrender.com/api/v1` | Render Cloud PaaS (512MB RAM) |
-| **로컬 서버 (Local Dev)** | `http://localhost:8080/api/v1` | Spring Boot 3.3.x |
-| **인증 방식 (Auth)** | `Authorization: Bearer <Supabase_JWT_Token>` | Supabase GoTrue Auth 연동 |
+| **운영 서버** | `https://dduktak-backend.onrender.com/api/v1` | Render Cloud PaaS (512MB RAM) |
+| **로컬 서버** | `http://localhost:8080/api/v1` | Spring Boot 3.3.x |
+| **인증 방식** | `Authorization: Bearer <Supabase_JWT_Token>` | Supabase GoTrue Auth 연동 |
 
 ### 1.2. 공통 응답 헤더 (Response Headers)
 
@@ -73,14 +73,14 @@ X-Trace-Id: e4a3f1
 
 ## 2. 전역 비즈니스 규칙 및 UX 에러 태그 체계
 
-### 2.1. 선입선출(FIFO) 차감 및 양념류 제외 규칙
+### 2.1. 선입선출 차감 및 양념류 제외 규칙
 
-- **선입선출(FIFO) 자동 차감 (`INV-01 / SYS-03`)**:
+- **선입선출 자동 차감 (`INV-01 / SYS-03`)**:
   - 요리 완료 시 동일 식재료가 여러 개 등록되어 있을 경우, 소비기한이 가장 빠른(`ORDER BY expire_date ASC`) 활성 재료부터 순차적으로 차감합니다.
   - **0g 클램핑 & 상태 전이**: 백엔드는 `Math.max(0, quantity - deductQuantity)`로 차감하며, 잔여 수량이 `0`이 되면 식재료의 상태를 즉시 `status = 'CONSUMED'`로 전이합니다.
 - **양념/소스 차감 제외 정책 (`REC-02`)**:
   - 간장, 고추장, 설탕, 식용유 등 양념/조미료(`category_id = 5` 또는 `type_code = 'SEASONING'`)는 요리 완료 차감 연산 대상에서 자동으로 배제되어 수량이 보존됩니다.
-- **소유권 검증 (Ownership Validation)**:
+- **자원 소유권 검증**:
   - 식재료 수정/삭제/소비 요청 시 SecurityContext의 `user_id`와 대상 엔티티의 소유자를 교차 검증하여 타인의 자원 조작을 원천 차단(`404 INV_WARN_NOT_FOUND`)합니다.
 - **회원 탈퇴 데이터 익명 보존 (`USER-02`)**:
   - 회원 탈퇴 시 개인 식재료 및 알림은 즉시 영구 삭제하되, 커뮤니티에 등록된 레시피는 작성자 식별자를 `user_id = NULL`로 처리하여 "관리자" 명의로 익명 보존합니다.
@@ -504,13 +504,13 @@ Authorization: Bearer <JWT_TOKEN>
 
 ### 모듈 4. 스마트 레시피 매칭 & 요리완료 API (`/api/v1/matching`)
 
-> 사용자의 냉장고 재고를 기반으로 최적의 레시피를 추천하고, 조리 완료 시 선입선출(FIFO) 차감을 처리합니다.
+> 사용자의 냉장고 재고를 기반으로 최적의 레시피를 추천하고, 조리 완료 시 선입선출 차감을 처리합니다.
 
 #### 엔드포인트 목록 요약
 | HTTP Method | 엔드포인트 | 설명 | 인증 |
 | :--- | :--- | :--- | :---: |
-| `GET` | `/api/v1/matching/recommendations` | 냉장고 기반 스마트 2-Tier 매칭 레시피 추천 피드 | 필수 |
-| `POST` | `/api/v1/matching/cook/{recipeId}` | 3-Way 요리 완료 및 선입선출(FIFO) 자동 차감 | 필수 |
+| `GET` | `/api/v1/matching/recommendations` | 냉장고 기반 스마트 맞춤 매칭 레시피 추천 피드 | 필수 |
+| `POST` | `/api/v1/matching/cook/{recipeId}` | 3-Way 요리 완료 및 선입선출 자동 차감 | 필수 |
 
 ---
 
@@ -551,7 +551,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 ---
 
-#### 2. 요리 완료 및 선입선출(FIFO) 차감
+#### 2. 요리 완료 및 선입선출 차감
 - **Method**: `POST`
 - **URL**: `/api/v1/matching/cook/{recipeId}`
 - **비즈니스 규칙 (`INV-01 / REC-02`)**:
@@ -732,7 +732,7 @@ Authorization: Bearer <JWT_TOKEN>
 
 <div align="center">
 
-**오늘의 뚝딱 (Dduktak) REST API 명세서 — Enterprise Standard Specification**  
-Document Version: 2.1 | Last Updated: 2026-11-01
+**오늘의 뚝딱 REST API 명세서 — Enterprise Standard Specification**  
+Document Version: 2.1 | Last Updated: 2026-11-02
 
 </div>
